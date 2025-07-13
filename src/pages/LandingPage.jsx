@@ -28,18 +28,11 @@ export default function LandingPage() {
 
   return (
     <div className="flex h-screen w-screen bg-white text-gray-900 overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
-
-      {/* Cora Logo beside sidebar */}
       <div
-        className={`absolute top-4 ${
-          sidebarOpen ? "left-52" : "left-20"
-        } transition-all duration-300 text-red-800 font-bold text-xl select-none`}
+        className={`absolute top-4 left-5 transition-all duration-300 text-red-800 font-serif text-3xl select-none`}
       >
         CORA
       </div>
-
       {/* Main Content */}
       <div className="flex-1 relative flex flex-col">
         {/* Header */}
@@ -63,11 +56,8 @@ export default function LandingPage() {
           {!submitted ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-4">
               <h1 className="text-3xl sm:text-4xl font-bold text-red-800 mb-1">
-                Hello, Raven
+                CORA
               </h1>
-              <p className="text-sm text-red-800 mb-6">
-                What can I help you with?
-              </p>
               <form
                 onSubmit={handleSubmit}
                 className="w-full max-w-md flex items-center border border-red-400 rounded-lg px-4 py-2 bg-gray-100 text-red-800"

@@ -1,46 +1,46 @@
-import { Menu } from "lucide-react";
+import { Menu, FilePen } from "lucide-react";
 
 export default function Sidebar({ open, setOpen }) {
   return (
     <aside
       className={`${
-        open ? "w-48" : "w-16"
+        open ? "w-64" : "w-16"
       } bg-red-800 text-white flex flex-col transition-all duration-300 ease-in-out h-full`}
     >
-      {/* Top - Menu Icon */}
-      <div className="flex items-center justify-center p-4">
-        <Menu
-          onClick={() => setOpen(!open)}
-          className="cursor-pointer w-5 h-5"
-        />
+      {/* Toggle Icon Only */}
+      <div className="flex items-center justify-start px-4 py-4">
+        <Menu onClick={() => setOpen(!open)} className="cursor-pointer w-5 h-5" />
       </div>
 
-      {/* Menu Items */}
-      <div className="flex flex-col mt-4 px-2">
-        <ul className={`space-y-3 text-sm ${open ? "pl-2" : "pl-0"} transition-all`}>
-          <li
-            className={`cursor-pointer hover:underline ${
-              open ? "text-left" : "text-center"
-            }`}
-          >
-            Dashboard
-          </li>
-          <li
-            className={`cursor-pointer hover:underline ${
-              open ? "text-left" : "text-center"
-            }`}
-          >
-            Settings
-          </li>
-          <li
-            className={`cursor-pointer hover:underline ${
-              open ? "text-left" : "text-center"
-            }`}
-          >
-            Logout
-          </li>
-        </ul>
+      {/* New Chat */}
+      <div
+        className="flex items-center gap-2 cursor-pointer px-4 py-2 hover:bg-red-700 transition"
+      >
+        <FilePen size={18} />
+        {open && <span className="font-semibold text-white">New Chat</span>}
       </div>
+
+      {/* Chat History - Only if sidebar is open */}
+      {open && (
+        <div className="flex flex-col px-2 mt-4 overflow-y-auto">
+          <ul className="space-y-2 text-sm pl-2">
+            {[
+              "Tuition Fee Inquiry",
+              "Enrollment Requirements",
+              "Class Schedule",
+              "Scholarship Info",
+              "Subject Pre-requisites",
+            ].map((chat, idx) => (
+              <li
+                key={idx}
+                className="cursor-pointer truncate rounded p-2 hover:bg-red-700 text-left"
+              >
+                {chat}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </aside>
   );
 }

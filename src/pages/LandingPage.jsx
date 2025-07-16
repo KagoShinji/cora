@@ -32,14 +32,15 @@ export default function LandingPage() {
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
       {/* Cora Logo beside sidebar */}
-      <div
-        className={`absolute top-4 ${
-          sidebarOpen ? "left-52" : "left-20"
-        } transition-all duration-300 text-red-800 font-bold text-xl select-none`}
-      >
-        CORA
-      </div>
-
+<div
+  className="fixed top-4 z-50 transition-all duration-300 text-red-800 font-bold text-xl select-none"
+  style={{
+    left: sidebarOpen ? "12rem" : "5rem", // match sidebar width + spacing
+    pointerEvents: "none"
+  }}
+>
+  CORA
+</div>
       {/* Main Content */}
       <div className="flex-1 relative flex flex-col">
         {/* Header */}
@@ -63,7 +64,7 @@ export default function LandingPage() {
           {!submitted ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-4">
               <h1 className="text-3xl sm:text-4xl font-bold text-red-800 mb-1">
-                Hello, Raven
+                Hello, Roca
               </h1>
               <p className="text-sm text-red-800 mb-6">
                 What can I help you with?

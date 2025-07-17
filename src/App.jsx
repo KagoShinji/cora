@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
@@ -7,6 +6,15 @@ import SuperAdminUsers from "./roles/superadmin/SuperAdminUsers";
 import SuperAdminLogs from "./roles/superadmin/SuperAdminLogs";
 import CoSuperAdminDashboard from "./roles/cosuperadmin/CoSuperAdminDashboard";
 import CoSuperAdminDepartments from "./roles/cosuperadmin/CoSuperAdminDepartments";
+import CoSuperAdminThemes from "./roles/cosuperadmin/CoSuperAdminThemes";
+import CoSuperAdminLogs from "./roles/cosuperadmin/CoSuperAdminLogs";
+import AdminCreatorDashboard from "./roles/admincreator/AdminCreatorDashboard";
+import AdminCreatorDocuments from "./roles/admincreator/AdminCreatorDocuments";
+import AdminCreatorLogs from "./roles/admincreator/AdminCreatorLogs";
+import AdminApproverDashboard from "./roles/adminapprover/AdminApproverDashboard";
+import AdminApproverDocuments from "./roles/adminapprover/AdminApproverDocuments";
+import AdminApproverLogs from "./roles/adminapprover/AdminApproverLogs";
+
 
 function App() {
   return (
@@ -19,6 +27,14 @@ function App() {
         <Route path="/superadmin/logs" element={<SuperAdminLogs />} />
         <Route path="/cosuperadmin" element={<CoSuperAdminDashboard />} />
         <Route path="/cosuperadmin/departments" element={<CoSuperAdminDepartments />} />
+        <Route path="/cosuperadmin/themes" element={<CoSuperAdminThemes />} />
+        <Route path="/cosuperadmin/logs" element={<CoSuperAdminLogs />} />
+        <Route path="/admincreator" element={<AdminCreatorDashboard />} />
+        <Route path="/admincreator/logs" element={<AdminCreatorLogs />} />
+        <Route path="/admincreator/documents" element={<AdminCreatorDocuments />} />
+        <Route path="/adminapprover" element={<AdminApproverDashboard />} />
+        <Route path="/adminapprover/documents" element={<AdminApproverDocuments />} />
+        <Route path="/adminapprover/logs" element={<AdminApproverLogs />} />
       </Routes>
     </Router>
   );

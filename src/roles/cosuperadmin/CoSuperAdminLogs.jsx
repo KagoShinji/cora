@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Sidebar from "../../components/SidebarSuperAdmin";
+import SidebarCoSuperAdmin from "../../components/SidebarCoSuperAdmin";
 
-function SuperAdminLogs() {
+function CoSuperAdminLogs() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -13,7 +13,7 @@ function SuperAdminLogs() {
           sidebarOpen ? "w-64" : "w-16"
         }`}
       >
-        <Sidebar isOpen={sidebarOpen} setOpen={setSidebarOpen} />
+        <SidebarCoSuperAdmin isOpen={sidebarOpen} setOpen={setSidebarOpen} />
       </div>
 
       {/* Main content */}
@@ -45,24 +45,24 @@ function SuperAdminLogs() {
               </thead>
               <tbody>
                 <tr className="hover:bg-gray-100 border-t border-gray-300">
-                  <td className="p-4 text-center">User Coby updated profile</td>
-                  <td className="p-4 text-center">March 23, 2025 10:42 AM</td>
+                  <td className="p-4 text-center">Co-Super Admin updated a theme</td>
+                  <td className="p-4 text-center">March 27, 2025 10:20 AM</td>
                 </tr>
                 <tr className="hover:bg-gray-100 border-t border-gray-300">
-                  <td className="p-4 text-center">Admin Raven created a new user</td>
-                  <td className="p-4 text-center">March 24, 2025 09:15 AM</td>
+                  <td className="p-4 text-center">Logo was changed by Alex Cruz</td>
+                  <td className="p-4 text-center">March 26, 2025 04:33 PM</td>
                 </tr>
                 <tr className="hover:bg-gray-100 border-t border-gray-300">
-                  <td className="p-4 text-center">Super Admin logged in</td>
+                  <td className="p-4 text-center">Theme color updated to red</td>
+                  <td className="p-4 text-center">March 25, 2025 11:45 AM</td>
+                </tr>
+                <tr className="hover:bg-gray-100 border-t border-gray-300">
+                  <td className="p-4 text-center">Co-Super Admin logged in</td>
                   <td className="p-4 text-center">March 25, 2025 08:30 AM</td>
                 </tr>
                 <tr className="hover:bg-gray-100 border-t border-gray-300">
-                  <td className="p-4 text-center">User Mira deleted an inquiry</td>
-                  <td className="p-4 text-center">March 25, 2025 01:05 PM</td>
-                </tr>
-                <tr className="hover:bg-gray-100 border-t border-gray-300">
-                  <td className="p-4 text-center">System backup completed successfully</td>
-                  <td className="p-4 text-center">March 26, 2025 12:00 AM</td>
+                  <td className="p-4 text-center">Updated system name to "Cora"</td>
+                  <td className="p-4 text-center">March 24, 2025 01:05 PM</td>
                 </tr>
               </tbody>
             </table>
@@ -73,4 +73,4 @@ function SuperAdminLogs() {
   );
 }
 
-export default SuperAdminLogs;
+export default CoSuperAdminLogs;

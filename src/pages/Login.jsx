@@ -1,38 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const credentialsMap = {
+  superadmin: { password: "super123", path: "/superadmin" },
+  cosuperadmin: { password: "co123", path: "/cosuperadmin" },
+  admincreator: { password: "creator123", path: "/admincreator" },
+  adminapprover: { password: "admin123", path: "/adminapprover" },
+};
+
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    const user = credentialsMap[username];
 
-  const SUPERADMIN_CREDENTIALS = {
-    username: "superadmin",
-    password: "super123",
+    if (user && user.password === password) {
+      navigate(user.path);
+    } else {
+      alert("Invalid credentials");
+    }
   };
-
-  const COSUPERADMIN_CREDENTIALS = {
-    username: "cosuperadmin",
-    password: "co123",
-  };
-
-  if (
-    username === SUPERADMIN_CREDENTIALS.username &&
-    password === SUPERADMIN_CREDENTIALS.password
-  ) {
-    navigate("/superadmin");
-  } else if (
-    username === COSUPERADMIN_CREDENTIALS.username &&
-    password === COSUPERADMIN_CREDENTIALS.password
-  ) {
-    navigate("/cosuperadmin");
-  } else {
-    alert("Invalid credentials");
-  }
-};
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -49,7 +39,6 @@ function Login() {
       {/* Centered login card */}
       <div className="relative z-10 flex items-center justify-center h-full px-4">
         <div className="bg-white/90 backdrop-blur-lg p-8 sm:p-10 rounded-2xl shadow-2xl max-w-md w-full text-center text-black">
-
           {/* School Logo */}
           <div className="mb-6">
             <img

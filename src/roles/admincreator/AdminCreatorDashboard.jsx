@@ -37,36 +37,37 @@ function AdminCreatorDashboard() {
         </div>
 
         {/* Logs Table */}
-        <div className="bg-white shadow-md rounded-lg overflow-auto">
-          <div className="p-4">
-            <table className="min-w-full text-left text-sm text-black">
-              <thead className="bg-red-800 text-white">
-                <tr>
-                  <th className="p-4">Description</th>
-                  <th className="p-4">Timestamp</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-t border-gray-300 hover:bg-gray-100">
-                  <td className="p-4">Approved new student document</td>
-                  <td className="p-4">July 15, 2025 09:10 AM</td>
-                </tr>
-                <tr className="border-t border-gray-300 hover:bg-gray-100">
-                  <td className="p-4">Reviewed and rejected outdated form</td>
-                  <td className="p-4">July 14, 2025 01:45 PM</td>
-                </tr>
-                <tr className="border-t border-gray-300 hover:bg-gray-100">
-                  <td className="p-4">Logged in to Admin Panel</td>
-                  <td className="p-4">July 14, 2025 08:00 AM</td>
-                </tr>
-                <tr className="border-t border-gray-300 hover:bg-gray-100">
-                  <td className="p-4">Checked logs activity</td>
-                  <td className="p-4">July 13, 2025 06:30 PM</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* Logs Table */}
+<div className="bg-white shadow-md rounded-lg overflow-auto">
+  <div className="p-4">
+    <table className="min-w-full text-sm text-black">
+      <thead className="bg-red-800 text-white">
+        <tr>
+          <th className="p-4 text-center align-middle">Description</th>
+          <th className="p-4 text-center align-middle">Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr className="border-t border-gray-300 hover:bg-gray-100">
+          <td className="p-4 text-center align-middle">Approved new student document</td>
+          <td className="p-4 text-center align-middle">July 15, 2025 09:10 AM</td>
+        </tr>
+        <tr className="border-t border-gray-300 hover:bg-gray-100">
+          <td className="p-4 text-center align-middle">Reviewed and rejected outdated form</td>
+          <td className="p-4 text-center align-middle">July 14, 2025 01:45 PM</td>
+        </tr>
+        <tr className="border-t border-gray-300 hover:bg-gray-100">
+          <td className="p-4 text-center align-middle">Logged in to Admin Panel</td>
+          <td className="p-4 text-center align-middle">July 14, 2025 08:00 AM</td>
+        </tr>
+        <tr className="border-t border-gray-300 hover:bg-gray-100">
+          <td className="p-4 text-center align-middle">Checked logs activity</td>
+          <td className="p-4 text-center align-middle">July 13, 2025 06:30 PM</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
       </main>
     </div>
   );

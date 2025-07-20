@@ -1,9 +1,16 @@
 import { useState } from "react";
 import Sidebar from "../../components/SidebarSuperAdmin";
+import ModalAddUser from "../../components/ModalAddUser";
 
 function SuperAdminUsers() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const handleSaveUser = () => {
+    // Add logic to save user (API call, etc.)
+    console.log("User added.");
+  };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -25,7 +32,10 @@ function SuperAdminUsers() {
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-red-800">Users</h1>
-          <button className="bg-red-800 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+          <button
+            className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors"
+            onClick={() => setShowAddModal(true)}
+          >
             Add User
           </button>
         </div>
@@ -42,36 +52,44 @@ function SuperAdminUsers() {
         </div>
 
         {/* Table */}
-        {/* Table */}
-<div className="bg-white shadow-md rounded-lg overflow-auto">
-  <table className="min-w-full text-sm text-black">
-    <thead className="bg-red-800 text-white">
-      <tr>
-        <th className="p-4 text-center">User</th>
-        <th className="p-4 text-center">Timestamp</th>
-        <th className="p-4 text-center">Role</th>
-        <th className="p-4 text-center">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr className="hover:bg-gray-100 border-t border-gray-300">
-        <td className="p-4 text-center">Coby</td>
-        <td className="p-4 text-center">March 23, 2025 10:42 AM</td>
-        <td className="p-4 text-center">Creator</td>
-        <td className="p-4">
-          <div className="flex justify-center gap-3">
-            <button className="bg-red-800 text-white px-4 py-2 rounded hover:bg-red-700 transition">
-              Edit
-            </button>
-            <button className="bg-red-800 text-white px-4 py-2 rounded hover:bg-red-900 transition">
-              Delete
-            </button>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+        <div className="bg-white shadow-md rounded-lg overflow-auto">
+          <table className="min-w-full text-sm text-black">
+            <thead className="bg-red-800 text-white">
+              <tr>
+                <th className="p-4 text-center">User</th>
+                <th className="p-4 text-center">Timestamp</th>
+                <th className="p-4 text-center">Role</th>
+                <th className="p-4 text-center">Department</th>
+                <th className="p-4 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="hover:bg-gray-100 border-t border-gray-300">
+                <td className="p-4 text-center">Coby</td>
+                <td className="p-4 text-center">March 23, 2025 10:42 AM</td>
+                <td className="p-4 text-center">Creator</td>
+                <td className="p-4 text-center">Information Technology</td>
+                <td className="p-4">
+                  <div className="flex justify-center gap-3">
+                    <button className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors">
+                      Edit
+                    </button>
+                    <button className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-900 transition-colors">
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Add User Modal */}
+        <ModalAddUser
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSave={handleSaveUser}
+        />
       </main>
     </div>
   );

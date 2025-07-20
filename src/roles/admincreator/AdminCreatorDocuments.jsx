@@ -30,7 +30,7 @@ function AdminCreatorDocuments() {
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between">
             <Upload className="text-red-800 w-12 h-12 mb-4" />
             <h2 className="text-xl font-semibold text-red-800 mb-4">Upload Documents</h2>
-            <button className="bg-red-800 text-white px-6 py-2 rounded hover:bg-red-700 transition">
+            <button className="!bg-red-800 text-white px-6 py-2 rounded hover:bg-red-700 transition">
               Upload
             </button>
           </div>
@@ -39,7 +39,7 @@ function AdminCreatorDocuments() {
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between">
             <ScanLine className="text-red-800 w-12 h-12 mb-4" />
             <h2 className="text-xl font-semibold text-red-800 mb-4">Scan Documents</h2>
-            <button className="bg-red-800 text-white px-6 py-2 rounded hover:bg-red-700 transition">
+            <button className="!bg-red-800 text-white px-6 py-2 rounded hover:bg-red-700 transition">
               Upload
             </button>
           </div>
@@ -48,7 +48,7 @@ function AdminCreatorDocuments() {
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between">
             <Pencil className="text-red-800 w-12 h-12 mb-4" />
             <h2 className="text-xl font-semibold text-red-800 mb-4">Manual Entry</h2>
-            <button className="bg-red-800 text-white px-6 py-2 rounded hover:bg-red-700 transition">
+            <button className="!bg-red-800 text-white px-6 py-2 rounded hover:bg-red-700 transition">
               Create
             </button>
           </div>

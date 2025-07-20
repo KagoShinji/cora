@@ -32,7 +32,7 @@ function CoSuperAdminThemes() {
               alt="School Logo"
               className="w-24 h-24 object-contain"
             />
-            <button className="bg-red-800 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+            <button className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors">
               Change
             </button>
           </div>
@@ -41,7 +41,7 @@ function CoSuperAdminThemes() {
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs h-72 flex flex-col items-center justify-between">
             <h2 className="text-xl font-semibold text-black">Name</h2>
             <div className="text-2xl font-bold text-black">CORA</div>
-            <button className="bg-red-800 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+            <button className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors">
               Change
             </button>
           </div>
@@ -57,7 +57,7 @@ function CoSuperAdminThemes() {
                 Secondary
               </button>
             </div>
-            <button className="bg-red-800 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+            <button className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors">
               Change
             </button>
           </div>

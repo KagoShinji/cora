@@ -8,17 +8,22 @@ export default function LandingPage() {
   const [chatHistory, setChatHistory] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [modal, setModal] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // NEW
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const closeModal = () => setModal(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (query.trim() === "") return;
-
     setChatHistory([...chatHistory, { role: "user", text: query }]);
     setQuery("");
     setSubmitted(true);
+  };
+
+  const handleNewChat = () => {
+    setQuery("");
+    setChatHistory([]);
+    setSubmitted(false);
   };
 
   useEffect(() => {
@@ -29,46 +34,45 @@ export default function LandingPage() {
   return (
     <div className="flex h-screen w-screen bg-white text-gray-900 overflow-hidden">
       {/* Sidebar */}
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} onNewChat={handleNewChat} />
 
-      {/* Cora Logo beside sidebar */}
-<div
-  className="fixed top-4 z-50 transition-all duration-300 text-red-800 font-bold text-xl select-none"
-  style={{
-    left: sidebarOpen ? "12rem" : "5rem", // match sidebar width + spacing
-    pointerEvents: "none"
-  }}
->
-  CORA
-</div>
+      {/* Logo */}
+      <div
+        className="fixed top-4 z-50 transition-all duration-300 text-red-800 font-bold text-xl select-none"
+        style={{
+          left: sidebarOpen ? "12rem" : "5rem",
+          pointerEvents: "none",
+        }}
+      >
+        CORA
+      </div>
+
       {/* Main Content */}
       <div className="flex-1 relative flex flex-col">
         {/* Header */}
         <header className="flex justify-end gap-4 px-6 py-4">
           <button
-            className="px-4 py-1 text-sm bg-red-800 text-white rounded-full"
+            className="px-4 py-1 text-sm !bg-red-800 text-white rounded-full"
             onClick={() => setModal("login")}
           >
             Login
           </button>
           <button
-            className="px-4 py-1 text-sm border border-red-800 text-red-800 rounded-full"
+            className="px-4 py-1 text-sm border !bg-white !border-red-800 text-red-800 rounded-full"
             onClick={() => setModal("register")}
           >
             Sign up
           </button>
         </header>
 
-        {/* Main Chat or Welcome */}
+        {/* Chat Area */}
         <main id="chat-scroll" className="flex-grow overflow-y-auto relative">
           {!submitted ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-4">
               <h1 className="text-3xl sm:text-4xl font-bold text-red-800 mb-1">
                 Hello, Roca
               </h1>
-              <p className="text-sm text-red-800 mb-6">
-                What can I help you with?
-              </p>
+              <p className="text-sm text-red-800 mb-6">What can I help you with?</p>
               <form
                 onSubmit={handleSubmit}
                 className="w-full max-w-md flex items-center border border-red-400 rounded-lg px-4 py-2 bg-gray-100 text-red-800"
@@ -97,7 +101,7 @@ export default function LandingPage() {
                 ))}
               </div>
 
-              {/* Input Box at Bottom */}
+              {/* Input Box */}
               <form
                 onSubmit={handleSubmit}
                 className="w-full max-w-xl px-4 py-2 absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center border border-red-400 rounded-lg bg-gray-100 text-red-800"
@@ -120,49 +124,19 @@ export default function LandingPage() {
       {modal === "login" && (
         <Modal title="Login to your account" onClose={closeModal}>
           <form className="flex flex-col gap-4">
-            <input
-              type="email"
-              placeholder="Email"
-              className="border rounded p-2"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              className="border rounded p-2"
-            />
-            <button
-              type="submit"
-              className="bg-red-800 text-white py-2 rounded"
-            >
-              Login
-            </button>
+            <input type="email" placeholder="Email" className="border rounded p-2" />
+            <input type="password" placeholder="Password" className="border rounded p-2" />
+            <button type="submit" className="!bg-red-800 text-white py-2 rounded">Login</button>
           </form>
         </Modal>
       )}
       {modal === "register" && (
         <Modal title="Create an account" onClose={closeModal}>
           <form className="flex flex-col gap-4">
-            <input
-              type="text"
-              placeholder="Full Name"
-              className="border rounded p-2"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              className="border rounded p-2"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              className="border rounded p-2"
-            />
-            <button
-              type="submit"
-              className="bg-red-800 text-white py-2 rounded"
-            >
-              Register
-            </button>
+            <input type="text" placeholder="Full Name" className="border rounded p-2" />
+            <input type="email" placeholder="Email" className="border rounded p-2" />
+            <input type="password" placeholder="Password" className="border rounded p-2" />
+            <button type="submit" className="!bg-red-800 text-white py-2 rounded">Register</button>
           </form>
         </Modal>
       )}

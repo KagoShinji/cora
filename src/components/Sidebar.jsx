@@ -5,7 +5,7 @@ export default function Sidebar({ open, setOpen, onNewChat }) {
     <aside
       className={`${
         open ? "w-64" : "w-16"
-      } bg-red-800 text-white flex flex-col transition-all duration-300 ease-in-out h-full`}
+      } bg-primary text-white flex flex-col transition-all duration-300 ease-in-out h-full`}
     >
       {/* Toggle Button */}
       <div className="flex items-center justify-start px-4 py-4">
@@ -14,7 +14,7 @@ export default function Sidebar({ open, setOpen, onNewChat }) {
 
       {/* New Chat */}
       <div
-        className="flex items-center gap-2 cursor-pointer px-4 py-2 hover:bg-red-700 transition"
+        className="flex items-center gap-2 cursor-pointer px-4 py-2 hover:bg-primary transition"
         onClick={onNewChat}
       >
         <FilePen size={18} className="text-white" />
@@ -34,7 +34,7 @@ export default function Sidebar({ open, setOpen, onNewChat }) {
             ].map((chat, idx) => (
               <li
                 key={idx}
-                className="cursor-pointer truncate rounded p-2 hover:bg-red-700 text-left text-white"
+                className="cursor-pointer truncate rounded p-2 hover:bg-primary text-left text-white"
               >
                 {chat}
               </li>

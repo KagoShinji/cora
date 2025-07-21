@@ -5,6 +5,7 @@ import SuperAdminDashboard from "./roles/superadmin/SuperAdminDashboard";
 import SuperAdminUsers from "./roles/superadmin/SuperAdminUsers";
 import SuperAdminLogs from "./roles/superadmin/SuperAdminLogs";
 import CoSuperAdminDashboard from "./roles/cosuperadmin/CoSuperAdminDashboard";
+import CoSuperAdminAdmins from "./roles/cosuperadmin/CoSuperAdminAdmins";
 import CoSuperAdminDepartments from "./roles/cosuperadmin/CoSuperAdminDepartments";
 import CoSuperAdminThemes from "./roles/cosuperadmin/CoSuperAdminThemes";
 import CoSuperAdminLogs from "./roles/cosuperadmin/CoSuperAdminLogs";
@@ -26,6 +27,7 @@ function App() {
         <Route path="/superadmin/users" element={<SuperAdminUsers />} />
         <Route path="/superadmin/logs" element={<SuperAdminLogs />} />
         <Route path="/cosuperadmin" element={<CoSuperAdminDashboard />} />
+        <Route path="/cosuperadmin/admins" element={<CoSuperAdminAdmins />} />
         <Route path="/cosuperadmin/departments" element={<CoSuperAdminDepartments />} />
         <Route path="/cosuperadmin/themes" element={<CoSuperAdminThemes />} />
         <Route path="/cosuperadmin/logs" element={<CoSuperAdminLogs />} />

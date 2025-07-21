@@ -22,7 +22,7 @@ function CoSuperAdminLogs() {
           sidebarOpen ? "ml-64" : "ml-16"
         } w-full`}
       >
-        <h1 className="text-3xl font-bold text-red-800 mb-6">Logs</h1>
+        <h1 className="text-3xl font-bold text-primary mb-6">Logs</h1>
 
         {/* Logs Card with Search */}
         <div className="bg-white shadow-md rounded-lg overflow-auto">
@@ -37,7 +37,7 @@ function CoSuperAdminLogs() {
               />
             </div>
             <table className="min-w-full text-sm text-black">
-              <thead className="bg-red-800 text-white">
+              <thead className="bg-primary text-white">
                 <tr>
                   <th className="p-4 text-center">Description</th>
                   <th className="p-4 text-center">Timestamp</th>

@@ -18,20 +18,20 @@ function AdminCreatorDashboard() {
           sidebarOpen ? "ml-64" : "ml-16"
         }`}
       >
-        <h1 className="text-3xl font-bold text-red-800 mb-6">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-primary mb-6">Dashboard</h1>
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <Link to="/admincreator/documents">
             <div className="bg-white shadow-md rounded-lg p-6 flex items-center justify-center flex-col cursor-pointer hover:shadow-lg transition">
               <div className="text-4xl mb-2">📄</div>
-              <h2 className="text-xl font-semibold text-red-800">Documents</h2>
+              <h2 className="text-xl font-semibold text-primary">Documents</h2>
             </div>
           </Link>
           <Link to="/admincreator/logs">
             <div className="bg-white shadow-md rounded-lg p-6 flex items-center justify-center flex-col cursor-pointer hover:shadow-lg transition">
               <div className="text-4xl mb-2">📝</div>
-              <h2 className="text-xl font-semibold text-red-800">Logs</h2>
+              <h2 className="text-xl font-semibold text-primary">Logs</h2>
             </div>
           </Link>
         </div>
@@ -41,7 +41,7 @@ function AdminCreatorDashboard() {
 <div className="bg-white shadow-md rounded-lg overflow-auto">
   <div className="p-4">
     <table className="min-w-full text-sm text-black">
-      <thead className="bg-red-800 text-white">
+      <thead className="bg-primary text-white">
         <tr>
           <th className="p-4 text-center align-middle">Description</th>
           <th className="p-4 text-center align-middle">Timestamp</th>

@@ -31,9 +31,9 @@ function SuperAdminUsers() {
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-red-800">Users</h1>
+          <h1 className="text-3xl font-bold text-primary">Users</h1>
           <button
-            className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors"
+            className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
             onClick={() => setShowAddModal(true)}
           >
             Add User
@@ -54,7 +54,7 @@ function SuperAdminUsers() {
         {/* Table */}
         <div className="bg-white shadow-md rounded-lg overflow-auto">
           <table className="min-w-full text-sm text-black">
-            <thead className="bg-red-800 text-white">
+            <thead className="bg-primary text-white">
               <tr>
                 <th className="p-4 text-center">User</th>
                 <th className="p-4 text-center">Timestamp</th>
@@ -71,10 +71,10 @@ function SuperAdminUsers() {
                 <td className="p-4 text-center">Information Technology</td>
                 <td className="p-4">
                   <div className="flex justify-center gap-3">
-                    <button className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors">
+                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
                       Edit
                     </button>
-                    <button className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-900 transition-colors">
+                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
                       Delete
                     </button>
                   </div>

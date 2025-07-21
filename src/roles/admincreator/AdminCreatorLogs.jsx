@@ -22,7 +22,7 @@ function AdminCreatorLogs() {
           sidebarOpen ? "ml-64" : "ml-16"
         } w-full`}
       >
-        <h1 className="text-3xl font-bold text-red-800 mb-6">Logs</h1>
+        <h1 className="text-3xl font-bold text-primary mb-6">Logs</h1>
 
         {/* Logs Table with Search */}
         <div className="bg-white shadow-md rounded-lg overflow-auto">
@@ -40,7 +40,7 @@ function AdminCreatorLogs() {
 
             {/* Table */}
             <table className="min-w-full text-sm">
-              <thead className="bg-red-800 text-white">
+              <thead className="bg-primary text-white">
                 <tr>
                   <th className="p-4 text-center align-middle">Description</th>
                   <th className="p-4 text-center align-middle">Timestamp</th>

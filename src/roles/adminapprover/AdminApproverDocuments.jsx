@@ -1,10 +1,14 @@
 import { useState } from "react";
 import SidebarAdminApprover from "../../components/SidebarAdminApprover";
+import DocumentModal from "../../components/DocumentModal"; // ✅ Modal component
 
 function AdminApproverDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("pending");
+
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [remarks, setRemarks] = useState("");
 
   const documents = [
     {
@@ -25,16 +29,25 @@ function AdminApproverDocuments() {
       timestamp: "July 14, 2025 02:45 PM",
       status: "completed",
     },
+    {
+      id: 3,
+      user: "Mark Reyes",
+      department: "Education",
+      description: "Thesis outline submission",
+      file: "thesis_outline.pdf",
+      timestamp: "July 13, 2025 11:20 AM",
+      status: "rejected",
+    },
   ];
 
   const handleConfirm = (id) => {
     console.log("Confirmed:", id);
-    // TODO: Update document status to 'completed'
+    // TODO: Update document status to "completed"
   };
 
-  const handleDecline = (id) => {
-    console.log("Declined:", id);
-    // TODO: Handle decline
+  const handleDelete = (id, remark) => {
+    console.log("Deleted:", id, "with remarks:", remark);
+    // TODO: Handle rejection or deletion
   };
 
   const filteredDocs = documents.filter((doc) => {
@@ -63,7 +76,7 @@ function AdminApproverDocuments() {
           sidebarOpen ? "ml-64" : "ml-16"
         } w-full`}
       >
-        <h1 className="text-3xl font-bold text-red-800 mb-6">Documents</h1>
+        <h1 className="text-3xl font-bold text-primary mb-6">Documents</h1>
 
         {/* Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
@@ -77,14 +90,14 @@ function AdminApproverDocuments() {
 
           {/* Filter buttons */}
           <div className="flex gap-2">
-            {["all", "pending", "completed"].map((status) => (
+            {["all", "pending", "completed", "rejected"].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
                 className={`px-4 py-2 rounded-md font-semibold ${
                   filterStatus === status
                     ? "!bg-blue-700 text-white"
-                    : "!bg-red-600 text-white border"
+                    : "!bg-primary text-white border"
                 }`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -96,13 +109,14 @@ function AdminApproverDocuments() {
         {/* Table */}
         <div className="bg-white shadow-md rounded-lg overflow-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-red-800 text-white">
+            <thead className="bg-primary text-white">
               <tr>
                 <th className="p-4 text-center">Submitted by</th>
                 <th className="p-4 text-center">Department</th>
                 <th className="p-4 text-center">Description</th>
                 <th className="p-4 text-center">File</th>
                 <th className="p-4 text-center">Timestamp</th>
+                <th className="p-4 text-center">Status</th>
                 <th className="p-4 text-center">Actions</th>
               </tr>
             </thead>
@@ -124,30 +138,33 @@ function AdminApproverDocuments() {
                     </td>
                     <td className="p-4 text-center text-black">{doc.timestamp}</td>
                     <td className="p-4 text-center">
-                      {doc.status === "pending" ? (
-                        <div className="flex justify-center gap-3">
-                          <button
-                            onClick={() => handleConfirm(doc.id)}
-                            className="!bg-green-600 !text-white px-4 py-2 rounded-md hover:!bg-green-700 transition-colors"
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            onClick={() => handleDecline(doc.id)}
-                            className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-900 transition-colors"
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-green-700 font-semibold">Completed</span>
-                      )}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+                          doc.status === "pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : doc.status === "completed"
+                            ? "bg-green-100 text-green-700"
+                            : doc.status === "rejected"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-gray-200 text-gray-800"
+                        }`}
+                      >
+                        {doc.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => setSelectedDoc(doc)}
+                        className="!bg-primary text-white px-4 py-2 rounded-md hover:!bg-primary/80 transition-colors"
+                      >
+                        View
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-6 text-gray-500">
+                  <td colSpan="7" className="text-center py-6 text-gray-500">
                     No {filterStatus} documents found.
                   </td>
                 </tr>
@@ -156,6 +173,19 @@ function AdminApproverDocuments() {
           </table>
         </div>
       </main>
+
+      {/* Modal */}
+      <DocumentModal
+        document={selectedDoc}
+        onClose={() => {
+          setSelectedDoc(null);
+          setRemarks("");
+        }}
+        onConfirm={handleConfirm}
+        onDelete={handleDelete}
+        remarks={remarks}
+        setRemarks={setRemarks}
+      />
     </div>
   );
 }

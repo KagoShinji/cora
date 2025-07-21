@@ -44,31 +44,31 @@ function Login() {
             <img
               src="/school-logo.png"
               alt="School Logo"
-              className="w-40 h-40 mx-auto object-contain rounded-full border shadow-md"
+              className="w-40 h-40 mx-auto object-contain rounded-full border shadow-md border-primary"
             />
-            <h2 className="mt-4 text-5xl font-extrabold text-red-800 tracking-tight">CORA</h2>
-            <p className="text-lg text-gray-600 mt-1">Admin Portal</p>
+            <h2 className="mt-4 text-5xl font-extrabold text-primary tracking-tight">CORA</h2>
+            <p className="text-lg text-primary mt-1">Admin Portal</p>
           </div>
 
           {/* Login Form */}
           <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="block text-sm font-medium text-primary mb-1">Username</label>
               <input
                 type="text"
                 placeholder="Enter your username"
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-800 text-black"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary text-black"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-primary mb-1">Password</label>
               <input
                 type="password"
                 placeholder="Enter your password"
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-800 text-black"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary text-black"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -76,7 +76,7 @@ function Login() {
             </div>
             <button
               type="submit"
-              className="bg-red-800 text-white py-2 rounded font-semibold hover:bg-red-700 transition"
+              className="!bg-primary text-white py-2 rounded font-semibold hover:bg-primary transition"
             >
               Login
             </button>

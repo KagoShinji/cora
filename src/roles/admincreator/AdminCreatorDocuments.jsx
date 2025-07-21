@@ -22,33 +22,33 @@ function AdminCreatorDocuments() {
           sidebarOpen ? "ml-64" : "ml-16"
         } w-full`}
       >
-        <h1 className="text-3xl font-bold text-red-800 mb-6">Documents</h1>
+        <h1 className="text-3xl font-bold text-primary mb-6">Documents</h1>
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Upload Documents */}
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between">
-            <Upload className="text-red-800 w-12 h-12 mb-4" />
-            <h2 className="text-xl font-semibold text-red-800 mb-4">Upload Documents</h2>
-            <button className="!bg-red-800 text-white px-6 py-2 rounded hover:bg-red-700 transition">
+            <Upload className="text-primary w-12 h-12 mb-4" />
+            <h2 className="text-xl font-semibold text-primary mb-4">Upload Documents</h2>
+            <button className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition">
               Upload
             </button>
           </div>
 
           {/* Scan Documents */}
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between">
-            <ScanLine className="text-red-800 w-12 h-12 mb-4" />
-            <h2 className="text-xl font-semibold text-red-800 mb-4">Scan Documents</h2>
-            <button className="!bg-red-800 text-white px-6 py-2 rounded hover:bg-red-700 transition">
+            <ScanLine className="text-primary w-12 h-12 mb-4" />
+            <h2 className="text-xl font-semibold text-primary mb-4">Scan Documents</h2>
+            <button className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition">
               Upload
             </button>
           </div>
 
           {/* Manual Entry */}
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between">
-            <Pencil className="text-red-800 w-12 h-12 mb-4" />
-            <h2 className="text-xl font-semibold text-red-800 mb-4">Manual Entry</h2>
-            <button className="!bg-red-800 text-white px-6 py-2 rounded hover:bg-red-700 transition">
+            <Pencil className="text-primary w-12 h-12 mb-4" />
+            <h2 className="text-xl font-semibold text-primary mb-4">Manual Entry</h2>
+            <button className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition">
               Create
             </button>
           </div>

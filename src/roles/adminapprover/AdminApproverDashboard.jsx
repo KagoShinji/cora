@@ -18,20 +18,20 @@ function AdminApproverDashboard() {
           sidebarOpen ? "ml-64" : "ml-16"
         }`}
       >
-        <h1 className="text-3xl font-bold text-red-800 mb-6">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-primary mb-6">Dashboard</h1>
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <Link to="/adminapprover/documents">
             <div className="bg-white shadow-md rounded-lg p-6 flex items-center justify-center flex-col cursor-pointer hover:shadow-lg transition">
               <div className="text-4xl mb-2">📄</div>
-              <h2 className="text-xl font-semibold text-red-800">Documents</h2>
+              <h2 className="text-xl font-semibold text-primary">Documents</h2>
             </div>
           </Link>
           <Link to="/adminapprover/logs">
             <div className="bg-white shadow-md rounded-lg p-6 flex items-center justify-center flex-col cursor-pointer hover:shadow-lg transition">
               <div className="text-4xl mb-2">📝</div>
-              <h2 className="text-xl font-semibold text-red-800">Logs</h2>
+              <h2 className="text-xl font-semibold text-primary">Logs</h2>
             </div>
           </Link>
         </div>
@@ -39,7 +39,7 @@ function AdminApproverDashboard() {
         {/* Table */}
         <div className="bg-white shadow-md rounded-lg overflow-auto">
           <table className="min-w-full text-sm text-gray-700">
-            <thead className="bg-red-800 text-white">
+            <thead className="bg-primary text-white">
               <tr>
                 <th className="p-4 text-center">Document</th>
                 <th className="p-4 text-center">Submitted By</th>
@@ -59,7 +59,7 @@ function AdminApproverDashboard() {
                     <button className="!bg-green-600 !text-white px-4 py-2 rounded-md hover:!bg-green-700 transition-colors">
                       Approve
                     </button>
-                    <button className="!bg-red-800 !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors">
+                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
                       Reject
                     </button>
                   </div>

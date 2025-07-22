@@ -33,6 +33,7 @@ export default function LandingPage() {
 
   return (
     <div className="flex h-screen w-screen bg-white text-gray-900 overflow-hidden">
+<<<<<<< HEAD
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} onNewChat={handleNewChat} />
 
@@ -43,10 +44,13 @@ export default function LandingPage() {
           left: sidebarOpen ? "12rem" : "5rem",
           pointerEvents: "none",
         }}
+=======
+      <div
+        className={`absolute top-4 left-5 transition-all duration-300 text-red-800 font-serif text-3xl select-none`}
+>>>>>>> d8563d8de655a57d0874247f6957b283a42dcdd9
       >
         CORA
       </div>
-
       {/* Main Content */}
       <div className="flex-1 relative flex flex-col">
         {/* Header */}
@@ -69,10 +73,16 @@ export default function LandingPage() {
         <main id="chat-scroll" className="flex-grow overflow-y-auto relative">
           {!submitted ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-4">
+<<<<<<< HEAD
               <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-1">
                 Hello, Roca
               </h1>
               <p className="text-sm text-primary mb-6">What can I help you with?</p>
+=======
+              <h1 className="text-3xl sm:text-4xl font-bold text-red-800 mb-1">
+                CORA
+              </h1>
+>>>>>>> d8563d8de655a57d0874247f6957b283a42dcdd9
               <form
                 onSubmit={handleSubmit}
                 className="w-full max-w-md flex items-center border border-primary rounded-lg px-4 py-2 bg-gray-100 text-primary"

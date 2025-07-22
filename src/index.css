@@ -1,4 +1,5 @@
 @import "tailwindcss";
+<<<<<<< HEAD
 
 @theme {
   --color-primary: #65171D;
@@ -73,3 +74,5 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+=======
+>>>>>>> d8563d8de655a57d0874247f6957b283a42dcdd9

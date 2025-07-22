@@ -1,5 +1,37 @@
-export default function ModalAddUser({ isOpen, onClose, onSave }) {
+import { useState } from "react";
+
+export default function ModalAddUser({ isOpen, onClose, onSave,isLoading,error}) {
   if (!isOpen) return null;
+
+  const [username,setUsername] = useState("")
+  const [email,setEmail] = useState("")
+  const [password,setPassword] = useState("")
+  const [school,setSchool] = useState("")
+  const [role,setRole] = useState('')
+
+
+  const handleSubmit = async(e) => {
+    e.preventDefault()
+
+    const userData = {
+      name:username,
+      email,
+      password,
+      role,
+      school,
+    }
+    try{
+      await onSave(userData);
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setRole('Co-Super Admin');
+      setSchool('')
+      onClose();
+    }catch(err){
+      console.error("Form submission failed in ModalAddUser:", err);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
@@ -9,11 +41,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave }) {
         </h2>
 
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSave();
-            onClose();
-          }}
+          onSubmit={handleSubmit}
           className="flex flex-col gap-4 !text-primary"
         >
           <div>
@@ -21,8 +49,10 @@ export default function ModalAddUser({ isOpen, onClose, onSave }) {
               Username <span className="text-red-600">*</span>
             </label>
             <input
+              onChange={(e)=>setUsername(e.target.value)}
               type="text"
               placeholder="Enter username"
+              value={username}
               className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
               required
             />
@@ -33,6 +63,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave }) {
               Email <span className="text-red-600">*</span>
             </label>
             <input
+              onChange={(e)=>setEmail(e.target.value)}
               type="email"
               placeholder="Enter email"
               className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
@@ -45,6 +76,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave }) {
               Password <span className="text-red-600">*</span>
             </label>
             <input
+              onChange={(e)=>setPassword(e.target.value)}
               type="password"
               placeholder="Enter password"
               className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
@@ -59,26 +91,30 @@ export default function ModalAddUser({ isOpen, onClose, onSave }) {
             <select
               className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
               required
+              onChange={(e)=>setRole(e.target.value)}
+              
             >
               <option value="">Select Role</option>
-              <option value="co-super-admin">Co Super Admin</option>
+              <option value="co-superadmin">Co-Super Admin</option>
             </select>
           </div>
 
           <div>
             <label className="block mb-1 font-medium">
-              Department <span className="text-red-600">*</span>
+              School <span className="text-red-600">*</span>
             </label>
-            <select
+            <input
+              onChange={(e)=>setSchool(e.target.value)}
+              type="text"
+              placeholder="Enter school"
               className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
               required
-            >
-              <option value="">Select Department</option>
-              <option value="cs">Information Technology</option>
-              <option value="ba">Business Administration</option>
-              <option value="ed">Education</option>
-              <option value="eng">Engineering</option>
-            </select>
+            />
+            {error && (
+            <p className="text-red-600 bg-red-100 border border-red-400 rounded p-2 text-sm text-center">
+              {error}
+            </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
@@ -92,11 +128,13 @@ export default function ModalAddUser({ isOpen, onClose, onSave }) {
             <button
               type="submit"
               className="!px-4 !py-2 !bg-primary !text-white !rounded-md hover:!bg-primary/90 transition"
+              disabled={isLoading}
             >
-              Save
+              {isLoading ? 'Saving...' : 'Save'}
             </button>
           </div>
         </form>
+
       </div>
     </div>
   );

@@ -1,15 +1,28 @@
 import { useState } from "react";
 import Sidebar from "../../components/SidebarSuperAdmin";
 import ModalAddUser from "../../components/ModalAddUser";
+import {useAuthStore} from "../../stores/userStore"
+import { shallow } from "zustand/shallow";
+import { createUsers } from "../../api/api";
 
 function SuperAdminUsers() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+ 
 
-  const handleSaveUser = () => {
-    // Add logic to save user (API call, etc.)
-    console.log("User added.");
+  const signup = useAuthStore((state) => state.signup);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const error = useAuthStore((state) => state.error);
+
+  const handleAddUser = async(userData) => {
+    await signup(userData)
+    const {error} = useAuthStore.getState();
+    if(!error){
+      alert("Account created successfully!");
+    }else{
+      alert("Failed to create account: " + error);
+    }
   };
 
   return (
@@ -57,18 +70,18 @@ function SuperAdminUsers() {
             <thead className="bg-primary text-white">
               <tr>
                 <th className="p-4 text-center">User</th>
+                <th className="p-4 text-center">Email</th>
+                <th className="p-4 text-center">School</th>
                 <th className="p-4 text-center">Timestamp</th>
-                <th className="p-4 text-center">Role</th>
-                <th className="p-4 text-center">Department</th>
                 <th className="p-4 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr className="hover:bg-gray-100 border-t border-gray-300">
                 <td className="p-4 text-center">Coby</td>
+                <td className="p-4 text-center">coby@gmail.com</td>
+                <td className="p-4 text-center">Southwestern University PHINMA</td>
                 <td className="p-4 text-center">March 23, 2025 10:42 AM</td>
-                <td className="p-4 text-center">Creator</td>
-                <td className="p-4 text-center">Information Technology</td>
                 <td className="p-4">
                   <div className="flex justify-center gap-3">
                     <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
@@ -88,7 +101,7 @@ function SuperAdminUsers() {
         <ModalAddUser
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
-          onSave={handleSaveUser}
+          onSave={handleAddUser}
         />
       </main>
     </div>

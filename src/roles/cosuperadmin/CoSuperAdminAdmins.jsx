@@ -1,11 +1,18 @@
 import { useState } from "react";
 import Sidebar from "../../components/SidebarCoSuperAdmin";
 import ModalAddAdmins from "../../components/ModalAddAdmins";
+import { useAuthStore } from "../../stores/userStores";
 
 function CoSuperAdminAdmins() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+
+  //authstore 
+  const signup = useAuthStore((state) => state.signup);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const error = useAuthStore((state) => state.error);
+  
 
   const [adminList, setAdminList] = useState([
     {
@@ -16,13 +23,15 @@ function CoSuperAdminAdmins() {
     },
   ]);
 
-  const handleSaveAdmin = (admin) => {
-    const timestamp = new Date().toLocaleString("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-    setAdminList((prev) => [...prev, { ...admin, timestamp }]);
-  };
+  const handleSaveAdmin = async(userData) =>{
+    await signup(userData)
+    const {error} = useAuthStore.getState();
+    if(!error){
+      alert("Account created successfully!");
+    }else{
+      alert("Failed to create account: " + error);
+    }
+  }
 
   const filteredAdmins = adminList.filter((admin) =>
     admin.name.toLowerCase().includes(search.toLowerCase())

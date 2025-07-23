@@ -1,28 +1,69 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from '../stores/userStores'
 
 const credentialsMap = {
-  superadmin: { password: "super123", path: "/superadmin" },
-  cosuperadmin: { password: "co123", path: "/cosuperadmin" },
-  admincreator: { password: "creator123", path: "/admincreator" },
-  adminapprover: { password: "admin123", path: "/adminapprover" },
+  'superadmin@gmail.com': { password: "super123",role:"superadmin", path: "/superadmin" },
+  'cosuperadmin@gmail.com': { password: "co123",role:"co-superadmin", path: "/cosuperadmin" },
+  'admincreator@gmail.com': { password: "creator123",role:"admin-creator", path: "/admincreator" },
+  'adminapprover@gmail.com': { password: "admin123",role:"admin-approver", path: "/adminapprover" },
 };
 
 function Login() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    const user = credentialsMap[username];
 
-    if (user && user.password === password) {
-      navigate(user.path);
-    } else {
+  //AuthStore
+  const signin = useAuthStore((state)=> state.signin)
+  const isLoading = useAuthStore((state)=> state.isLoading)
+  const error = useAuthStore((state)=>state.error)
+  const role = useAuthStore((state)=> state.role)
+  
+  
+  //Handle Login of users in superadmin,co-superadmin, and admin.
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const users = credentialsMap[email];
+
+    if (users && users.password === password) {
+      navigate(users.path);
+      return
+    } 
+
+    const userData= {
+      email:email,
+      password:password
+    }
+    const login = await signin(userData)
+    
+    if(!login){
       alert("Invalid credentials");
+      return
+    }else{
+      alert("login successfully")
+    }
+
+    switch(login.role){
+      case 'superadmin':
+        navigate('/superadmin')
+        break;
+      case 'co-superadmin':
+        navigate('/cosuperadmin')
+        break
+      case 'admincreator':
+        navigate('/admincreator')
+        break
+      case 'adminapprover':
+        navigate('/adminapprover')
+        break
+      default:
+      alert('Unauthorized role or unknown user.')
+
     }
   };
+
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -53,13 +94,13 @@ function Login() {
           {/* Login Form */}
           <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
             <div>
-              <label className="block text-sm font-medium text-primary mb-1">Username</label>
+              <label className="block text-sm font-medium text-primary mb-1">Email</label>
               <input
                 type="text"
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary text-black"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>

@@ -7,15 +7,29 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
   const [department, setDepartment] = useState("");
   const [role, setRole] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({ username, email, password, department, role });
-    onClose();
-    setUsername("");
-    setEmail("");
-    setPassword("");
-    setDepartment("");
-    setRole("");
+
+    const userData = {
+      name:username,
+      email,
+      password,
+      role,
+      department
+    }
+    try {
+      await onSave(userData)
+      setUsername('')
+      setEmail('')
+      setPassword('')
+      setRole('')
+      setDepartment('')
+      onClose();
+    } catch (error) {
+      console.error("Form submission failed in ModalAddAdmin:", err);
+    }
+   
+    
   };
 
   if (!isOpen) return null;
@@ -27,7 +41,7 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 !text-primary">
           <div>
-            <label className="block mb-1 font-medium">Username</label>
+            <label className="block mb-1 font-medium">Name</label>
             <input
               type="text"
               placeholder="Enter username"
@@ -71,8 +85,8 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
               required
             >
               <option value="">Select Role</option>
-              <option value="creator">Creator</option>
-              <option value="approver">Approver</option>
+              <option value="admincreator">Creator</option>
+              <option value="adminapprover">Approver</option>
             </select>
           </div>
 
@@ -82,13 +96,13 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
               className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-red-700"
-              required
+            
             >
               <option value="">Select Department</option>
-              <option value="cs">Information Technology</option>
-              <option value="ba">Business Administration</option>
-              <option value="ed">Education</option>
-              <option value="eng">Engineering</option>
+              <option value="IT">Information Technology</option>
+              <option value="BA">Business Administration</option>
+              <option value="Education">Education</option>
+              <option value="Engineering">Engineering</option>
             </select>
           </div>
 

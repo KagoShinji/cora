@@ -108,7 +108,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave,isLoading,error})
               type="text"
               placeholder="Enter school"
               className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
-              required
+              
             />
             {error && (
             <p className="text-red-600 bg-red-100 border border-red-400 rounded p-2 text-sm text-center">

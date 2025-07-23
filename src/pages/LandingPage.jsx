@@ -70,7 +70,7 @@ export default function LandingPage() {
           {!submitted ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-4">
               <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-1">
-                Hello, Roca
+                Hello!
               </h1>
               <p className="text-sm text-primary mb-6">What can I help you with?</p>
               <form
@@ -80,7 +80,7 @@ export default function LandingPage() {
                 <Plus size={16} className="mr-2" />
                 <input
                   className="flex-grow bg-transparent outline-none placeholder:text-primary/50"
-                  placeholder="Ask Coby"
+                  placeholder="Ask Cora"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
@@ -109,7 +109,7 @@ export default function LandingPage() {
                 <Plus size={16} className="mr-2" />
                 <input
                   className="flex-grow bg-transparent outline-none placeholder:text-primary/50"
-                  placeholder="Ask Coby"
+                  placeholder="Ask Cora"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />

@@ -1,4 +1,16 @@
+import { useState } from "react";
+
 export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
+  const [newDepartment, setNewDepartment] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (newDepartment.trim()) {
+      onSave(newDepartment.trim());
+      setNewDepartment("");
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -8,20 +20,15 @@ export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
           Add Department
         </h2>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSave();
-            onClose();
-          }}
-          className="flex flex-col gap-4 text-primary"
-        >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-primary">
           <div>
             <label className="block mb-1 font-medium">
               Department Name <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
+              value={newDepartment}
+              onChange={(e) => setNewDepartment(e.target.value)}
               placeholder="Enter department name"
               required
               className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
@@ -31,7 +38,10 @@ export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                setNewDepartment("");
+                onClose();
+              }}
               className="!px-4 !py-2 !bg-white !text-primary !border !border-primary !rounded-md hover:!bg-primary/10 transition"
             >
               Cancel

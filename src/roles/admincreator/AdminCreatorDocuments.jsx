@@ -1,9 +1,28 @@
 import { useState } from "react";
-import SidebarAdminCreator from "../../components/SidebarAdminCreator"; // ✅ Correct component name
+import SidebarAdminCreator from "../../components/SidebarAdminCreator";
+import ModalUploadDocument from "../../components/ModalUploadDocument";
+import ModalManualEntry from "../../components/ModalManualEntry"; // ✅ Manual Entry Modal
 import { Upload, ScanLine, Pencil } from "lucide-react";
 
 function AdminCreatorDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
+
+  const handleUpload = (formData) => {
+    console.log("Uploading to AI:", {
+      file: formData.get("file"),
+      documentType: formData.get("documentType"),
+    });
+    alert("Document uploaded successfully!");
+    setShowUploadModal(false);
+  };
+
+  const handleManualSave = (manualDoc) => {
+    console.log("Manual Entry Saved:", manualDoc);
+    alert("Manual entry saved successfully!");
+    setShowManualModal(false);
+  };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -30,7 +49,10 @@ function AdminCreatorDocuments() {
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between">
             <Upload className="text-primary w-12 h-12 mb-4" />
             <h2 className="text-xl font-semibold text-primary mb-4">Upload Documents</h2>
-            <button className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition">
+            <button
+              className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition"
+              onClick={() => setShowUploadModal(true)}
+            >
               Upload
             </button>
           </div>
@@ -48,12 +70,29 @@ function AdminCreatorDocuments() {
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between">
             <Pencil className="text-primary w-12 h-12 mb-4" />
             <h2 className="text-xl font-semibold text-primary mb-4">Manual Entry</h2>
-            <button className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition">
+            <button
+              className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition"
+              onClick={() => setShowManualModal(true)}
+            >
               Create
             </button>
           </div>
         </div>
       </main>
+
+      {/* Upload Modal */}
+      <ModalUploadDocument
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onUpload={handleUpload}
+      />
+
+      {/* Manual Entry Modal */}
+      <ModalManualEntry
+        isOpen={showManualModal}
+        onClose={() => setShowManualModal(false)}
+        onSave={handleManualSave}
+      />
     </div>
   );
 }

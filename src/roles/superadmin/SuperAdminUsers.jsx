@@ -1,26 +1,24 @@
 import { useState } from "react";
 import Sidebar from "../../components/SidebarSuperAdmin";
 import ModalAddUser from "../../components/ModalAddUser";
-import {useAuthStore} from "../../stores/userStores"
-import { shallow } from "zustand/shallow";
-import { createUsers } from "../../api/api";
+import { useAuthStore } from "../../stores/userStores";
 
 function SuperAdminUsers() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState(""); // 👈 New role filter state
   const [showAddModal, setShowAddModal] = useState(false);
- 
 
   const signup = useAuthStore((state) => state.signup);
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
 
-  const handleAddUser = async(userData) => {
-    await signup(userData)
-    const {error} = useAuthStore.getState();
-    if(!error){
+  const handleAddUser = async (userData) => {
+    await signup(userData);
+    const { error } = useAuthStore.getState();
+    if (!error) {
       alert("Account created successfully!");
-    }else{
+    } else {
       alert("Failed to create account: " + error);
     }
   };
@@ -53,47 +51,62 @@ function SuperAdminUsers() {
           </button>
         </div>
 
-        {/* Search bar */}
-        <div className="mb-4">
+        {/* Search & Filter */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          {/* Search bar */}
           <input
             type="text"
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border border-gray-300 rounded px-4 py-2 w-full max-w-sm"
+            className="border border-primary !text-primary rounded px-4 py-2 w-full sm:max-w-sm"
           />
+
+          {/* Role filter dropdown */}
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="border !border-primary !text-primary rounded px-4 py-2 w-full sm:max-w-xs"
+          >
+            <option value="">All Roles</option>
+            <option value="superadmin">Super Admin</option>
+            <option value="co-superadmin">Co Super Admin</option>
+          </select>
         </div>
 
         {/* Table */}
         <div className="bg-white shadow-md rounded-lg overflow-auto">
           <table className="min-w-full text-sm text-black">
             <thead className="bg-primary text-white">
-              <tr>
-                <th className="p-4 text-center">User</th>
-                <th className="p-4 text-center">Email</th>
-                <th className="p-4 text-center">School</th>
-                <th className="p-4 text-center">Timestamp</th>
-                <th className="p-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="hover:bg-gray-100 border-t border-gray-300">
-                <td className="p-4 text-center">Coby</td>
-                <td className="p-4 text-center">coby@gmail.com</td>
-                <td className="p-4 text-center">Southwestern University PHINMA</td>
-                <td className="p-4 text-center">March 23, 2025 10:42 AM</td>
-                <td className="p-4">
-                  <div className="flex justify-center gap-3">
-                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
-                      Edit
-                    </button>
-                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
+  <tr>
+    <th className="p-4 text-center">User</th>
+    <th className="p-4 text-center">Email</th>
+    <th className="p-4 text-center">School</th>
+    <th className="p-4 text-center">Role</th>
+    <th className="p-4 text-center">Timestamp</th>
+    <th className="p-4 text-center">Actions</th>
+  </tr>
+</thead>
+<tbody>
+  {/* Example row - replace with dynamic content */}
+  <tr className="hover:bg-gray-100 border-t border-gray-300">
+    <td className="p-4 text-center">Coby</td>
+    <td className="p-4 text-center">coby@gmail.com</td>
+    <td className="p-4 text-center">Southwestern University PHINMA</td>
+    <td className="p-4 text-center">Super Admin</td> {/* 👈 New Role Column */}
+    <td className="p-4 text-center">March 23, 2025 10:42 AM</td>
+    <td className="p-4">
+      <div className="flex justify-center gap-3">
+        <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+          Edit
+        </button>
+        <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+          Delete
+        </button>
+      </div>
+    </td>
+  </tr>
+</tbody>
           </table>
         </div>
 

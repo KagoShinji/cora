@@ -1,6 +1,6 @@
 import { useState } from "react";
 import SidebarCoSuperAdmin from "../../components/SidebarCoSuperAdmin";
-import ModalAddDepartment from "../../components/ModalAddDepartment"; // <-- Import modal
+import ModalAddDepartment from "../../components/ModalAddDepartment";
 
 function CoSuperAdminDepartments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -9,17 +9,8 @@ function CoSuperAdminDepartments() {
   const [departments, setDepartments] = useState([]);
 
   const handleSaveDepartment = (name) => {
-    const timestamp = new Date().toLocaleString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
     setDepartments((prev) => [
-      { name, timestamp },
+      { name },
       ...prev,
     ]);
   };
@@ -64,7 +55,6 @@ function CoSuperAdminDepartments() {
             <thead className="bg-primary text-white">
               <tr>
                 <th className="p-4 text-center">Department</th>
-                <th className="p-4 text-center">Timestamp</th>
                 <th className="p-4 text-center">Actions</th>
               </tr>
             </thead>
@@ -73,7 +63,6 @@ function CoSuperAdminDepartments() {
                 filteredDepartments.map((dept, index) => (
                   <tr key={index} className="hover:bg-gray-100 border-t border-gray-300">
                     <td className="p-4 text-center">{dept.name}</td>
-                    <td className="p-4 text-center">{dept.timestamp}</td>
                     <td className="p-4 flex justify-center gap-2">
                       <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary transition-colors">Edit</button>
                       <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary transition-colors">Delete</button>
@@ -82,7 +71,7 @@ function CoSuperAdminDepartments() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className="p-4 text-center text-gray-500">
+                  <td colSpan="2" className="p-4 text-center text-gray-500">
                     No departments found.
                   </td>
                 </tr>

@@ -45,3 +45,23 @@ export const loginUser = async (userData) => {
         throw error
     }
 }
+
+export const uploadDocument = async (formData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to upload document");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Upload failed:", error);
+    throw error;
+  }
+};

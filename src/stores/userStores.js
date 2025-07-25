@@ -1,5 +1,5 @@
 import {create} from 'zustand'
-import { createUsers,loginUser } from '../api/api'
+import { createUsers,loginUser,uploadDocument } from '../api/api'
 
 export const useAuthStore = create((set)=>({
     user:null,
@@ -51,6 +51,25 @@ export const useAuthStore = create((set)=>({
             })
         }
 
+    },
+    createDocument: async (file, title, notes) => {
+        set({ isLoading: true, error: null });
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("title", title);
+            formData.append("notes", notes);
+
+            const uploaded = await uploadDocument(formData); // ✅ good now
+            set({ isLoading: false });
+            return uploaded;
+        } catch (err) {
+            set({
+            isLoading: false,
+            error: err.message || "Document upload failed",
+            });
+            throw err;
     }
+}
 }))
 

@@ -3,20 +3,27 @@ import SidebarAdminCreator from "../../components/SidebarAdminCreator";
 import ModalUploadDocument from "../../components/ModalUploadDocument";
 import ModalManualEntry from "../../components/ModalManualEntry"; // ✅ Manual Entry Modal
 import { Upload, ScanLine, Pencil } from "lucide-react";
+import { useAuthStore } from "../../stores/userStores";
 
 function AdminCreatorDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
 
-  const handleUpload = (formData) => {
-    console.log("Uploading to AI:", {
-      file: formData.get("file"),
-      documentType: formData.get("documentType"),
-    });
+  const handleUpload = async (formData) => {
+  try {
+    const file = formData.get("file");
+    const title = formData.get("title");
+    const notes = formData.get("notes");
+
+    await useAuthStore.getState().createDocument(file, title, notes);
+
     alert("Document uploaded successfully!");
     setShowUploadModal(false);
-  };
+  } catch (error) {
+    alert("Upload failed: " + error.message);
+  }
+};
 
   const handleManualSave = (manualDoc) => {
     console.log("Manual Entry Saved:", manualDoc);

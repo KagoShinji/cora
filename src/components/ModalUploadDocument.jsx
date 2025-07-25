@@ -7,7 +7,7 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
   const [notes, setNotes] = useState("");
   const [showTypeModal, setShowTypeModal] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
 
     if (!file || !docType) {
@@ -17,11 +17,12 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("type", docType);
+    formData.append("title", docType);
     formData.append("notes", notes);
 
-    onUpload(formData);
+    await onUpload(formData)
     onClose();
+    
     setFile(null);
     setDocType("");
     setNotes("");

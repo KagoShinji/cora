@@ -7,6 +7,7 @@ export const useAuthStore = create((set)=>({
     error:null,
     isAuthenticated:false,
     role:null,
+    user:null,
     departments:[],
 
 
@@ -50,7 +51,8 @@ export const useAuthStore = create((set)=>({
                 isLoading:false,
                 error:null,
                 isAuthenticated:true,
-                role:login.role
+                role:login.role,
+                user:login.name
                 
             })
             return login

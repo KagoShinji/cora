@@ -1,10 +1,13 @@
 import { Home, Users, ClipboardList, Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuthStore } from "../stores/userStores";
 
 function SidebarSuperAdmin({ isOpen, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
+
+  const user = useAuthStore((state)=>state.user)
 
   const handleLogout = () => {
     navigate("/login");
@@ -55,7 +58,7 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
               onClick={() => setShowLogoutModal(true)}
               className="bg-white text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
             >
-              <div className="font-semibold">Raven De Leon</div>
+              <div className="font-semibold uppercase">{user}</div>
               <div className="text-sm">Super Admin</div>
             </div>
           </div>

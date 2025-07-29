@@ -25,6 +25,15 @@ export const createUsers = async (userData) => {
     }
 };
 
+export const getUser = async () => {
+    const response = await fetch(`${API_BASE_URL}/users`)
+    if(!response.ok){
+        throw new Error("Failed to fetch users");
+    }
+    return await response.json();
+    
+}
+
 export const loginUser = async (userData) => {
     try {
         const response = await fetch(`${API_BASE_URL}/login`,{
@@ -45,7 +54,41 @@ export const loginUser = async (userData) => {
         throw error
     }
 }
+//department
+export const createDepartment = async (departmentData) =>{
+    try{
+        console.log("🔍 Sending userData:", departmentData);
+        const response = await fetch(`${API_BASE_URL}/add-department`,{
+            method:"POST",
+            headers:{
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify(departmentData)
+        })
+        if(!response.ok){
+            const errorData = await  response.json();
+            throw new Error(errorData.detail || 'Something wrong creating department')
+        }
+        const data = await response.json()
+        return data
+        
+    }
+    catch(error){
+        console.error("Failed to create:",error)
+        throw error
+    }
+}
 
+export const fetchDepartment = async () => {
+    const response = await fetch(`${API_BASE_URL}/department`)
+    if(!response.ok){
+        throw new Error("Failed to fetch departments");
+    }
+    return await response.json();
+}
+
+
+//upload documents
 export const uploadDocument = async (formData) => {
   try {
     const response = await fetch(`${API_BASE_URL}/upload`, {

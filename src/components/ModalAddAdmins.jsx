@@ -1,14 +1,18 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import ModalAddDepartment from "./ModalAddDepartment";
+import { useAuthStore } from "../stores/userStores";
 
 export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // ✅ New state
+  const [confirmPassword, setConfirmPassword] = useState(""); 
   const [department, setDepartment] = useState("");
   const [role, setRole] = useState("");
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
+  const departments = useAuthStore((state) => state.departments)
+  const getDepartment = useAuthStore((state) => state.getDepartment)
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,8 +44,13 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
     }
   };
 
-  const handleNewDepartment = (newDept) => {
-    setDepartment(newDept);
+  useEffect(() => {
+  getDepartment();
+}, []);
+
+  const handleNewDepartment = async (newDept) => {
+    await getDepartment();    
+    setDepartment(newDept);  
     setIsDeptModalOpen(false);
   };
 
@@ -126,10 +135,11 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
                   className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
                 >
                   <option value="">Select Department</option>
-                  <option value="IT">Information Technology</option>
-                  <option value="BA">Business Administration</option>
-                  <option value="Education">Education</option>
-                  <option value="Engineering">Engineering</option>
+                  {departments.map((dept)=>(
+                    <option key={dept.id} value={dept.department_name}>
+                      {dept.department_name}
+                    </option>
+                  ))}
                 </select>
                 <button
                   type="button"

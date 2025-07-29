@@ -8,7 +8,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
-  const [school, setSchool] = useState(""); // 👈 Add school state
+  const [school, setSchool] = useState(""); 
   const [localError, setLocalError] = useState("");
 
   const handleSubmit = async (e) => {
@@ -24,7 +24,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
       email,
       password,
       role,
-      ...(role === "co-superadmin" && { school }), // Only include school if needed
+      ...(role === "co-superadmin" && { school }),
     };
 
     try {
@@ -123,6 +123,8 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
           </div>
 
           {/* Show school input only when Co-Super Admin is selected */}
+          
+          {/*
           {role === "co-superadmin" && (
             <div>
               <label className="block mb-1 font-medium">
@@ -138,6 +140,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
               />
             </div>
           )}
+            */}
 
           {(localError || error) && (
             <p className="text-red-600 bg-red-100 border border-red-400 rounded p-2 text-sm text-center">

@@ -3,7 +3,7 @@ import SidebarAdminCreator from "../../components/SidebarAdminCreator";
 import ModalUploadDocument from "../../components/ModalUploadDocument";
 import ModalManualEntry from "../../components/ModalManualEntry"; // ✅ Manual Entry Modal
 import { Upload, ScanLine, Pencil } from "lucide-react";
-import { useAuthStore } from "../../stores/userStores";
+import { useDocumentStore } from "../../stores/useDocumentStore";
 
 function AdminCreatorDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -16,7 +16,7 @@ function AdminCreatorDocuments() {
     const title = formData.get("title");
     const notes = formData.get("notes");
 
-    await useAuthStore.getState().createDocument(file, title, notes);
+    await useDocumentStore.getState().createDocument(file, title, notes);
 
     alert("Document uploaded successfully!");
     setShowUploadModal(false);

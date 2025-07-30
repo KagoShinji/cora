@@ -57,7 +57,6 @@ export const loginUser = async (userData) => {
 //department
 export const createDepartment = async (departmentData) =>{
     try{
-        console.log("🔍 Sending userData:", departmentData);
         const response = await fetch(`${API_BASE_URL}/add-department`,{
             method:"POST",
             headers:{
@@ -96,14 +95,14 @@ export const deleteDepartment = async (department_id) => {
         const response = await fetch(`${API_BASE_URL}/delete-department/${department_id}`,{
             method:"DELETE",
             headers:{
-                'Content-type':'json/application'
+                'Content-Type':'application/json'
             },
         })
         if(response.ok){
             console.log(`Department with an ID of ${department_id} is successfully deleted`)
         }else{
-            const error = json.response()
-            throw error
+            const errorData = await response.json();
+            throw new Error(errorData.detail || "Failed to delete department");
         }
 
     } catch (error) {
@@ -115,9 +114,13 @@ export const deleteDepartment = async (department_id) => {
 
 //upload documents
 export const uploadDocument = async (formData) => {
-  try { 
+  try {
+    const token = localStorage.getItem("access_token");
     const response = await fetch(`${API_BASE_URL}/upload`, {
       method: "POST",
+      headers:{
+        Authorization: `Bearer ${token}`
+      },
       body: formData,
     });
 
@@ -130,6 +133,46 @@ export const uploadDocument = async (formData) => {
     return data;
   } catch (error) {
     console.error("Upload failed:", error);
+    throw error;
+  }
+};
+
+export const fetchDocument = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/documents`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch documents");
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching documents:", error);
+    throw error;
+  }
+};
+
+export const viewDocument = async (docId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/documents/${docId}/view`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`, 
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch document");
+    }
+
+    return await response.blob();
+  } catch (error) {
+    console.error("Error viewing document:", error);
     throw error;
   }
 };

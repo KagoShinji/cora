@@ -6,10 +6,12 @@ import { useAuthStore } from "../stores/userStores";
 function SidebarSuperAdmin({ isOpen, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
-
   const user = useAuthStore((state)=>state.user)
 
-  const handleLogout = () => {
+  const signout = useAuthStore((state)=>state.signout)
+
+  const handleLogout = async () => {
+    await signout()
     navigate("/login");
   };
 

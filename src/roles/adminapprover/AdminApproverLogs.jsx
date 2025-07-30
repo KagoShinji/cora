@@ -47,11 +47,15 @@ function AdminApproverLogs() {
               </thead>
               <tbody>
                 <tr className="hover:bg-gray-100 border-t border-gray-300">
-                  <td className="p-4 text-center">Approved document submission</td>
+                  <td className="p-4 text-center">
+                    Approved document submission
+                  </td>
                   <td className="p-4 text-center">July 15, 2025 10:45 AM</td>
                 </tr>
                 <tr className="hover:bg-gray-100 border-t border-gray-300">
-                  <td className="p-4 text-center">Declined a document request</td>
+                  <td className="p-4 text-center">
+                    Declined a document request
+                  </td>
                   <td className="p-4 text-center">July 14, 2025 03:22 PM</td>
                 </tr>
               </tbody>

@@ -1,23 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SidebarCoSuperAdmin from "../../components/SidebarCoSuperAdmin";
 import ModalAddDepartment from "../../components/ModalAddDepartment";
+import { useAuthStore } from "../../stores/userStores";
 
 function CoSuperAdminDepartments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [departments, setDepartments] = useState([]);
+  const departments = useAuthStore((state)=>state.departments)
+  const fetchDepartment = useAuthStore((state)=>state.getDepartment)
 
-  const handleSaveDepartment = (name) => {
-    setDepartments((prev) => [
-      { name },
-      ...prev,
-    ]);
-  };
+  useEffect(()=>{
+    fetchDepartment()
+  },[])
 
-  const filteredDepartments = departments.filter((dept) =>
-    dept.name.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -59,10 +55,10 @@ function CoSuperAdminDepartments() {
               </tr>
             </thead>
             <tbody>
-              {filteredDepartments.length > 0 ? (
-                filteredDepartments.map((dept, index) => (
-                  <tr key={index} className="hover:bg-gray-100 border-t border-gray-300">
-                    <td className="p-4 text-center">{dept.name}</td>
+              {departments.length > 0 ? (
+                departments.map((dept) => (
+                  <tr key={dept.id} className="hover:bg-gray-100 border-t border-gray-300">
+                    <td className="p-4 text-center">{dept.department_name}</td>
                     <td className="p-4 flex justify-center gap-2">
                       <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary transition-colors">Edit</button>
                       <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary transition-colors">Delete</button>

@@ -19,7 +19,7 @@ function SuperAdminUsers() {
     const { error } = useAuthStore.getState();
     if (!error) {
       alert("Account created successfully!");
-    } else {
+    } else {  
       alert("Failed to create account: " + error);
     }
   };
@@ -27,7 +27,7 @@ function SuperAdminUsers() {
   useEffect(() => {
   fetchUsers();
 }, []);
-console.log("Users from store:", users);
+
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Sidebar */}
@@ -95,10 +95,10 @@ console.log("Users from store:", users);
 </thead>
       <tbody>
         {users
-          .filter((user) => user.role?.toLowerCase() === "co-superadmin")
+          .filter((user) => user.role?.toLowerCase() === "co-superadmin" || "superadmin")
           .map((user) => (
             <tr key={user.id} className="hover:bg-gray-100 border-t border-gray-300">
-              <td className="p-4 text-center">Hello</td>
+              <td className="p-4 text-center">{user.name}</td>
               <td className="p-4 text-center">{user.email}</td>
               {/*<td className="p-4 text-center">{user.school}</td>*/}
               <td className="p-4 text-center">{user.role}</td>

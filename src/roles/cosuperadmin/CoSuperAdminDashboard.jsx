@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../../components/SidebarCoSuperAdmin";
+import { useAuthStore } from "../../stores/userStores";
 
 function CoSuperAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const departments = useAuthStore((state)=>state.departments)
+  const fetchDepartment = useAuthStore((state)=> state.getDepartment)
+
+  useEffect(()=>{
+    fetchDepartment();
+  },[])
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -74,9 +81,10 @@ function CoSuperAdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              <tr className="hover:bg-gray-100">
+              {departments.map((dept)=>(
+                <tr key={dept.id} className="hover:bg-gray-100">
                 <td className="p-4 text-black text-center align-middle">
-                  College of Engineering
+                  {dept.department_name}
                 </td>
                 <td className="p-4 text-black text-center align-middle">
                   March 23, 2025 10:42 AM
@@ -92,6 +100,7 @@ function CoSuperAdminDashboard() {
                   </div>
                 </td>
               </tr>
+              ))}
               {/* Add more rows as needed */}
             </tbody>
           </table>

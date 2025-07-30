@@ -1,5 +1,5 @@
 import {create} from 'zustand'
-import { createDepartment, createUsers,fetchDepartment,getUser,loginUser,uploadDocument } from '../api/api'
+import { createDepartment, createUsers,deleteDepartment,fetchDepartment,getUser,loginUser,uploadDocument } from '../api/api'
 
 export const useAuthStore = create((set)=>({
     users:[],
@@ -16,6 +16,7 @@ export const useAuthStore = create((set)=>({
         set({isLoading:true,error:null,})
         try{
             const newUser = await createUsers(userData);
+            console.log(newUser)
             set({
                 isLoading:false,
                 error:null
@@ -35,9 +36,9 @@ export const useAuthStore = create((set)=>({
         set({ error: null });
         try {
             const users = await getUser();
-            set({ users });
+            set({users });
         } catch (error) {
-            set({ error: "Failed to fetch users" });
+            set({error: "Failed to fetch users" });
             console.error("Error fetching users:", error);
         }
     },
@@ -46,7 +47,6 @@ export const useAuthStore = create((set)=>({
         set({isLoading:true,error:null})
         try {
             const login  = await loginUser(userData)
-            console.log(userData)
             set({
                 isLoading:false,
                 error:null,
@@ -84,6 +84,7 @@ export const useAuthStore = create((set)=>({
         try {
             const departments = await fetchDepartment();
             set({ departments, error:null});
+          
         } catch (err) {
             console.error("Error fetching departments", err);
             set({
@@ -92,7 +93,23 @@ export const useAuthStore = create((set)=>({
             });
         }
     },
-
+    deleteDept: async(department_id) =>{
+        set({isLoading:true,error:null})
+        try {
+        const delete_dept = await deleteDepartment(department_id)
+        
+        if(delete_dept){
+            console.log("Department deleted successfully")
+            set({isLoading:false,error:null})
+        }else{
+            console.error("Failed to delete department.");
+            set({ isLoading: false, error: "Failed to delete department." });
+        }
+        } catch (error) {
+            console.error("Network error deleting department:", error);
+            set({ isLoading: false, error: "Network error. Please try again." });
+        }
+    },
 
     //Creating documents
     createDocument: async (file, title, notes) => {

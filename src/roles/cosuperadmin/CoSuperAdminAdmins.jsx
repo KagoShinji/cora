@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "../../components/SidebarCoSuperAdmin";
 import ModalAddAdmins from "../../components/ModalAddAdmins";
 import { useAuthStore } from "../../stores/userStores";
@@ -7,6 +7,10 @@ function CoSuperAdminAdmins() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const fetchUsers = useAuthStore((state)=>state.fetchUsers)
+  const users = useAuthStore((state)=>state.users)
+
+
 
   //authstore 
   const signup = useAuthStore((state) => state.signup);
@@ -14,14 +18,6 @@ function CoSuperAdminAdmins() {
   const error = useAuthStore((state) => state.error);
   
 
-  const [adminList, setAdminList] = useState([
-    {
-      name: "Marisse",
-      timestamp: "March 23, 2025 10:42 AM",
-      role: "Approver",
-      department: "Nursing",
-    },
-  ]);
 
   const handleSaveAdmin = async(userData) =>{
     await signup(userData)
@@ -33,9 +29,10 @@ function CoSuperAdminAdmins() {
     }
   }
 
-  const filteredAdmins = adminList.filter((admin) =>
-    admin.name.toLowerCase().includes(search.toLowerCase())
-  );
+
+  useEffect(()=>{
+    fetchUsers();
+  },[]);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -82,22 +79,22 @@ function CoSuperAdminAdmins() {
             <thead className="bg-primary text-white">
               <tr>
                 <th className="p-4 text-center">Name</th>
-                <th className="p-4 text-center">Timestamp</th>
+                {/*<th className="p-4 text-center">Timestamp</th>*/}
                 <th className="p-4 text-center">Role</th>
                 <th className="p-4 text-center">Department</th>
                 <th className="p-4 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredAdmins.map((admin, index) => (
+              {users.filter((user)=> user.role?.toLowerCase() === "admincreator").map((user)=>(
                 <tr
-                  key={index}
+                  key={user.id}
                   className="hover:bg-gray-100 border-t border-gray-300"
                 >
-                  <td className="p-4 text-center">{admin.name}</td>
-                  <td className="p-4 text-center">{admin.timestamp}</td>
-                  <td className="p-4 text-center">{admin.role}</td>
-                  <td className="p-4 text-center">{admin.department}</td>
+                  <td className="p-4 text-center uppercase">{user.name}</td>
+                 {/*} <td className="p-4 text-center">{admin.timestamp}</td>*/}
+                  <td className="p-4 text-center uppercase">{user.role}</td>
+                  <td className="p-4 text-center">{user.department}</td>
                   <td className="p-4">
                     <div className="flex justify-center gap-3">
                       <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary">
@@ -110,13 +107,6 @@ function CoSuperAdminAdmins() {
                   </td>
                 </tr>
               ))}
-              {filteredAdmins.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="p-4 text-center text-gray-500">
-                    No admin found.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>

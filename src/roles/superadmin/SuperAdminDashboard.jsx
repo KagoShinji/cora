@@ -1,9 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../../components/SidebarSuperAdmin";
+import { useAuthStore } from "../../stores/userStores";
+
 
 function SuperAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const users = useAuthStore((state)=>state.users)
+  const fetchUsers = useAuthStore((state)=> state.fetchUsers)
+
+
+  useEffect(()=>{
+    fetchUsers()
+  },[]);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -48,21 +57,27 @@ function SuperAdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              <tr className="hover:bg-gray-100">
-                <td className="p-4 text-black text-center align-middle">Coby</td>
-                <td className="p-4 text-black text-center align-middle">March 23, 2025 10:42 AM</td>
-                <td className="p-4 text-black text-center align-middle">Creator</td>
-                <td className="p-4 text-center align-middle">
-                  <div className="flex justify-center gap-3">
-                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
-                      Edit
-                    </button>
-                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              {users
+              .filter((user) => user.role?.toLowerCase() === "co-superadmin" || user.role?.toLowerCase() === "superadmin")
+              .map((user) => (
+                <tr key={user.id} className="hover:bg-gray-100 border-t border-gray-300">
+                  <td className="p-4 text-center text-black">{user.name}</td>
+                  <td className="p-4 text-center text-black">{user.email}</td>
+                  {/*<td className="p-4 text-center">{user.school}</td>*/}
+                  <td className="p-4 text-center text-black">{user.role}</td>
+                  {/*<td className="p-4 text-center">{user.created_at}</td>*/}
+                  <td className="p-4 text-center text-black">
+                    <div className="flex justify-center gap-3">
+                      <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                        Edit
+                      </button>
+                      <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
               {/* You can map more rows here dynamically */}
             </tbody>
           </table>

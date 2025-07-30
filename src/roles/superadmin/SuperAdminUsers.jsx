@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import Sidebar from "../../components/SidebarSuperAdmin";
 import ModalAddUser from "../../components/ModalAddUser";
 import { useAuthStore } from "../../stores/userStores";
@@ -6,12 +6,13 @@ import { useAuthStore } from "../../stores/userStores";
 function SuperAdminUsers() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState(""); // 👈 New role filter state
+  const [roleFilter, setRoleFilter] = useState(""); 
   const [showAddModal, setShowAddModal] = useState(false);
+  const fetchUsers = useAuthStore((state) => state.fetchUsers);
+
+  const users = useAuthStore((state) => state.users);
 
   const signup = useAuthStore((state) => state.signup);
-  const isLoading = useAuthStore((state) => state.isLoading);
-  const error = useAuthStore((state) => state.error);
 
   const handleAddUser = async (userData) => {
     await signup(userData);
@@ -23,6 +24,10 @@ function SuperAdminUsers() {
     }
   };
 
+  useEffect(() => {
+  fetchUsers();
+}, []);
+console.log("Users from store:", users);
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Sidebar */}
@@ -62,7 +67,7 @@ function SuperAdminUsers() {
             className="border border-primary !text-primary rounded px-4 py-2 w-full sm:max-w-sm"
           />
 
-          {/* Role filter dropdown */}
+          {/* Role filter dropdown 
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
@@ -72,6 +77,7 @@ function SuperAdminUsers() {
             <option value="superadmin">Super Admin</option>
             <option value="co-superadmin">Co Super Admin</option>
           </select>
+          */}
         </div>
 
         {/* Table */}
@@ -81,32 +87,35 @@ function SuperAdminUsers() {
   <tr>
     <th className="p-4 text-center">User</th>
     <th className="p-4 text-center">Email</th>
-    <th className="p-4 text-center">School</th>
+    {/*<th className="p-4 text-center">School</th>*/}
     <th className="p-4 text-center">Role</th>
-    <th className="p-4 text-center">Timestamp</th>
+    {/*<th className="p-4 text-center">Timestamp</th>*/}
     <th className="p-4 text-center">Actions</th>
   </tr>
 </thead>
-<tbody>
-  {/* Example row - replace with dynamic content */}
-  <tr className="hover:bg-gray-100 border-t border-gray-300">
-    <td className="p-4 text-center">Coby</td>
-    <td className="p-4 text-center">coby@gmail.com</td>
-    <td className="p-4 text-center">Southwestern University PHINMA</td>
-    <td className="p-4 text-center">Super Admin</td> {/* 👈 New Role Column */}
-    <td className="p-4 text-center">March 23, 2025 10:42 AM</td>
-    <td className="p-4">
-      <div className="flex justify-center gap-3">
-        <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
-          Edit
-        </button>
-        <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
-          Delete
-        </button>
-      </div>
-    </td>
-  </tr>
-</tbody>
+      <tbody>
+        {users
+          .filter((user) => user.role?.toLowerCase() === "co-superadmin")
+          .map((user) => (
+            <tr key={user.id} className="hover:bg-gray-100 border-t border-gray-300">
+              <td className="p-4 text-center">Hello</td>
+              <td className="p-4 text-center">{user.email}</td>
+              {/*<td className="p-4 text-center">{user.school}</td>*/}
+              <td className="p-4 text-center">{user.role}</td>
+              {/*<td className="p-4 text-center">{user.created_at}</td>*/}
+              <td className="p-4 text-center">
+                <div className="flex justify-center gap-3">
+                  <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                    Edit
+                  </button>
+                  <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+      </tbody>
           </table>
         </div>
 

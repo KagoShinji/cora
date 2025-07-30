@@ -1,12 +1,14 @@
 import {create} from 'zustand'
-import { createUsers,loginUser,uploadDocument } from '../api/api'
+import { createDepartment, createUsers,fetchDepartment,getUser,loginUser,uploadDocument } from '../api/api'
 
 export const useAuthStore = create((set)=>({
-    user:null,
+    users:[],
     isLoading:false,
     error:null,
     isAuthenticated:false,
     role:null,
+    user:null,
+    departments:[],
 
 
 
@@ -29,6 +31,17 @@ export const useAuthStore = create((set)=>({
         }
     },
 
+    fetchUsers: async () => {
+        set({ error: null });
+        try {
+            const users = await getUser();
+            set({ users });
+        } catch (error) {
+            set({ error: "Failed to fetch users" });
+            console.error("Error fetching users:", error);
+        }
+    },
+
     signin: async(userData) => {
         set({isLoading:true,error:null})
         try {
@@ -38,7 +51,8 @@ export const useAuthStore = create((set)=>({
                 isLoading:false,
                 error:null,
                 isAuthenticated:true,
-                role:login.role
+                role:login.role,
+                user:login.name
                 
             })
             return login
@@ -52,6 +66,35 @@ export const useAuthStore = create((set)=>({
         }
 
     },
+
+
+    //Add and fetchdepartment
+    addDepartment: async(departmentData) => {
+        set({isLoading:true,error:null})
+        try{
+            const department = await createDepartment(departmentData)
+            return department
+        }catch(err){
+            console.error('AddDepartment error',err)
+            set({isLoading:false,error:err.message || 'Error creating department'})
+        }
+    },
+    getDepartment: async () => {
+        set({error: null });
+        try {
+            const departments = await fetchDepartment();
+            set({ departments, error:null});
+        } catch (err) {
+            console.error("Error fetching departments", err);
+            set({
+            error: err.message || "Failed to fetch departments",
+            isLoading: false,
+            });
+        }
+    },
+
+
+    //Creating documents
     createDocument: async (file, title, notes) => {
         set({ isLoading: true, error: null });
         try {
@@ -60,7 +103,7 @@ export const useAuthStore = create((set)=>({
             formData.append("title", title);
             formData.append("notes", notes);
 
-            const uploaded = await uploadDocument(formData); // ✅ good now
+            const uploaded = await uploadDocument(formData);
             set({ isLoading: false });
             return uploaded;
         } catch (err) {

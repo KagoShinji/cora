@@ -1,14 +1,28 @@
 import { useState } from "react";
+import { useAuthStore } from "../stores/userStores";
 
 export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
   const [newDepartment, setNewDepartment] = useState("");
 
-  const handleSubmit = (e) => {
+  const addDepartment = useAuthStore((state)=>state.addDepartment)
+  const getDepartment = useAuthStore((state) => state.getDepartment); 
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (newDepartment.trim()) {
-      onSave(newDepartment.trim());
-      setNewDepartment("");
+
+    try {
+      await addDepartment({department_name: newDepartment})
+      await getDepartment();
+      alert("Department created succesfully")
+      onSave(newDepartment); 
+      setNewDepartment('')
+      onClose()
+    } catch (err) {
+      console.error("Failed to create department")
+      throw err
     }
+    
   };
 
   if (!isOpen) return null;

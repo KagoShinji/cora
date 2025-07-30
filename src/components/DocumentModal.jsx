@@ -1,4 +1,3 @@
-// components/DocumentModal.jsx
 export default function DocumentModal({ document, onClose, onConfirm, onDelete, remarks, setRemarks }) {
   if (!document) return null;
 
@@ -54,15 +53,15 @@ export default function DocumentModal({ document, onClose, onConfirm, onDelete, 
         )}
 
         {(document.status === "completed" || document.status === "rejected") && (
-  <div className="flex justify-center">
-    <button
-      onClick={onClose}
-      className="px-4 py-2 !bg-primary text-white rounded-md hover:bg-primary/90 transition"
-    >
-      Close
-    </button>
-  </div>
-)}
+          <div className="flex justify-center">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 !bg-primary text-white rounded-md hover:bg-primary/90 transition"
+            >
+              Close
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

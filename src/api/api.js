@@ -115,7 +115,7 @@ export const deleteDepartment = async (department_id) => {
 
 //upload documents
 export const uploadDocument = async (formData) => {
-  try {
+  try { 
     const response = await fetch(`${API_BASE_URL}/upload`, {
       method: "POST",
       body: formData,

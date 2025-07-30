@@ -15,7 +15,7 @@ import AdminCreatorLogs from "./roles/admincreator/AdminCreatorLogs";
 import AdminApproverDashboard from "./roles/adminapprover/AdminApproverDashboard";
 import AdminApproverDocuments from "./roles/adminapprover/AdminApproverDocuments";
 import AdminApproverLogs from "./roles/adminapprover/AdminApproverLogs";
-
+import UserChat from "./pages/user/UserChat";
 
 function App() {
   return (
@@ -37,6 +37,7 @@ function App() {
         <Route path="/adminapprover" element={<AdminApproverDashboard />} />
         <Route path="/adminapprover/documents" element={<AdminApproverDocuments />} />
         <Route path="/adminapprover/logs" element={<AdminApproverLogs />} />
+        <Route path="/user/chat" element={<UserChat />} />
       </Routes>
     </Router>
   );

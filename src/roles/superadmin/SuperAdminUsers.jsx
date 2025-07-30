@@ -2,6 +2,10 @@ import { useState,useEffect } from "react";
 import Sidebar from "../../components/SidebarSuperAdmin";
 import ModalAddUser from "../../components/ModalAddUser";
 import { useAuthStore } from "../../stores/userStores";
+// NEW: import the edit modal
+import ModalEditUser from "../../components/ModalEditUser";
+// NEW: import the global delete modal
+import ModalConfirmDelete from "../../components/ModalConfirmDelete";
 
 function SuperAdminUsers() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -14,6 +18,18 @@ function SuperAdminUsers() {
 
   const signup = useAuthStore((state) => state.signup);
 
+  // NEW: edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const updateUser = useAuthStore((state) => state.updateUser); // assumes this exists
+
+  // NEW: delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const deleteUser = useAuthStore((state) => state.deleteUser); // assumes this exists
+
   const handleAddUser = async (userData) => {
     await signup(userData);
     const { error } = useAuthStore.getState();
@@ -21,6 +37,58 @@ function SuperAdminUsers() {
       alert("Account created successfully!");
     } else {  
       alert("Failed to create account: " + error);
+    }
+  };
+
+  // NEW: open edit modal with selected user
+  const handleEditClick = (user) => {
+    setEditingUser(user);
+    setShowEditModal(true);
+  };
+
+  // NEW: save edits via store
+  const handleUpdateUser = async (id, data) => {
+    await updateUser(id, data);
+    const { error } = useAuthStore.getState();
+    if (!error) {
+      alert("User updated successfully!");
+      setShowEditModal(false);
+      setEditingUser(null);
+      // optional: refetch if your store doesn't update locally
+      // await fetchUsers();
+    } else {
+      alert("Failed to update user: " + error);
+      throw new Error(error);
+    }
+  };
+
+  // NEW: open delete modal
+  const handleDeleteClick = (user) => {
+    setDeletingUser(user);
+    setDeleteError("");
+    setShowDeleteModal(true);
+  };
+
+  // NEW: confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deletingUser) return;
+    try {
+      setIsDeleting(true);
+      setDeleteError("");
+      await deleteUser(deletingUser.id);
+      const { error } = useAuthStore.getState();
+      if (error) throw new Error(error);
+
+      // optional: refetch if your store doesn't update locally
+      // await fetchUsers();
+
+      setShowDeleteModal(false);
+      setDeletingUser(null);
+      alert("User deleted successfully!");
+    } catch (err) {
+      setDeleteError(err?.message || "Failed to delete user.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -105,10 +173,16 @@ function SuperAdminUsers() {
               {/*<td className="p-4 text-center">{user.created_at}</td>*/}
               <td className="p-4 text-center">
                 <div className="flex justify-center gap-3">
-                  <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                  <button
+                    className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                    onClick={() => handleEditClick(user)} // NEW
+                  >
                     Edit
                   </button>
-                  <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                  <button
+                    className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                    onClick={() => handleDeleteClick(user)} // NEW
+                  >
                     Delete
                   </button>
                 </div>
@@ -124,6 +198,29 @@ function SuperAdminUsers() {
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           onSave={handleAddUser}
+        />
+
+        {/* NEW: Edit User Modal */}
+        <ModalEditUser
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingUser(null);
+          }}
+          onSave={handleUpdateUser}
+          user={editingUser}
+        />
+
+        {/* NEW: Delete Confirmation Modal */}
+        <ModalConfirmDelete
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingUser(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          isLoading={isDeleting}
+          error={deleteError}
         />
       </main>
     </div>

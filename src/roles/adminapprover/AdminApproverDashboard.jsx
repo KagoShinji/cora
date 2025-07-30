@@ -1,9 +1,63 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import SidebarAdminApprover from "../../components/SidebarAdminApprover";
+import DocumentModal from "../../components/DocumentModal"; // NEW
 
 function AdminApproverDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // NEW: basic local documents state so we can update status after Approve/Disapprove
+  const [documents, setDocuments] = useState([
+    {
+      id: "doc-1",
+      title: "Request Form",
+      user: "Alex",
+      department: "Finance",
+      description: "Request for budget approval.",
+      file: "request-form.pdf",
+      timestamp: "March 25, 2025 10:30 AM",
+      status: "pending", // "pending" | "completed" | "rejected"
+      remarks: "",
+    },
+  ]);
+
+  // NEW: modal state
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [remarks, setRemarks] = useState("");
+
+  // NEW: open modal
+  const handleView = (doc) => {
+    setSelectedDoc(doc);
+    setRemarks(doc.remarks || "");
+  };
+
+  // NEW: close modal
+  const handleClose = () => {
+    setSelectedDoc(null);
+    setRemarks("");
+  };
+
+  // NEW: approve handler
+  const handleApprove = async (id) => {
+    // TODO: Replace with your store/API call, then refresh state from server.
+    // e.g., await approveDocument(id)
+    setDocuments((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, status: "completed" } : d))
+    );
+    handleClose();
+  };
+
+  // NEW: disapprove handler (with remarks)
+  const handleDisapprove = async (id, newRemarks) => {
+    // TODO: Replace with your store/API call, then refresh state from server.
+    // e.g., await rejectDocument(id, newRemarks)
+    setDocuments((prev) =>
+      prev.map((d) =>
+        d.id === id ? { ...d, status: "rejected", remarks: newRemarks || "" } : d
+      )
+    );
+    handleClose();
+  };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -49,25 +103,54 @@ function AdminApproverDashboard() {
               </tr>
             </thead>
             <tbody>
-              <tr className="hover:bg-gray-100">
-                <td className="p-4 text-center">Request Form</td>
-                <td className="p-4 text-center">Alex</td>
-                <td className="p-4 text-center">March 25, 2025 10:30 AM</td>
-                <td className="p-4 text-center text-yellow-500 font-semibold">Pending</td>
-                <td className="p-4 text-center">
-                  <div className="flex justify-center gap-2">
-                    <button className="!bg-green-600 !text-white px-4 py-2 rounded-md hover:!bg-green-700 transition-colors">
-                      Approve
-                    </button>
-                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
-                      Reject
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              {documents.map((doc) => (
+                <tr key={doc.id} className="hover:bg-gray-100">
+                  <td className="p-4 text-center">{doc.title}</td>
+                  <td className="p-4 text-center">{doc.user}</td>
+                  <td className="p-4 text-center">{doc.timestamp}</td>
+                  <td
+                    className={`p-4 text-center font-semibold ${
+                      doc.status === "pending"
+                        ? "text-yellow-500"
+                        : doc.status === "completed"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                  </td>
+                  <td className="p-4 text-center">
+                    <div className="flex justify-center gap-2">
+                      <button
+                        className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                        onClick={() => handleView(doc)}
+                      >
+                        View
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {documents.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-gray-500">
+                    No documents found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* Document Modal */}
+        <DocumentModal
+          document={selectedDoc}
+          onClose={handleClose}
+          onConfirm={handleApprove}
+          onDelete={handleDisapprove}
+          remarks={remarks}
+          setRemarks={setRemarks}
+        />
       </main>
     </div>
   );

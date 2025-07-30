@@ -3,14 +3,81 @@ import { Link } from "react-router-dom";
 import Sidebar from "../../components/SidebarCoSuperAdmin";
 import { useAuthStore } from "../../stores/userStores";
 
+// NEW: modals
+import ModalEditDepartment from "../../components/ModalEditDepartment";
+import ModalConfirmDelete from "../../components/ModalConfirmDelete";
+
 function CoSuperAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const departments = useAuthStore((state)=>state.departments)
   const fetchDepartment = useAuthStore((state)=> state.getDepartment)
 
+  // NEW: store actions
+  const updateDepartment = useAuthStore((state) => state.updateDepartment); // ensure exists
+  const deleteDepartment = useAuthStore((state) => state.deleteDepartment); // ensure exists
+
+  // NEW: edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingDept, setEditingDept] = useState(null);
+
+  // NEW: delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingDept, setDeletingDept] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
   useEffect(()=>{
     fetchDepartment();
   },[])
+
+  // NEW: open edit
+  const handleEditClick = (dept) => {
+    setEditingDept(dept);
+    setShowEditModal(true);
+  };
+
+  // NEW: save edit
+  const handleUpdateDepartment = async (id, data) => {
+    await updateDepartment(id, data);
+    const { error } = useAuthStore.getState();
+    if (!error) {
+      alert("Department updated successfully!");
+      await fetchDepartment(); // refresh if your store doesn't update locally
+      setShowEditModal(false);
+      setEditingDept(null);
+    } else {
+      alert("Failed to update department: " + error);
+      throw new Error(error);
+    }
+  };
+
+  // NEW: open delete
+  const handleDeleteClick = (dept) => {
+    setDeletingDept(dept);
+    setDeleteError("");
+    setShowDeleteModal(true);
+  };
+
+  // NEW: confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deletingDept) return;
+    try {
+      setIsDeleting(true);
+      setDeleteError("");
+      await deleteDepartment(deletingDept.id);
+      const { error } = useAuthStore.getState();
+      if (error) throw new Error(error);
+
+      await fetchDepartment(); // refresh list
+      setShowDeleteModal(false);
+      setDeletingDept(null);
+      alert("Department deleted successfully!");
+    } catch (err) {
+      setDeleteError(err?.message || "Failed to delete department.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -91,10 +158,16 @@ function CoSuperAdminDashboard() {
                 </td>
                 <td className="p-4 text-center align-middle">
                   <div className="flex justify-center gap-3">
-                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                    <button
+                      className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                      onClick={() => handleEditClick(dept)}
+                    >
                       Edit
                     </button>
-                    <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                    <button
+                      className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                      onClick={() => handleDeleteClick(dept)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -106,6 +179,29 @@ function CoSuperAdminDashboard() {
           </table>
         </div>
       </main>
+
+      {/* NEW: Edit Department Modal */}
+      <ModalEditDepartment
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingDept(null);
+        }}
+        onSave={handleUpdateDepartment}
+        department={editingDept}
+      />
+
+      {/* NEW: Delete Confirmation Modal */}
+      <ModalConfirmDelete
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeletingDept(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        error={deleteError}
+      />
     </div>
   );
 }

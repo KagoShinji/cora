@@ -9,6 +9,7 @@ export const useAuthStore = create((set)=>({
     role:null,
     user:null,
     departments:[],
+    department:null,
 
 
 
@@ -41,7 +42,7 @@ export const useAuthStore = create((set)=>({
             set({error: "Failed to fetch users" });
             console.error("Error fetching users:", error);
         }
-    },
+    },  
 
     signin: async(userData) => {
         set({isLoading:true,error:null})
@@ -52,9 +53,10 @@ export const useAuthStore = create((set)=>({
                 error:null,
                 isAuthenticated:true,
                 role:login.role,
-                user:login.name
-                
+                user:login.name,
+                department:login.department          
             })
+            console.log(login)
             return login
         } catch (err) {
             console.error('Login error',err)
@@ -122,6 +124,7 @@ export const useAuthStore = create((set)=>({
 
             const uploaded = await uploadDocument(formData);
             set({ isLoading: false });
+            console.log(uploaded)
             return uploaded;
         } catch (err) {
             set({

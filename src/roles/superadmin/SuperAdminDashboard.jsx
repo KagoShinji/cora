@@ -3,16 +3,82 @@ import { Link } from "react-router-dom";
 import Sidebar from "../../components/SidebarSuperAdmin";
 import { useAuthStore } from "../../stores/userStores";
 
+// NEW: modals
+import ModalEditUser from "../../components/ModalEditUser";
+import ModalConfirmDelete from "../../components/ModalConfirmDelete";
 
 function SuperAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const users = useAuthStore((state)=>state.users)
   const fetchUsers = useAuthStore((state)=> state.fetchUsers)
 
+  // NEW: edit modal state + store action
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const updateUser = useAuthStore((state) => state.updateUser); // assumes this exists
+
+  // NEW: delete modal state + store action
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const deleteUser = useAuthStore((state) => state.deleteUser); // assumes this exists
 
   useEffect(()=>{
     fetchUsers()
   },[]);
+
+  // NEW: open edit modal
+  const handleEditClick = (user) => {
+    setEditingUser(user);
+    setShowEditModal(true);
+  };
+
+  // NEW: save edits via store
+  const handleUpdateUser = async (id, data) => {
+    await updateUser(id, data);
+    const { error } = useAuthStore.getState();
+    if (!error) {
+      alert("User updated successfully!");
+      setShowEditModal(false);
+      setEditingUser(null);
+      // optional: refetch if your store doesn't update locally
+      // await fetchUsers();
+    } else {
+      alert("Failed to update user: " + error);
+      throw new Error(error);
+    }
+  };
+
+  // NEW: open delete modal
+  const handleDeleteClick = (user) => {
+    setDeletingUser(user);
+    setDeleteError("");
+    setShowDeleteModal(true);
+  };
+
+  // NEW: confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deletingUser) return;
+    try {
+      setIsDeleting(true);
+      setDeleteError("");
+      await deleteUser(deletingUser.id);
+      const { error } = useAuthStore.getState();
+      if (error) throw new Error(error);
+
+      // optional: refetch if your store doesn't update locally
+      // await fetchUsers();
+
+      setShowDeleteModal(false);
+      setDeletingUser(null);
+      alert("User deleted successfully!");
+    } catch (err) {
+      setDeleteError(err?.message || "Failed to delete user.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -68,10 +134,16 @@ function SuperAdminDashboard() {
                   {/*<td className="p-4 text-center">{user.created_at}</td>*/}
                   <td className="p-4 text-center text-black">
                     <div className="flex justify-center gap-3">
-                      <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                      <button
+                        className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                        onClick={() => handleEditClick(user)}
+                      >
                         Edit
                       </button>
-                      <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                      <button
+                        className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                        onClick={() => handleDeleteClick(user)}
+                      >
                         Delete
                       </button>
                     </div>
@@ -82,6 +154,29 @@ function SuperAdminDashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* NEW: Edit User Modal */}
+        <ModalEditUser
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingUser(null);
+          }}
+          onSave={handleUpdateUser}
+          user={editingUser}
+        />
+
+        {/* NEW: Delete Confirmation Modal */}
+        <ModalConfirmDelete
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingUser(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          isLoading={isDeleting}
+          error={deleteError}
+        />
       </main>
     </div>
   );

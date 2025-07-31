@@ -8,8 +8,10 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
   const navigate = useNavigate();
   const user = useAuthStore((state)=>state.user)
 
+  const signout = useAuthStore((state)=>state.signout)
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signout()
     navigate("/login");
   };
 

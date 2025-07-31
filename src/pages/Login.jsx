@@ -40,9 +40,9 @@ function Login() {
       return;
     } else {
       alert("Login successfully");
-    }
 
-    switch (login.role) {
+    }
+    switch (login.user.role) {
       case 'superadmin':
         navigate('/superadmin');
         break;

@@ -1,25 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import SidebarAdminApprover from "../../components/SidebarAdminApprover";
-import DocumentModal from "../../components/DocumentModal"; // NEW
+import DocumentModal from "../../components/DocumentModal";
+import { useDocumentStore } from "../../stores/useDocumentStore";
+import { useEffect } from "react";
 
 function AdminApproverDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // NEW: basic local documents state so we can update status after Approve/Disapprove
-  const [documents, setDocuments] = useState([
-    {
-      id: "doc-1",
-      title: "Request Form",
-      user: "Alex",
-      department: "Finance",
-      description: "Request for budget approval.",
-      file: "request-form.pdf",
-      timestamp: "March 25, 2025 10:30 AM",
-      status: "pending", // "pending" | "completed" | "rejected"
-      remarks: "",
-    },
-  ]);
+  const { documents, fetchDocuments } = useDocumentStore();
 
   // NEW: modal state
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -53,16 +43,26 @@ function AdminApproverDashboard() {
     // e.g., await rejectDocument(id, newRemarks)
     setDocuments((prev) =>
       prev.map((d) =>
-        d.id === id ? { ...d, status: "rejected", remarks: newRemarks || "" } : d
+        d.id === id
+          ? { ...d, status: "rejected", remarks: newRemarks || "" }
+          : d
       )
     );
     handleClose();
   };
 
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Sidebar */}
-      <div className={`fixed top-0 left-0 h-screen transition-all duration-300 ${sidebarOpen ? "w-64" : "w-16"}`}>
+      <div
+        className={`fixed top-0 left-0 h-screen transition-all duration-300 ${
+          sidebarOpen ? "w-64" : "w-16"
+        }`}
+      >
         <SidebarAdminApprover isOpen={sidebarOpen} setOpen={setSidebarOpen} />
       </div>
 
@@ -106,8 +106,10 @@ function AdminApproverDashboard() {
               {documents.map((doc) => (
                 <tr key={doc.id} className="hover:bg-gray-100">
                   <td className="p-4 text-center">{doc.title}</td>
-                  <td className="p-4 text-center">{doc.user}</td>
-                  <td className="p-4 text-center">{doc.timestamp}</td>
+                  <td className="p-4 text-center">{doc.uploaded_by_name}</td>
+                  <td className="p-4 text-center">
+                    {new Date(doc.upload_timestamp).toLocaleString()}
+                  </td>
                   <td
                     className={`p-4 text-center font-semibold ${
                       doc.status === "pending"
@@ -117,7 +119,7 @@ function AdminApproverDashboard() {
                         : "text-red-600"
                     }`}
                   >
-                    {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                    {doc.status?.charAt(0).toUpperCase() + doc.status?.slice(1)}
                   </td>
                   <td className="p-4 text-center">
                     <div className="flex justify-center gap-2">

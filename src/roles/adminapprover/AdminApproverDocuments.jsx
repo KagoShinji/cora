@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SidebarAdminApprover from "../../components/SidebarAdminApprover";
-import DocumentModal from "../../components/DocumentModal"; // ✅ Modal component
+import DocumentModal from "../../components/DocumentModal";
+import { useDocumentStore } from "../../stores/useDocumentStore";
 
 function AdminApproverDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -10,50 +11,26 @@ function AdminApproverDocuments() {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [remarks, setRemarks] = useState("");
 
-  const documents = [
-    {
-      id: 1,
-      user: "Juan Dela Cruz",
-      department: "Engineering",
-      description: "Enrollment form for 1st sem",
-      file: "enrollment_form.pdf",
-      timestamp: "July 15, 2025 09:10 AM",
-      status: "pending",
-    },
-    {
-      id: 2,
-      user: "Maria Santos",
-      department: "Business",
-      description: "Graduation clearance",
-      file: "clearance.pdf",
-      timestamp: "July 14, 2025 02:45 PM",
-      status: "completed",
-    },
-    {
-      id: 3,
-      user: "Mark Reyes",
-      department: "Education",
-      description: "Thesis outline submission",
-      file: "thesis_outline.pdf",
-      timestamp: "July 13, 2025 11:20 AM",
-      status: "rejected",
-    },
-  ];
+  const { documents, fetchDocuments } = useDocumentStore();
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
 
   const handleConfirm = (id) => {
     console.log("Confirmed:", id);
-    // TODO: Update document status to "completed"
+    // TODO: API call to mark as completed
   };
 
   const handleDelete = (id, remark) => {
-    console.log("Deleted:", id, "with remarks:", remark);
-    // TODO: Handle rejection or deletion
+    console.log("Rejected:", id, "with remarks:", remark);
+    // TODO: API call to mark as rejected
   };
 
   const filteredDocs = documents.filter((doc) => {
     const matchesSearch =
-      doc.user.toLowerCase().includes(search.toLowerCase()) ||
-      doc.description.toLowerCase().includes(search.toLowerCase());
+      doc.uploaded_by_name?.toLowerCase().includes(search.toLowerCase()) ||
+      doc.notes?.toLowerCase().includes(search.toLowerCase());
 
     if (filterStatus === "all") return matchesSearch;
     return doc.status === filterStatus && matchesSearch;
@@ -78,17 +55,16 @@ function AdminApproverDocuments() {
       >
         <h1 className="text-3xl font-bold text-primary mb-6">Documents</h1>
 
-        {/* Controls */}
+        {/* Search + Filter */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <input
             type="text"
-            placeholder="Search by user or description..."
+            placeholder="Search by name or notes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border border-gray-300 rounded px-4 py-2 w-full max-w-md text-black"
           />
 
-          {/* Filter buttons */}
           <div className="flex gap-2">
             {["all", "pending", "completed", "rejected"].map((status) => (
               <button
@@ -113,7 +89,7 @@ function AdminApproverDocuments() {
               <tr>
                 <th className="p-4 text-center">Submitted by</th>
                 <th className="p-4 text-center">Department</th>
-                <th className="p-4 text-center">Description</th>
+                <th className="p-4 text-center">Notes</th>
                 <th className="p-4 text-center">File</th>
                 <th className="p-4 text-center">Timestamp</th>
                 <th className="p-4 text-center">Status</th>
@@ -124,19 +100,40 @@ function AdminApproverDocuments() {
               {filteredDocs.length > 0 ? (
                 filteredDocs.map((doc) => (
                   <tr key={doc.id} className="hover:bg-gray-100">
-                    <td className="p-4 text-center text-black">{doc.user}</td>
-                    <td className="p-4 text-center text-black">{doc.department}</td>
-                    <td className="p-4 text-center text-black">{doc.description}</td>
-                    <td className="p-4 text-center">
-                      <a
-                        href={`/${doc.file}`}
-                        className="text-blue-600 underline"
-                        download
-                      >
-                        {doc.file}
-                      </a>
+                    <td className="p-4 text-center text-black">
+                      {doc.uploaded_by_name}
                     </td>
-                    <td className="p-4 text-center text-black">{doc.timestamp}</td>
+                    <td className="p-4 text-center text-black">
+                      {doc.department}
+                    </td>
+                    <td className="p-4 text-center text-black">{doc.title}</td>
+                    <td className="p-4 text-center text-black">
+                      <button
+                        onClick={async () => {
+                          try {
+                            const blob = await useDocumentStore
+                              .getState()
+                              .previewDocument(doc.id);
+                            const url = window.URL.createObjectURL(blob);
+                            const newTab = window.open(url);
+
+                            if (!newTab) {
+                              alert(
+                                "Popup blocked! Please allow popups for this site."
+                              );
+                            }
+                          } catch (err) {
+                            console.error("Failed to preview document:", err);
+                          }
+                        }}
+                        className="text-blue-600 underline hover:text-blue-800"
+                      >
+                        {doc.filename}
+                      </button>
+                    </td>
+                    <td className="p-4 text-center text-black">
+                      {new Date(doc.upload_timestamp).toLocaleString()}
+                    </td>
                     <td className="p-4 text-center">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${

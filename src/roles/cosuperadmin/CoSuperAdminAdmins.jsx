@@ -4,6 +4,7 @@ import ModalAddAdmins from "../../components/ModalAddAdmins";
 import ModalEditAdmins from "../../components/ModalEditAdmins"; // NEW
 import ModalConfirmDelete from "../../components/ModalConfirmDelete"; // NEW
 import { useAuthStore } from "../../stores/userStores";
+import { userDelete, userUpdate } from "../../api/api";
 
 function CoSuperAdminAdmins() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -13,20 +14,14 @@ function CoSuperAdminAdmins() {
   const fetchUsers = useAuthStore((state)=>state.fetchUsers);
   const users = useAuthStore((state)=>state.users);
 
-  // authstore 
   const signup = useAuthStore((state) => state.signup);
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
 
-  // NEW: edit + delete actions
-  const updateUser = useAuthStore((state) => state.updateUser); // ensure this exists
-  const deleteUser = useAuthStore((state) => state.deleteUser); // ensure this exists
 
-  // NEW: edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
-  // NEW: delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingUser, setDeletingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -37,63 +32,58 @@ function CoSuperAdminAdmins() {
     const {error} = useAuthStore.getState();
     if(!error){
       alert("Account created successfully!");
-      // Optionally refresh the list:
-      // await fetchUsers();
+      window.location.reload()
     }else{
       alert("Failed to create account: " + error);
     }
   }
 
-  // NEW: open edit
+ 
   const handleEditClick = (user) => {
     setEditingUser(user);
     setShowEditModal(true);
   };
 
-  // NEW: save edit
-  const handleUpdateAdmin = async (id, data) => {
-    await updateUser(id, data);
-    const { error } = useAuthStore.getState();
-    if (!error) {
-      alert("Admin updated successfully!");
-      setShowEditModal(false);
-      setEditingUser(null);
-      // Optionally refresh:
-      // await fetchUsers();
-    } else {
-      alert("Failed to update admin: " + error);
-      throw new Error(error);
-    }
-  };
 
-  // NEW: open delete
-  const handleDeleteClick = (user) => {
-    setDeletingUser(user);
+  const handleUpdateAdmin = async (id, data) => {
+  try {
+    await userUpdate(id, data);
+    alert("Admin updated successfully!");
+    setShowEditModal(false);
+    setEditingUser(null);
+    await fetchUsers(); 
+  } catch (error) {
+    alert("Failed to update admin: " + error.message);
+  }
+};
+
+
+  const handleDeleteClick = async (user) => {
+    setDeletingUser(user)
     setDeleteError("");
     setShowDeleteModal(true);
   };
 
-  // NEW: confirm delete
-  const handleConfirmDelete = async () => {
-    if (!deletingUser) return;
-    try {
-      setIsDeleting(true);
-      setDeleteError("");
-      await deleteUser(deletingUser.id);
-      const { error } = useAuthStore.getState();
-      if (error) throw new Error(error);
 
-      setShowDeleteModal(false);
-      setDeletingUser(null);
-      alert("Admin deleted successfully!");
-      // Optionally refresh:
-      // await fetchUsers();
-    } catch (err) {
-      setDeleteError(err?.message || "Failed to delete admin.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  const handleConfirmDelete = async () => {
+  if (!deletingUser) return;
+
+  try {
+    setIsDeleting(true);
+    setDeleteError("");
+
+    await userDelete(deletingUser.id);
+    await fetchUsers();
+
+    setShowDeleteModal(false);
+    setDeletingUser(null);
+    alert("Admin deleted successfully!");
+  } catch (err) {
+    setDeleteError(err?.message || "Failed to delete admin.");
+  } finally {
+    setIsDeleting(false);
+  }
+};
 
   useEffect(()=>{
     fetchUsers();

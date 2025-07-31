@@ -27,7 +27,7 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
       email,
       password,
       role,
-      department,
+      department_id:department,
     };
 
     try {
@@ -64,10 +64,10 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-primary">
             <div>
-              <label className="block mb-1 font-medium">Name</label>
+              <label className="block mb-1 font-medium">Fullname</label>
               <input
                 type="text"
-                placeholder="Enter username"
+                placeholder="Enter Fullname"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
@@ -136,7 +136,7 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
                 >
                   <option value="">Select Department</option>
                   {departments.map((dept)=>(
-                    <option key={dept.id} value={dept.department_name}>
+                    <option key={dept.id} value={dept.id}>
                       {dept.department_name}
                     </option>
                   ))}

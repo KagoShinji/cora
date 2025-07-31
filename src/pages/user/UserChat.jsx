@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Mic, Plus } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import { useAuthStore } from "../../stores/userStores";
+import { useAppSettingsStore } from "../../stores/useSettingsStore";
 
 export default function UserChat() {
   const [query, setQuery] = useState("");
@@ -9,6 +10,7 @@ export default function UserChat() {
   const [submitted, setSubmitted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const name = useAppSettingsStore((state)=>state.name)
 
   const inputRef = useRef(null);
   const scrollRef = useRef(null);
@@ -99,7 +101,7 @@ export default function UserChat() {
           pointerEvents: "none",
         }}
       >
-        CORA
+        {name.toUpperCase()}
       </div>
 
       {/* Main Content */}
@@ -139,7 +141,7 @@ export default function UserChat() {
                 <input
                   ref={inputRef}
                   className="flex-grow bg-transparent outline-none placeholder:text-primary/50"
-                  placeholder="Ask Cora"
+                  placeholder={`Ask ${name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}`}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={onKeyDown}

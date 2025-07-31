@@ -6,6 +6,8 @@ import { useAuthStore } from "../../stores/userStores";
 import ModalEditUser from "../../components/ModalEditUser";
 // NEW: import the global delete modal
 import ModalConfirmDelete from "../../components/ModalConfirmDelete";
+import { userDelete,userUpdate } from "../../api/api";
+
 
 function SuperAdminUsers() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -21,20 +23,19 @@ function SuperAdminUsers() {
   // NEW: edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const updateUser = useAuthStore((state) => state.updateUser); // assumes this exists
 
   // NEW: delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingUser, setDeletingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  const deleteUser = useAuthStore((state) => state.deleteUser); // assumes this exists
 
   const handleAddUser = async (userData) => {
     await signup(userData);
     const { error } = useAuthStore.getState();
     if (!error) {
       alert("Account created successfully!");
+      fetchUsers();
     } else {  
       alert("Failed to create account: " + error);
     }
@@ -48,7 +49,7 @@ function SuperAdminUsers() {
 
   // NEW: save edits via store
   const handleUpdateUser = async (id, data) => {
-    await updateUser(id, data);
+    await userUpdate(id, data);
     const { error } = useAuthStore.getState();
     if (!error) {
       alert("User updated successfully!");
@@ -75,7 +76,7 @@ function SuperAdminUsers() {
     try {
       setIsDeleting(true);
       setDeleteError("");
-      await deleteUser(deletingUser.id);
+      await userDelete(deletingUser.id);
       const { error } = useAuthStore.getState();
       if (error) throw new Error(error);
 
@@ -85,6 +86,7 @@ function SuperAdminUsers() {
       setShowDeleteModal(false);
       setDeletingUser(null);
       alert("User deleted successfully!");
+      fetchUsers()
     } catch (err) {
       setDeleteError(err?.message || "Failed to delete user.");
     } finally {

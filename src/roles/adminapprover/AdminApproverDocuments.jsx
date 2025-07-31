@@ -2,30 +2,55 @@ import { useState, useEffect } from "react";
 import SidebarAdminApprover from "../../components/SidebarAdminApprover";
 import DocumentModal from "../../components/DocumentModal";
 import { useDocumentStore } from "../../stores/useDocumentStore";
+import ApproveModal from "../../components/ApproveModal";
+import { approveDocument } from "../../api/api";
+import DeclineModal from "../../components/DeclineModal";
+import { declineDocument } from "../../api/api";
 
 function AdminApproverDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("pending");
+  const [filterStatus, setFilterStatus] = useState("pending-approval");
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+
 
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [remarks, setRemarks] = useState("");
 
   const { documents, fetchDocuments } = useDocumentStore();
+  
 
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+  fetchDocuments(filterStatus === "all" ? "" : filterStatus); 
+}, [filterStatus]);
 
-  const handleConfirm = (id) => {
-    console.log("Confirmed:", id);
-    // TODO: API call to mark as completed
-  };
+  const handleApprove = async (docId) => {
+  try {
+    const status = "approved"
+    await approveDocument(docId,status);
+    await fetchDocuments(); 
+    setSelectedDoc(null);   
+    setShowApproveModal(false);
+    alert("Approved Succesfully")
+  } catch (error) {
+    console.error("Approval failed:", error);
+  }
+};
 
-  const handleDelete = (id, remark) => {
-    console.log("Rejected:", id, "with remarks:", remark);
-    // TODO: API call to mark as rejected
-  };
+const handleDecline = async (docId, remarks) => {
+  try {
+    const status = "declined";
+    await declineDocument(docId, status, remarks);
+    await fetchDocuments(); 
+    setSelectedDoc(null);   
+    setShowDeclineModal(false);
+    alert("Declined successfully");
+  } catch (error) {
+    console.error("Decline failed:", error);
+  }
+};
+
 
   const filteredDocs = documents.filter((doc) => {
     const matchesSearch =
@@ -66,7 +91,7 @@ function AdminApproverDocuments() {
           />
 
           <div className="flex gap-2">
-            {["all", "pending", "completed", "rejected"].map((status) => (
+            {["all", "pending-approval", "approved","declined"].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
@@ -76,7 +101,7 @@ function AdminApproverDocuments() {
                     : "!bg-primary text-white border"
                 }`}
               >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {status.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
               </button>
             ))}
           </div>
@@ -89,7 +114,7 @@ function AdminApproverDocuments() {
               <tr>
                 <th className="p-4 text-center">Submitted by</th>
                 <th className="p-4 text-center">Department</th>
-                <th className="p-4 text-center">Notes</th>
+                <th className="p-4 text-center">Title</th>
                 <th className="p-4 text-center">File</th>
                 <th className="p-4 text-center">Timestamp</th>
                 <th className="p-4 text-center">Status</th>
@@ -126,9 +151,9 @@ function AdminApproverDocuments() {
                             console.error("Failed to preview document:", err);
                           }
                         }}
-                        className="text-blue-600 underline hover:text-blue-800"
+                        className="underline hover:text-blue-800"
                       >
-                        {doc.filename}
+                        View
                       </button>
                     </td>
                     <td className="p-4 text-center text-black">
@@ -137,11 +162,11 @@ function AdminApproverDocuments() {
                     <td className="p-4 text-center">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                          doc.status === "pending"
+                          doc.status === "pending-approval"
                             ? "bg-yellow-100 text-yellow-700"
-                            : doc.status === "completed"
+                            : doc.status === "approved"
                             ? "bg-green-100 text-green-700"
-                            : doc.status === "rejected"
+                            : doc.status === "declined"
                             ? "bg-red-100 text-red-700"
                             : "bg-gray-200 text-gray-800"
                         }`}
@@ -150,12 +175,35 @@ function AdminApproverDocuments() {
                       </span>
                     </td>
                     <td className="p-4 text-center">
-                      <button
-                        onClick={() => setSelectedDoc(doc)}
-                        className="!bg-primary text-white px-4 py-2 rounded-md hover:!bg-primary/80 transition-colors"
-                      >
-                        View
-                      </button>
+                      {doc.status === "pending-approval" ? (
+                        <div className="flex justify-center gap-2">
+                          <button 
+                            onClick={() => {
+                              setSelectedDoc({
+                                ...doc,
+                                preview: () => useDocumentStore.getState().previewDocument(doc.id),
+                              });
+                              setShowApproveModal(true);
+                            }}
+                            className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+                            APPROVE
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedDoc({
+                                ...doc,
+                                preview: () => useDocumentStore.getState().previewDocument(doc.id),
+                              });
+                              setShowDeclineModal(true);
+                            }}
+                            className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                          >
+                            DECLINE
+                        </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 italic"></span>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -170,19 +218,21 @@ function AdminApproverDocuments() {
           </table>
         </div>
       </main>
-
-      {/* Modal */}
-      <DocumentModal
+      <ApproveModal
+        open={showApproveModal}
+        onClose={() => setShowApproveModal(false)}
+        onConfirm={() => handleApprove(selectedDoc.id)}
         document={selectedDoc}
-        onClose={() => {
-          setSelectedDoc(null);
-          setRemarks("");
-        }}
-        onConfirm={handleConfirm}
-        onDelete={handleDelete}
-        remarks={remarks}
-        setRemarks={setRemarks}
       />
+      <DeclineModal
+        open={showDeclineModal}
+        onClose={() => setShowDeclineModal(false)}
+        onConfirm={(remarks) => handleDecline(selectedDoc.id, remarks)}
+        document={selectedDoc}
+        remarks={remarks}
+        setRemarks={setRemarks}       
+      />
+
     </div>
   );
 }

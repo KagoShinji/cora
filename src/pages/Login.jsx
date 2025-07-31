@@ -55,6 +55,8 @@ function Login() {
       case 'adminapprover':
         navigate('/adminapprover');
         break;
+      case 'user':
+        navigate('/users')
       default:
         alert('Unauthorized role or unknown user.');
     }

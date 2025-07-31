@@ -52,6 +52,7 @@ export const useAuthStore = create(
             user: login.user.name,
             department: login.user.department,
           });
+          console.log(login)
           return login;
         } catch (err) {
           console.error('Login error', err);
@@ -84,22 +85,20 @@ export const useAuthStore = create(
         }
       },
 
-      deleteDept: async (department_id) => {
-        set({ isLoading: true, error: null });
+      deleteDept: async (id) => {
         try {
-          const delete_dept = await deleteDepartment(department_id);
-          if (delete_dept) {
-            console.log('Department deleted successfully');
-            set({ isLoading: false, error: null });
-          } else {
-            console.error('Failed to delete department.');
-            set({ isLoading: false, error: 'Failed to delete department.' });
-          }
-        } catch (error) {
-          console.error('Network error deleting department:', error);
-          set({ isLoading: false, error: 'Network error. Please try again.' });
+            await deleteDepartment(id); // your actual API call
+            set((state) => ({
+            departments: state.departments.filter((dept) => dept.id !== id),
+            error: null,
+            }));
+            return true; // Explicit success
+        } catch (err) {
+            console.error("Failed to delete department:", err.message);
+            set({ error: err.message });
+            throw err; // Let caller handle this
         }
-      },
+       },
       
       signout: () => {
         set({

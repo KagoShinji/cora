@@ -105,7 +105,7 @@ export default function ModalEditUser({ isOpen, onClose, onSave, user }) {
             </select>
           </div>
 
-          {/* Show school input only when Co-Super Admin is selected */}
+          {/* Show school input only when Co-Super Admin is selected 
           {role === "co-superadmin" && (
             <div>
               <label className="block mb-1 font-medium">
@@ -121,8 +121,9 @@ export default function ModalEditUser({ isOpen, onClose, onSave, user }) {
               />
             </div>
           )}
+          */}
 
-          {/* Optional password change */}
+          {/* Optional password change 
           <div className="flex items-center gap-2">
             <input
               id="toggle-pw"
@@ -164,6 +165,7 @@ export default function ModalEditUser({ isOpen, onClose, onSave, user }) {
               </div>
             </>
           )}
+            */}
 
           {localError && (
             <p className="text-red-600 bg-red-100 border border-red-400 rounded p-2 text-sm text-center">

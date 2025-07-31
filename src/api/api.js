@@ -54,6 +54,47 @@ export const loginUser = async (userData) => {
         throw error
     }
 }
+
+export const userUpdate = async (users_id, updatedData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/update-users/${users_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Failed to update user');
+    }
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return await response.json();
+    } else {
+      return {}; 
+    }
+
+  } catch (error) {
+    console.error("Update error:", error.message);
+    throw error;
+  }
+};
+
+export const userDelete = async(users_id) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/delete-users/${users_id}`,{
+            method:"DELETE",
+            headers:{
+                'Content-Type':'application/json'
+            },
+        })
+    } catch (error) {
+        console.error("Network error during department deletion:", error);
+        return false;
+    }
+}
 //department
 export const createDepartment = async (departmentData) =>{
     try{
@@ -110,6 +151,34 @@ export const deleteDepartment = async (department_id) => {
         return false;
     }
 }
+export const updateDepartment = async (department_id, department_name) => {
+    try {
+        if (!department_id || !department_name) {
+            throw new Error("Both department ID and name are required");
+        }
+
+        const response = await fetch(`${API_BASE_URL}/update-department/${department_id}`, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                department_name: department_name
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || "Failed to update department");
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Update failed:", error.message);
+        throw error;
+    }
+};
 
 
 //upload documents
@@ -139,10 +208,12 @@ export const uploadDocument = async (formData) => {
 
 export const fetchDocument = async () => {
   try {
+    const token = localStorage.getItem("access_token");
     const response = await fetch(`${API_BASE_URL}/documents`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -173,6 +244,63 @@ export const viewDocument = async (docId) => {
     return await response.blob();
   } catch (error) {
     console.error("Error viewing document:", error);
+    throw error;
+  }
+};
+
+export const approveDocument = async (doc_id, status) => {
+  try {
+    const token = localStorage.getItem("access_token"); 
+
+    const response = await fetch(`${API_BASE_URL}/approve_document/${doc_id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, 
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Approval failed");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error approving document:", error.message);
+    throw error;
+  }
+};
+
+export const declineDocument = async (doc_id, status, remarks) => {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const payload = {
+      status,
+      remarks: (remarks || "").trim(),
+    };
+
+    console.log("Sending payload:", payload);
+
+    const response = await fetch(`${API_BASE_URL}/decline_document/${doc_id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to decline document");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Decline document failed:", error);
     throw error;
   }
 };

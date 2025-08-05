@@ -7,15 +7,16 @@ export default function ModalConfirmDelete({
   isLoading = false,
   error = "",
 }) {
-  if (!isOpen) return null;
-
   useEffect(() => {
+    if (!isOpen) return;
     const handler = (e) => {
       if (e.key === "Escape") onClose?.();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">

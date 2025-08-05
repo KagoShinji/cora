@@ -2,22 +2,11 @@ import React, { useEffect, useState } from "react";
 import ModalAddDepartment from "./ModalAddDepartment";
 import { useAuthStore } from "../stores/userStores";
 
-/**
- * Props:
- * - isOpen: boolean
- * - onClose: () => void
- * - onSave: (id: string|number, data: object) => Promise<void> | void
- * - user: { id, name, email, role, department }
- */
 export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
-  const [department, setDepartment] = useState("");
-
-  const [wantsPasswordChange, setWantsPasswordChange] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
 
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [localError, setLocalError] = useState("");
@@ -27,14 +16,10 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
 
   useEffect(() => {
     if (!isOpen || !user) return;
-    // Prefill with current user values
     setUsername(user.name || "");
     setEmail(user.email || "");
     setRole((user.role || "").toLowerCase());
-    setDepartment(user.department || "");
-    setWantsPasswordChange(false);
-    setPassword("");
-    setConfirmPassword("");
+    setDepartmentId(user.department_id ? String(user.department_id) : "");
     setLocalError("");
   }, [isOpen, user]);
 
@@ -45,7 +30,10 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
 
   const handleNewDepartment = async (newDept) => {
     await getDepartment();
-    setDepartment(newDept);
+    const matchedDept = departments.find((dept) => dept.department_name === newDept);
+    if (matchedDept) {
+      setDepartmentId(String(matchedDept.id));
+    }
     setIsDeptModalOpen(false);
   };
 
@@ -58,23 +46,11 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
       return;
     }
 
-    if (wantsPasswordChange) {
-      if (!password || !confirmPassword) {
-        setLocalError("Please enter and confirm the new password.");
-        return;
-      }
-      if (password !== confirmPassword) {
-        setLocalError("Passwords do not match.");
-        return;
-      }
-    }
-
     const data = {
       name: username,
       email,
       role,
-      department,
-      ...(wantsPasswordChange && { password }),
+      department_id: departmentId ? parseInt(departmentId) : null,
     };
 
     try {
@@ -137,13 +113,13 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
               <label className="block mb-1 font-medium">Department</label>
               <div className="flex items-center gap-2">
                 <select
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
+                  value={departmentId}
+                  onChange={(e) => setDepartmentId(e.target.value)}
                   className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
                 >
                   <option value="">Select Department</option>
                   {departments.map((dept) => (
-                    <option key={dept.id} value={dept.department_name}>
+                    <option key={dept.id} value={dept.id}>
                       {dept.department_name}
                     </option>
                   ))}
@@ -157,45 +133,6 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
                 </button>
               </div>
             </div>
-
-            {/* Optional password change */}
-            <div className="flex items-center gap-2">
-              <input
-                id="toggle-pw"
-                type="checkbox"
-                checked={wantsPasswordChange}
-                onChange={(e) => setWantsPasswordChange(e.target.checked)}
-                className="h-4 w-4 text-primary border-primary rounded"
-              />
-              <label htmlFor="toggle-pw" className="font-medium">Change password</label>
-            </div>
-
-            {wantsPasswordChange && (
-              <>
-                <div>
-                  <label className="block mb-1 font-medium">New Password</label>
-                  <input
-                    type="password"
-                    placeholder="Enter new password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
-                    required={wantsPasswordChange}
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 font-medium">Confirm New Password</label>
-                  <input
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
-                    required={wantsPasswordChange}
-                  />
-                </div>
-              </>
-            )}
 
             {localError && (
               <p className="text-red-600 bg-red-100 border border-red-400 rounded p-2 text-sm text-center">

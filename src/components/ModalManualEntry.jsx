@@ -11,7 +11,7 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!title || !docType || !content) {
+    if (!docType || !content) {
       alert("Please fill out all required fields.");
       return;
     }
@@ -44,7 +44,7 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
           </h2>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-primary">
-            {/* Title */}
+            {/* Title 
             <div>
               <label className="block mb-1 font-medium">
                 Title <span className="text-red-600">*</span>
@@ -58,6 +58,7 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
                 className="w-full border border-primary rounded-md px-4 py-2"
               />
             </div>
+            */}
 
             {/* Document Type */}
             <div>

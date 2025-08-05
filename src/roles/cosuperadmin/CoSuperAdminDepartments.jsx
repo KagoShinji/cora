@@ -4,6 +4,7 @@ import ModalAddDepartment from "../../components/ModalAddDepartment";
 import ModalEditDepartment from "../../components/ModalEditDepartment"; // NEW
 import ModalConfirmDelete from "../../components/ModalConfirmDelete"; // NEW
 import { useAuthStore } from "../../stores/userStores";
+import { updateDepartment } from "../../api/api";
 
 function CoSuperAdminDepartments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -13,9 +14,7 @@ function CoSuperAdminDepartments() {
   const departments = useAuthStore((state) => state.departments);
   const fetchDepartment = useAuthStore((state) => state.getDepartment);
 
-  // NEW: store actions for edit/delete
-  const updateDepartment = useAuthStore((state) => state.updateDepartment); // ensure exists
-  const deleteDepartment = useAuthStore((state) => state.deleteDepartment); // ensure exists
+  const deleteDepartment = useAuthStore((state) => state.deleteDept); 
 
   // NEW: edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -26,6 +25,8 @@ function CoSuperAdminDepartments() {
   const [deletingDept, setDeletingDept] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+
+  
 
   useEffect(() => {
     fetchDepartment();
@@ -54,20 +55,17 @@ function CoSuperAdminDepartments() {
   };
 
   // NEW: save edit
-  const handleUpdateDepartment = async (id, data) => {
-    await updateDepartment(id, data);
-    const { error } = useAuthStore.getState();
-    if (!error) {
-      alert("Department updated successfully!");
-      // Optionally refresh if your store doesn't update locally
-      await fetchDepartment();
-      setShowEditModal(false);
-      setEditingDept(null);
-    } else {
-      alert("Failed to update department: " + error);
-      throw new Error(error);
-    }
-  };
+ const handleUpdateDepartment = async (id, data) => {
+  try {
+    await updateDepartment(id, data.department_name);
+    alert("Department updated successfully!");
+    await fetchDepartment(); 
+    setShowEditModal(false);
+    setEditingDept(null);
+  } catch (error) {
+    alert("Failed to update department: " + error.message);
+  }
+};
 
   // NEW: open delete
   const handleDeleteClick = (dept) => {

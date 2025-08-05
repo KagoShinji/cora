@@ -32,16 +32,19 @@ export const useDocumentStore = create(
         }
       },
 
-      fetchDocuments: async () => {
+      fetchDocuments: async (status = null) => {
         set({ loading: true, error: null });
         try {
-          const data = await fetchDocument();
-          set({ documents: data, loading: false });
+            const data = await fetchDocument(status); // pass status
+            set({ documents: data, loading: false });
         } catch (err) {
-          console.error("Fetch documents failed:", err);
-          set({ loading: false, error: err.message || 'Failed to load documents' });
+            console.error("Fetch documents failed:", err);
+            set({
+            loading: false,
+            error: err.message || "Failed to load documents",
+            });
         }
-      },
+    },
 
      previewDocument: async (id) => {
         try {

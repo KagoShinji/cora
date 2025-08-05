@@ -52,12 +52,12 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 !text-primary">
           <div>
             <label className="block mb-1 font-medium">
-              Username <span className="text-red-600">*</span>
+              Fullname <span className="text-red-600">*</span>
             </label>
             <input
               onChange={(e) => setUsername(e.target.value)}
               type="text"
-              placeholder="Enter username"
+              placeholder="Enter Fullname"
               value={username}
               className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
               required

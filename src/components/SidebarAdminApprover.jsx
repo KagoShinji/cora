@@ -2,6 +2,7 @@ import { Home, FileText, ClipboardList, Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuthStore } from "../stores/userStores";
+import { useAppSettingsStore } from "../stores/useSettingsStore"; 
 
 function SidebarAdminApprover({ isOpen, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -9,6 +10,8 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
   const user = useAuthStore((state)=>state.user)
 
   const signout = useAuthStore((state)=>state.signout)
+  const primaryColor = useAppSettingsStore((state) => state.primary_color);
+  const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
 
   const handleLogout = async () => {
     await signout()
@@ -21,6 +24,7 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
         className={`h-screen fixed top-0 left-0 z-50 bg-primary text-white transition-all duration-300 ease-in-out ${
           isOpen ? "w-64" : "w-16"
         } flex flex-col`}
+        style={{ backgroundColor: primaryColor || "#1D4ED8" }}
       >
         {/* Toggle Icon */}
         <div className="flex items-center justify-start p-4 pl-4">
@@ -58,6 +62,7 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
             <div
               onClick={() => setShowLogoutModal(true)}
               className="bg-white text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
+              style={{ backgroundColor: secondaryColor || "#F3F4F6" }}
             >
               <div className="font-semibold uppercase">{user}</div>
               <div className="text-sm">Admin Approver</div>

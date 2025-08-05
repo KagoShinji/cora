@@ -1,8 +1,23 @@
 import { useState } from "react";
 import SidebarCoSuperAdmin from "../../components/SidebarCoSuperAdmin";
+import { useAppSettingsStore } from "../../stores/useSettingsStore";
+import ChangeNameModal from "../../components/ChangeNameModal";
 
 function CoSuperAdminThemes() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const changeLogo = useAppSettingsStore((state) => state.changeLogo)
+
+  const getSettings = useAppSettingsStore((state)=>state.getSettings)
+  const logoPath = useAppSettingsStore((state) => state.logo_path)
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const changeName = useAppSettingsStore((state) => state.changeName);
+  const name = useAppSettingsStore((state) => state.name);
+  const primaryColor = useAppSettingsStore((state) => state.primary_color);
+  const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
+  const changeColor = useAppSettingsStore((state) => state.changeColor);
+
+  const [selectedPrimary, setSelectedPrimary] = useState(primaryColor || "#007bff");
+  const [selectedSecondary, setSelectedSecondary] = useState(secondaryColor || "#6c757d");
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -28,21 +43,39 @@ function CoSuperAdminThemes() {
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs h-72 flex flex-col items-center justify-between">
             <h2 className="text-xl font-semibold text-primary">Logo</h2>
             <img
-              src="/school-logo.png"
-              alt="School Logo"
-              className="w-24 h-24 object-contain"
-            />
-            <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
-              Change
+            src={logoPath ? `http://127.0.0.1:8000${logoPath}` : "/school-logo.png"}
+            alt="School Logo"
+            className="w-24 h-24 object-contain rounded-full"
+          />
+                      <input
+                        id="logoUpload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            changeLogo(file)
+                          }
+                        }}
+                      />
+            <button
+                className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                onClick={() => document.getElementById('logoUpload')?.click()}
+              >
+                Change
             </button>
           </div>
 
           {/* Name Card */}
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs h-72 flex flex-col items-center justify-between">
             <h2 className="text-xl font-semibold text-primary">Name</h2>
-            <div className="text-2xl font-bold text-primary">CORA</div>
-            <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
-              Change
+            <div className="text-2xl font-bold text-primary uppercase">{name}</div>
+            <button
+                className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                onClick={() => setIsNameModalOpen(true)}
+              >
+                Change
             </button>
           </div>
 
@@ -62,8 +95,9 @@ function CoSuperAdminThemes() {
       <input
         id="primaryColorPicker"
         type="color"
+        value={selectedPrimary}
         className="absolute top-0 left-0 opacity-0 w-full h-full cursor-pointer"
-        onChange={(e) => console.log("Primary Color:", e.target.value)}
+        onChange={(e) => setSelectedPrimary(e.target.value)}
       />
     </div>
 
@@ -78,19 +112,32 @@ function CoSuperAdminThemes() {
       <input
         id="secondaryColorPicker"
         type="color"
+        value={selectedSecondary}
         className="absolute top-0 left-0 opacity-0 w-full h-full cursor-pointer"
-        onChange={(e) => console.log("Secondary Color:", e.target.value)}
+        onChange={(e) => setSelectedSecondary(e.target.value)}
       />
     </div>
   </div>
 
-  <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+  <button
+    className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+    onClick={() => changeColor(selectedPrimary, selectedSecondary)}
+  >
     Change
   </button>
 </div>
         </div>
       </main>
+      <ChangeNameModal
+  isOpen={isNameModalOpen}
+  onClose={() => setIsNameModalOpen(false)}
+  onSave={async (newName) => {
+    await changeName(newName); 
+    setIsNameModalOpen(false);
+  }}
+/>
     </div>
+    
   );
 }
 

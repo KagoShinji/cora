@@ -206,6 +206,31 @@ export const uploadDocument = async (formData) => {
   }
 };
 
+export const submitManualEntry = async (formData) => {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(`${API_BASE_URL}/manual-entry`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData, 
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to submit manual document");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Manual entry failed:", error);
+    throw error;
+  }
+};
+
 export const fetchDocument = async () => {
   try {
     const token = localStorage.getItem("access_token");
@@ -233,12 +258,21 @@ export const viewDocument = async (docId) => {
     const response = await fetch(`${API_BASE_URL}/documents/${docId}/view`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`, 
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
       },
     });
 
     if (!response.ok) {
       throw new Error("Failed to fetch document");
+    }
+
+    const contentType = response.headers.get("Content-Type");
+
+    // Handle plain text files explicitly
+    if (contentType && contentType.includes("text/plain")) {
+      const text = await response.text();
+      const blob = new Blob([text], { type: "text/plain" });
+      return blob;
     }
 
     return await response.blob();
@@ -302,5 +336,32 @@ export const declineDocument = async (doc_id, status, remarks) => {
   } catch (error) {
     console.error("Decline document failed:", error);
     throw error;
+  }
+};
+
+export const generateAnswer = async (query, accessToken, onToken) => {
+  const res = await fetch(`${API_BASE_URL}/generate`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || "Failed to generate answer");
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    if (onToken) onToken(chunk);  // stream chunks to UI
   }
 };

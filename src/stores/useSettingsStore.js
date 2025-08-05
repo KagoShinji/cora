@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { fetchSettings, uploadLogo,changeNameAPI } from '../api/settings'
+import { fetchSettings, uploadLogo,changeNameAPI,changeColorAPI } from '../api/settings'
 
 export const useAppSettingsStore = create(
   persist(
@@ -36,12 +36,25 @@ export const useAppSettingsStore = create(
         set({ isLoading: true });
         try {
             const updated = await changeNameAPI(newName);
-            set({ name: updated.name, isLoading: false }); // ✅ directly update name
+            set({ name: updated.name, isLoading: false }); 
         } catch (error) {
             set({ error: error.message, isLoading: false });
         }
+        },
+      changeColor: async (primaryColor, secondaryColor) => {
+        try {
+          const updated = await changeColorAPI(primaryColor, secondaryColor);
+          set({
+            primary_color: updated.primary_color,
+            secondary_color: updated.secondary_color,
+          });
+        } catch (error) {
+          console.error("Failed to change colors:", error);
         }
+      },
     }),
+        
+
     {
       name: 'app-settings-store',
     }

@@ -12,6 +12,12 @@ function CoSuperAdminThemes() {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const changeName = useAppSettingsStore((state) => state.changeName);
   const name = useAppSettingsStore((state) => state.name);
+  const primaryColor = useAppSettingsStore((state) => state.primary_color);
+  const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
+  const changeColor = useAppSettingsStore((state) => state.changeColor);
+
+  const [selectedPrimary, setSelectedPrimary] = useState(primaryColor || "#007bff");
+  const [selectedSecondary, setSelectedSecondary] = useState(secondaryColor || "#6c757d");
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -89,8 +95,9 @@ function CoSuperAdminThemes() {
       <input
         id="primaryColorPicker"
         type="color"
+        value={selectedPrimary}
         className="absolute top-0 left-0 opacity-0 w-full h-full cursor-pointer"
-        onChange={(e) => console.log("Primary Color:", e.target.value)}
+        onChange={(e) => setSelectedPrimary(e.target.value)}
       />
     </div>
 
@@ -105,13 +112,17 @@ function CoSuperAdminThemes() {
       <input
         id="secondaryColorPicker"
         type="color"
+        value={selectedSecondary}
         className="absolute top-0 left-0 opacity-0 w-full h-full cursor-pointer"
-        onChange={(e) => console.log("Secondary Color:", e.target.value)}
+        onChange={(e) => setSelectedSecondary(e.target.value)}
       />
     </div>
   </div>
 
-  <button className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors">
+  <button
+    className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+    onClick={() => changeColor(selectedPrimary, selectedSecondary)}
+  >
     Change
   </button>
 </div>

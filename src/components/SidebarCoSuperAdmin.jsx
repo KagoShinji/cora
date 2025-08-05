@@ -2,11 +2,14 @@ import { Home, Landmark, Palette, ClipboardList, Menu, Users } from "lucide-reac
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuthStore } from "../stores/userStores";
+import { useAppSettingsStore } from "../stores/useSettingsStore"; 
 
 function SidebarCoSuperAdmin({ isOpen, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
   const user = useAuthStore((state)=>state.user)
+  const primaryColor = useAppSettingsStore((state) => state.primary_color);
+  const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
 
   const signout = useAuthStore((state)=>state.signout)
 
@@ -19,9 +22,10 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
     <>
       {/* Sidebar */}
       <aside
-        className={`h-screen fixed top-0 left-0 z-50 bg-primary text-white transition-all duration-300 ease-in-out ${
+        className={`h-screen fixed top-0 left-0 z-50 text-white transition-all duration-300 ease-in-out ${
           isOpen ? "w-64" : "w-16"
         } flex flex-col`}
+        style={{ backgroundColor: primaryColor || "#1D4ED8" }}
       >
         {/* Toggle Button */}
         <div className="flex items-center justify-start p-4 pl-4">
@@ -81,7 +85,8 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
           <div className="mt-auto px-2 pb-4">
             <div
               onClick={() => setShowLogoutModal(true)}
-              className="bg-white text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
+              style={{ backgroundColor: secondaryColor || "#F3F4F6" }}
+              className=" text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
             >
               <div className="font-semibold uppercase">{user}</div>
               <div className="text-sm">Co-Super Admin</div>

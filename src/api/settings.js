@@ -41,3 +41,24 @@ export const changeNameAPI = async (newName) => {
 
   return await response.json();
 };
+
+
+export const changeColorAPI = async (primaryColor, secondaryColor) => {
+  const response = await fetch(`${API_BASE_URL}/change-color`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      primary_color: primaryColor,
+      secondary_color: secondaryColor,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to change colors");
+  }
+
+  return await response.json();
+};
+

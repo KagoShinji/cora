@@ -4,6 +4,7 @@ import ModalUploadDocument from "../../components/ModalUploadDocument";
 import ModalManualEntry from "../../components/ModalManualEntry";
 import { Upload, ScanLine, Pencil } from "lucide-react";
 import { useDocumentStore } from "../../stores/useDocumentStore";
+import { submitManualEntry } from "../../api/api";
 
 function AdminCreatorDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -29,12 +30,21 @@ function AdminCreatorDocuments() {
     }
   };
 
-  const handleManualSave = (manualDoc) => {
-    console.log("Manual Entry Saved:", manualDoc);
+  const handleManualSave = async (manualDoc) => {
+  try {
+    const formData = new FormData();
+    formData.append("title", manualDoc.type);
+    formData.append("content", manualDoc.content);
+    if (manualDoc.notes) formData.append("notes", manualDoc.notes);
+
+    await submitManualEntry(formData);
     alert("Manual entry saved successfully!");
     setShowManualModal(false);
-  };
-
+    fetchDocuments(); // Refresh the document list
+  } catch (err) {
+    alert("Failed to submit manual document: " + err.message);
+  }
+};
   const filteredDocs = documents.filter((doc) => {
     const matchesSearch =
       doc.uploaded_by_name?.toLowerCase().includes(search.toLowerCase()) ||

@@ -22,6 +22,7 @@ export default function LandingPage() {
   const signin = useAuthStore((state) => state.signin);
   const error = useAuthStore((state) => state.error);
   const name = useAppSettingsStore((state) => state.name);
+  const primaryColor = useAppSettingsStore((state)=>state.primary_color)
 
   const handleSubmit = (e) => {
     e.preventDefault();

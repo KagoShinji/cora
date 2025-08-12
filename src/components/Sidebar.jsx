@@ -1,11 +1,14 @@
 import { Menu, FilePen } from "lucide-react";
+import { useAppSettingsStore } from "../stores/useSettingsStore";
 
 export default function Sidebar({ open, setOpen, onNewChat }) {
+  const primaryColor = useAppSettingsStore((state)=>state.primary_color)
   return (
     <aside
       className={`${
         open ? "w-64" : "w-16"
-      } bg-primary text-white flex flex-col transition-all duration-300 ease-in-out h-full`}
+      }  text-white flex flex-col transition-all duration-300 ease-in-out h-full`}
+      style={{ backgroundColor: primaryColor || "#1D4ED8" }}
     >
       {/* Toggle Button */}
       <div className="flex items-center justify-start px-4 py-4">

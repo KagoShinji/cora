@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppSettingsStore } from "../stores/useSettingsStore";
 import { useAuthStore } from '../stores/userStores';
+
 
 const credentialsMap = {
   'superadmin@gmail.com': { password: "super123", role: "superadmin", path: "/superadmin" },
@@ -9,11 +11,14 @@ const credentialsMap = {
   'adminapprover@gmail.com': { password: "admin123", role: "admin-approver", path: "/adminapprover" },
 };
 
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const logoPath = useAppSettingsStore((state) => state.logo_path)
+  const appName = useAppSettingsStore((state)=>state.name)
 
   const navigate = useNavigate();
 
@@ -120,11 +125,11 @@ function Login() {
           {/* School Logo */}
           <div className="mb-6">
             <img
-              src="/school-logo.png"
+              src={logoPath ? `http://127.0.0.1:8000${logoPath}` : "/school-logo.png"}
               alt="School Logo"
               className="w-40 h-40 mx-auto object-contain rounded-full border shadow-md border-primary"
             />
-            <h2 className="mt-4 text-5xl font-extrabold text-primary tracking-tight">CORA</h2>
+            <h2 className="mt-4 text-5xl font-extrabold text-primary tracking-tight">{appName}</h2>
             <p className="text-lg text-primary mt-1">Admin Portal</p>
           </div>
 

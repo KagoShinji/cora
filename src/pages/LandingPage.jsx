@@ -107,7 +107,7 @@ export default function LandingPage() {
         }}
       >
         {name.toUpperCase()}
-      </div>
+      </div>  
 
       {/* Main Content */}
       <div className="flex-1 relative flex flex-col">
@@ -144,7 +144,7 @@ export default function LandingPage() {
                 <Plus size={16} className="mr-2" />
                 <input
                   className="flex-grow bg-transparent outline-none placeholder:text-primary/50"
-                  placeholder={`Ask ${name.toUpperCase()}`}
+                  placeholder={`Ask ${name}`}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />

@@ -132,7 +132,7 @@ const handleDecline = async (docId, remarks) => {
                       {doc.department}
                     </td>
                     <td className="p-4 text-center text-black">{doc.title}</td>
-                    <td className="p-4 text-center text-black">
+                    <td className="p-4 text-center text-white">
                       <button
                         onClick={async () => {
                           try {

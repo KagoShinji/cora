@@ -16,7 +16,7 @@ function ChangeNameModal({ isOpen, onClose, onSave }) {
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="Enter new name"
-          className="w-full px-4 py-2 border rounded-md mb-4"
+          className="w-full px-4 py-2 border rounded-md mb-4 text-black"
         />
         <div className="flex justify-end gap-2">
           <button

@@ -5,7 +5,7 @@ import { fetchSettings, uploadLogo,changeNameAPI,changeColorAPI } from '../api/s
 export const useAppSettingsStore = create(
   persist(
     (set) => ({
-      name: null,
+      name: "",
       logo_path: null,
       primary_color: null,
       secondary_color: null,

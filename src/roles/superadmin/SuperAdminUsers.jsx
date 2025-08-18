@@ -159,6 +159,7 @@ function SuperAdminUsers() {
     <th className="p-4 text-center">Email</th>
     {/*<th className="p-4 text-center">School</th>*/}
     <th className="p-4 text-center">Role</th>
+    <th className="p-4 text-center">Position</th> {/* NEW */}
     {/*<th className="p-4 text-center">Timestamp</th>*/}
     <th className="p-4 text-center">Actions</th>
   </tr>
@@ -172,6 +173,7 @@ function SuperAdminUsers() {
               <td className="p-4 text-center">{user.email}</td>
               {/*<td className="p-4 text-center">{user.school}</td>*/}
               <td className="p-4 text-center">{user.role}</td>
+              <td className="p-4 text-center">{user.position || "-"}</td>
               {/*<td className="p-4 text-center">{user.created_at}</td>*/}
               <td className="p-4 text-center">
                 <div className="flex justify-center gap-3">

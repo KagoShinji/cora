@@ -222,57 +222,69 @@ scannedDocuments: [
                           </span>
                         </td>
                         <td className="p-4 text-center">
-  {doc.status === "pending-approval" ? (
-  <div className="flex justify-center gap-2">
-    {/* ✅ Edit button (works like View) */}
-    <button
-      onClick={() => handlePreview(doc)}
-      className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80"
-    >
-      Edit
-    </button>
-
-    <button
-      onClick={() => {
-        setSelectedDoc(doc);
-        setShowApproveModal(true);
-      }}
-      className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80"
-    >
-      Approve
-    </button>
-
-    <button
-      onClick={() => {
-        setSelectedDoc(doc);
-        setShowDeclineModal(true);
-      }}
-      className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80"
-    >
-      Decline
-    </button>
-  </div>
-) : doc.status === "approved" ? (
-  <div className="flex justify-center gap-2">
-    <button
-      onClick={() => handlePreview(doc)}
-      className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80"
-    >
-      Edit
-    </button>
-    <button
-  onClick={() => {
-    setSelectedDoc(doc);
-    setShowArchiveModal(true);
-  }}
-  className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-red-900"
->
-  {doc.archived ? "Unarchive" : "Archive"}
-</button>
-  </div>
-) : (
-  <span className="text-gray-500 italic"></span>
-)}
+  {(doc.status === "pending-approval" || doc.status === "declined") ? (
+    <div className="flex justify-center gap-2">
+      <button
+        onClick={() => handlePreview(doc)}
+        className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80"
+      >
+        Edit
+      </button>
+      {doc.status === "pending-approval" && (
+        <>
+          <button
+            onClick={() => {
+              setSelectedDoc(doc);
+              setShowApproveModal(true);
+            }}
+            className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80"
+          >
+            Approve
+          </button>
+          <button
+            onClick={() => {
+              setSelectedDoc(doc);
+              setShowDeclineModal(true);
+            }}
+            className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80"
+          >
+            Decline
+          </button>
+        </>
+      )}
+      {doc.status !== "pending-approval" && (
+        <button
+          onClick={() => {
+            setSelectedDoc(doc);
+            setShowArchiveModal(true);
+          }}
+          className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-red-900"
+        >
+          {doc.archived ? "Unarchive" : "Archive"}
+        </button>
+      )}
+    </div>
+  ) : doc.status === "approved" ? (
+    <div className="flex justify-center gap-2">
+      <button
+        onClick={() => handlePreview(doc)}
+        className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80"
+      >
+        Edit
+      </button>
+      <button
+        onClick={() => {
+          setSelectedDoc(doc);
+          setShowArchiveModal(true);
+        }}
+        className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-red-900"
+      >
+        {doc.archived ? "Unarchive" : "Archive"}
+      </button>
+    </div>
+  ) : (
+    <span className="text-gray-500 italic"></span>
+  )}
 </td>
                       </tr>
                     ))

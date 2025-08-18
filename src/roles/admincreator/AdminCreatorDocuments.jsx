@@ -143,7 +143,7 @@ function AdminCreatorDocuments() {
             <thead className="bg-primary text-white">
               <tr>
                 <th className="p-4 text-center">Department</th>
-                <th className="p-4 text-center">Title</th>
+                <th className="p-4 text-center">Type of Information</th>
                 <th className="p-4 text-center">File</th>
                 <th className="p-4 text-center">Timestamp</th>
                 <th className="p-4 text-center">Status</th>

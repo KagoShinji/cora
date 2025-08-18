@@ -3,12 +3,13 @@ import { useState } from "react";
 export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error }) {
   if (!isOpen) return null;
 
-  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
-  const [school, setSchool] = useState(""); 
+  const [school, setSchool] = useState("");
   const [localError, setLocalError] = useState("");
 
   const handleSubmit = async (e) => {
@@ -20,7 +21,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
     }
 
     const userData = {
-      name: username,
+      name: `${firstName} ${lastName}`,
       email,
       password,
       role,
@@ -29,12 +30,13 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
 
     try {
       await onSave(userData);
-      setUsername("");
+      setFirstName("");
+      setLastName("");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
       setRole("");
-      setSchool(""); // Reset school
+      setSchool("");
       setLocalError("");
       onClose();
     } catch (err) {
@@ -52,13 +54,27 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 !text-primary">
           <div>
             <label className="block mb-1 font-medium">
-              Fullname <span className="text-red-600">*</span>
+              First Name <span className="text-red-600">*</span>
             </label>
             <input
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => setFirstName(e.target.value)}
               type="text"
-              placeholder="Enter Fullname"
-              value={username}
+              placeholder="Enter First Name"
+              value={firstName}
+              className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">
+              Last Name <span className="text-red-600">*</span>
+            </label>
+            <input
+              onChange={(e) => setLastName(e.target.value)}
+              type="text"
+              placeholder="Enter Last Name"
+              value={lastName}
               className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
               required
             />
@@ -121,26 +137,6 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
               <option value="co-superadmin">Co-Super Admin</option>
             </select>
           </div>
-
-          {/* Show school input only when Co-Super Admin is selected */}
-          
-          {/*
-          {role === "co-superadmin" && (
-            <div>
-              <label className="block mb-1 font-medium">
-                School <span className="text-red-600">*</span>
-              </label>
-              <input
-                onChange={(e) => setSchool(e.target.value)}
-                type="text"
-                placeholder="Enter school"
-                value={school}
-                className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
-                required={role === "co-superadmin"}
-              />
-            </div>
-          )}
-            */}
 
           {(localError || error) && (
             <p className="text-red-600 bg-red-100 border border-red-400 rounded p-2 text-sm text-center">

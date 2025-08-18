@@ -5,6 +5,7 @@ import Modal from "../components/Modal";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import { useNavigate } from "react-router-dom";
+import UserForgotPasswordModal from "../components/UserForgotPasswordModal";
 
 export default function LandingPage() {
   const [query, setQuery] = useState("");
@@ -12,9 +13,10 @@ export default function LandingPage() {
   const [submitted, setSubmitted] = useState(false);
   const [modal, setModal] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
 
   const closeModal = () => setModal(null);
 
@@ -23,6 +25,9 @@ export default function LandingPage() {
   const error = useAuthStore((state) => state.error);
   const name = useAppSettingsStore((state) => state.name);
   const primaryColor = useAppSettingsStore((state)=>state.primary_color)
+const [firstName, setFirstName] = useState("");
+const [lastName, setLastName] = useState("");
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -42,9 +47,10 @@ export default function LandingPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     const userData = {
-      email,
-      password,
-    };
+  name: firstName + " " + lastName,
+  email,
+  password,
+};
     
     try {
       const login = await signin(userData)
@@ -103,10 +109,10 @@ export default function LandingPage() {
       <div
         className="fixed top-4 z-50 transition-all duration-300 text-primary font-bold text-xl select-none"
         style={{
-          left: sidebarOpen ? "12rem" : "5rem",
+          left: sidebarOpen ? "17rem" : "5rem",
           pointerEvents: "none",
         }}
-      >
+      > 
         {name.toUpperCase()}
       </div>  
 
@@ -186,106 +192,175 @@ export default function LandingPage() {
       </div>
 
       {/* Modals */}
-      {modal === "login" && (
-        <Modal title="Login to your account" onClose={closeModal}>
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="login-email"
-                className="text-sm font-medium text-primary"
-              >
-                Email
-              </label>
-              <input
-                id="login-email"
-                type="email"
-                className="border rounded p-2"
-                onChange={(e) => setEmail(e.target.value)}
-                value={email}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="login-password"
-                className="text-sm font-medium text-primary"
-              >
-                Password
-              </label>
-              <input
-                id="login-password"
-                type="password"
-                className="border rounded p-2"
-                onChange={(e) => setPassword(e.target.value)}
-                value={password}
-              />
-            </div>
-            <button
-              type="submit"
-              className="!bg-primary text-white py-2 rounded"
-            
-            >
-              Login
-            </button>
-          </form>
-        </Modal>
-      )}
-      {modal === "register" && (
-        <Modal title="Create an account" onClose={closeModal}>
-          <form onSubmit={handleRegister} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="register-name"
-                className="text-sm font-medium text-primary "
-              >
-                Full Name
-              </label>
-              <input
-                id="register-name"
-                type="text"
-                className="border rounded p-2"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="register-email"
-                className="text-sm font-medium text-primary"
-              >
-                Email
-              </label>
-              <input
-                id="register-email"
-                type="email"
-                className="border rounded p-2"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="register-password"
-                className="text-sm font-medium text-primary"
-              >
-                Password
-              </label>
-              <input
-                id="register-password"
-                type="password"
-                className="border rounded p-2"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <button
-              type="submit"
-              className="!bg-primary text-white py-2 rounded"
-            >
-              Register
-            </button>
-          </form>
-        </Modal>
-      )}
+      {/* Login Modal */}
+{modal === "login" && (
+  <Modal title="Login to your account" onClose={closeModal}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!email.trim() || !password.trim()) {
+          alert("Please enter both email and password.");
+          return;
+        }
+        handleLogin(e);
+      }}
+      className="flex flex-col gap-4"
+    >
+      {/* Email */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="login-email" className="text-sm font-medium text-primary">
+          Email <span className="text-red-600">*</span>
+        </label>
+        <input
+          id="login-email"
+          type="email"
+          className="border rounded p-2"
+          onChange={(e) => setEmail(e.target.value)}
+          value={email}
+        />
+      </div>
+
+      {/* Password */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="login-password" className="text-sm font-medium text-primary">
+          Password <span className="text-red-600">*</span>
+        </label>  
+        <input
+          id="login-password"
+          type="password"
+          className="border rounded p-2"
+          onChange={(e) => setPassword(e.target.value)}
+          value={password}
+        />
+      </div>
+
+      {/* Forgot Password link */}
+      <p
+        onClick={() => setModal("user-forgot-password")}
+        className="text-blue-600 text-sm cursor-pointer hover:underline w-fit"
+      >
+        Forgot Password?
+      </p>
+
+      {/* Login button */}
+      <button
+        type="submit"
+        className="!bg-primary text-white py-2 rounded"
+      >
+        Login
+      </button>
+    </form>
+  </Modal>
+)}
+
+{/* User Forgot Password Modal */}
+{modal === "user-forgot-password" && (
+  <UserForgotPasswordModal
+    onClose={() => setModal("login")} // go back to login modal when closed
+  />
+)}
+
+
+{/* Register Modal */}
+{modal === "register" && (
+  <Modal title="Create an account" onClose={closeModal}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (
+          !firstName.trim() ||
+          !lastName.trim() ||
+          !email.trim() ||
+          !password.trim() ||
+          !confirmPassword.trim()
+        ) {
+          alert("Please fill in all required fields.");
+          return;
+        }
+        if (password !== confirmPassword) {
+          alert("Passwords do not match.");
+          return;
+        }
+        handleRegister(e);
+      }}
+      className="flex flex-col gap-4"
+    >
+      {/* First Name */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="register-first-name" className="text-sm font-medium text-primary">
+          First Name <span className="text-red-600">*</span>
+        </label>
+        <input
+          id="register-first-name"
+          type="text"
+          className="border rounded p-2"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+        />
+      </div>
+
+      {/* Last Name */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="register-last-name" className="text-sm font-medium text-primary">
+          Last Name <span className="text-red-600">*</span>
+        </label>
+        <input
+          id="register-last-name"
+          type="text"
+          className="border rounded p-2"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+        />
+      </div>
+
+      {/* Email */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="register-email" className="text-sm font-medium text-primary">
+          Email <span className="text-red-600">*</span>
+        </label>
+        <input
+          id="register-email"
+          type="email"
+          className="border rounded p-2"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+
+      {/* Password */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="register-password" className="text-sm font-medium text-primary">
+          Password <span className="text-red-600">*</span>
+        </label>
+        <input
+          id="register-password"
+          type="password"
+          className="border rounded p-2"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
+
+      {/* Confirm Password */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="register-confirm-password" className="text-sm font-medium text-primary">
+          Confirm Password <span className="text-red-600">*</span>
+        </label>
+        <input
+          id="register-confirm-password"
+          type="password"
+          className="border rounded p-2"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
+      </div>
+
+      <button type="submit" className="!bg-primary text-white py-2 rounded">
+        Register
+      </button>
+    </form>
+  </Modal>
+)}
     </div>
   );
 }

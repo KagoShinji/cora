@@ -2,35 +2,44 @@ import { useState } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
 
 export default function ModalManualEntry({ isOpen, onClose, onSave }) {
-  const [title, setTitle] = useState("");
-  const [docType, setDocType] = useState("");
   const [content, setContent] = useState("");
-  const [notes, setNotes] = useState("");
+  const [keywords, setKeywords] = useState([]);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [docType, setDocType] = useState(""); // Added for Type of Information
   const [showTypeModal, setShowTypeModal] = useState(false);
+
+  const handleKeywordKeyDown = (e) => {
+    if (e.key === "Enter" && keywordInput.trim()) {
+      e.preventDefault();
+      if (!keywords.includes(keywordInput.trim())) {
+        setKeywords([...keywords, keywordInput.trim()]);
+      }
+      setKeywordInput("");
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!docType || !content) {
-      alert("Please fill out all required fields.");
+    if (!content.trim() || !docType.trim()) {
+      alert("Please select a Type of Information and fill out the content field.");
       return;
     }
 
     const manualDoc = {
-      title,
       type: docType,
       content,
-      notes,
+      keywords,
     };
 
     onSave(manualDoc);
     onClose();
 
     // Reset form
-    setTitle("");
     setDocType("");
     setContent("");
-    setNotes("");
+    setKeywords([]);
+    setKeywordInput("");
   };
 
   if (!isOpen) return null;
@@ -44,26 +53,10 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
           </h2>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-primary">
-            {/* Title 
+            {/* Type of Information */}
             <div>
               <label className="block mb-1 font-medium">
-                Title <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter document title"
-                required
-                className="w-full border border-primary rounded-md px-4 py-2"
-              />
-            </div>
-            */}
-
-            {/* Document Type */}
-            <div>
-              <label className="block mb-1 font-medium">
-                Document Type <span className="text-red-600">*</span>
+                Type of Information <span className="text-red-600">*</span>
               </label>
               <div className="flex gap-2">
                 <select
@@ -105,16 +98,37 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
               />
             </div>
 
-            {/* Notes */}
+            {/* Keywords */}
             <div>
-              <label className="block mb-1 font-medium">Notes (optional)</label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={2}
-                placeholder="Any extra remarks..."
-                className="w-full border border-primary rounded-md px-4 py-2 resize-none"
+              <label className="block mb-1 font-medium">Keywords</label>
+              <input
+                type="text"
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                onKeyDown={handleKeywordKeyDown}
+                placeholder="Type a keyword and press Enter"
+                className="w-full border border-primary rounded-md px-4 py-2"
               />
+              {keywords.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {keywords.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="flex items-center gap-1 text-sm px-2 py-1 rounded bg-gray-200/60"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => setKeywords(keywords.filter((_, i) => i !== idx))}
+                        className="text-gray-500 hover:text-red-500"
+                        style={{ all: "unset", cursor: "pointer", color: "inherit" }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Buttons */}
@@ -130,14 +144,14 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
                 type="submit"
                 className="px-4 py-2 !bg-primary text-white rounded-md hover:bg-primary/90 transition"
               >
-                Save
+                Proceed
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      {/* Manage Document Types Modal */}
+      {/* Document Type Modal */}
       <ModalManageDocumentType
         isOpen={showTypeModal}
         onClose={() => setShowTypeModal(false)}

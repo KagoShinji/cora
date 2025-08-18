@@ -43,6 +43,7 @@ export default function Sidebar({ open, setOpen, onNewChat }) {
               </li>
             ))}
           </ul>
+          
         </div>
       )}
     </aside>

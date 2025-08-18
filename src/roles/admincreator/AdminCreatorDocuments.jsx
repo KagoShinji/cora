@@ -2,6 +2,7 @@ import { useState,useEffect } from "react";
 import SidebarAdminCreator from "../../components/SidebarAdminCreator";
 import ModalUploadDocument from "../../components/ModalUploadDocument";
 import ModalManualEntry from "../../components/ModalManualEntry";
+import ModalScan from "../../components/ModalScan";
 import { Upload, ScanLine, Pencil } from "lucide-react";
 import { useDocumentStore } from "../../stores/useDocumentStore";
 import { submitManualEntry } from "../../api/api";
@@ -13,8 +14,7 @@ function AdminCreatorDocuments() {
   const { documents,fetchDocuments } = useDocumentStore();
   const [filterStatus, setFilterStatus] = useState("declined");
   const [search, setSearch] = useState("");
-
-  
+  const [showScanModal, setShowScanModal] = useState(false);  
 
   const handleUpload = async (formData) => {
     try {
@@ -81,18 +81,24 @@ function AdminCreatorDocuments() {
               className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition"
               onClick={() => setShowUploadModal(true)}
             >
-              Upload
+              Upload  
             </button>
           </div>
 
           {/* Scan */}
-          <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
-            <ScanLine className="text-primary w-12 h-12 mb-4" />
-            <h2 className="text-xl font-semibold text-primary mb-4">Scan Documents</h2>
-            <button className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition">
-              Upload
-            </button>
-          </div>
+<div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
+  <ScanLine className="text-primary w-12 h-12 mb-4" />
+  <h2 className="text-xl font-semibold text-primary mb-4">Scan Documents</h2>
+  <button
+    onClick={() => setShowScanModal(true)}
+    className="!bg-primary text-white px-4 py-2 rounded"
+  >
+    Upload
+  </button>
+</div>
+
+{/* Modal Scan */}
+{showScanModal && <ModalScan onClose={() => setShowScanModal(false)} />}
 
           {/* Manual Entry */}
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
@@ -164,7 +170,7 @@ function AdminCreatorDocuments() {
                             console.error("Failed to preview document:", err);
                           }
                         }}
-                        className="underline hover:text-blue-800"
+                        className="!bg-primary !text-white underline hover:text-blue-800"
                       >
                         View
                       </button>

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
+import { fetchDocumentInfo } from "../api/api";
 
 export default function ModalManualEntry({ isOpen, onClose, onSave }) {
   const [content, setContent] = useState("");
@@ -7,6 +8,8 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
   const [keywordInput, setKeywordInput] = useState("");
   const [docType, setDocType] = useState(""); // Added for Type of Information
   const [showTypeModal, setShowTypeModal] = useState(false);
+  const [typeOfInfo, setTypeOfInfo] = useState("");
+  const [documentTypes, setDocumentTypes] = useState([]);
 
   const handleKeywordKeyDown = (e) => {
     if (e.key === "Enter" && keywordInput.trim()) {
@@ -18,32 +21,51 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!content.trim() || !docType.trim()) {
-      alert("Please select a Type of Information and fill out the content field.");
-      return;
-    }
+  if (!content.trim() || !typeOfInfo.trim()) {
+    alert("Please select a Type of Information and fill out the content field.");
+    return;
+  }
 
-    const manualDoc = {
-      type: docType,
-      content,
-      keywords,
-    };
+  const payload = {
+    title_id: typeOfInfo,  
+    keywords: keywords,         
+    content: content,              
+  };
 
-    onSave(manualDoc);
+  try {
+    await onSave(payload); 
     onClose();
 
     // Reset form
-    setDocType("");
+    setTypeOfInfo("");
     setContent("");
     setKeywords([]);
     setKeywordInput("");
-  };
+  } catch (err) {
+    console.error("Failed to save document:", err);
+  }
+};
+
+    useEffect(() => {
+        if (isOpen) {
+          const loadTypes = async () => {
+            try {
+              const res = await fetchDocumentInfo();
+              setDocumentTypes(res || []); 
+            } catch (err) {
+              console.error("Failed to fetch document types:", err);
+            }
+          };
+          loadTypes();
+        }
+      }, [isOpen]);
+    if (!isOpen) return null;
 
   if (!isOpen) return null;
-
+     
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
@@ -60,18 +82,17 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
               </label>
               <div className="flex gap-2">
                 <select
-                  value={docType}
-                  onChange={(e) => setDocType(e.target.value)}
+                  value={typeOfInfo}
+                  onChange={(e) => setTypeOfInfo(e.target.value)}
                   required
                   className="flex-1 border border-primary rounded-md px-4 py-2"
                 >
-                  <option value="">Select a type</option>
-                  <option value="enrollment">Enrollment Process</option>
-                  <option value="tuition">Tuition Fees</option>
-                  <option value="scholarship">Scholarships</option>
-                  <option value="calendar">Academic Calendar</option>
-                  <option value="facilities">Campus Facilities</option>
-                  <option value="others">Others</option>
+                  <option value="">Select type</option>
+                  {documentTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
                 </select>
                 <button
                   type="button"

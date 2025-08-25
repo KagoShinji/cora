@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import { useAuthStore } from '../stores/userStores';
+import { resetPasswordRequest } from "../api/api";
 
 
 const credentialsMap = {
@@ -19,6 +20,7 @@ function Login() {
   const [forgotEmail, setForgotEmail] = useState("");
   const logoPath = useAppSettingsStore((state) => state.logo_path)
   const appName = useAppSettingsStore((state)=>state.name)
+  const primaryColor = useAppSettingsStore((s)=>s.primary_color)
 
   const navigate = useNavigate();
 
@@ -67,11 +69,22 @@ function Login() {
     }
   };
 
-  const handleForgotSubmit = () => {
+  const handleForgotSubmit = async () => {
+  if (!forgotEmail) {
+    alert("Please enter your email.");
+    return;
+  }
+
+  try {
+    await resetPasswordRequest(forgotEmail);
     alert(`Password reset instructions sent to: ${forgotEmail}`);
     setForgotEmail("");
     setShowForgotModal(false);
-  };
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Failed to send password reset email");
+  }
+};
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -129,7 +142,7 @@ function Login() {
               alt="School Logo"
               className="w-40 h-40 mx-auto object-contain rounded-full border shadow-md border-primary"
             />
-            <h2 className="mt-4 text-5xl font-extrabold text-primary tracking-tight">{appName}</h2>
+            <h2 style={{ color: primaryColor }} className="mt-4 text-5xl font-extrabold tracking-tight">{appName}</h2>
             <p className="text-lg text-primary mt-1">Admin Portal</p>
           </div>
 
@@ -167,7 +180,8 @@ function Login() {
             </div>
             <button
               type="submit"
-              className="!bg-primary text-white py-2 rounded font-semibold hover:bg-primary transition"
+              style={{backgroundColor:primaryColor}}
+              className=" text-white py-2 rounded font-semibold hover:bg-primary transition"
             >
               Login
             </button>

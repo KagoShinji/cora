@@ -1,20 +1,23 @@
 import { useState } from "react";
+import { createDocumentInfo } from "../api/api";
 
 export default function ModalManageDocumentType({ isOpen, onClose }) {
   const [newType, setNewType] = useState("");
-  const [types, setTypes] = useState([
-    "Enrollment Process",
-    "Tuition Fees",
-    "Scholarships",
-    "Academic Calendar",
-    "Campus Facilities",
-    "Others",
-  ]);
 
-  const handleAddType = () => {
+  const handleAddType = async () => {
     if (!newType.trim()) return;
-    setTypes([...types, newType.trim()]);
-    setNewType("");
+    try {
+      const payload = {name:newType}
+      const response = await createDocumentInfo(payload)
+      if(response){
+        alert("Created successfully")
+        onClose();
+      }
+      
+    } catch (error) {
+      console.error("Error adding document type:", error);
+      alert(error.message);
+    }
   };
 
   if (!isOpen) return null;
@@ -25,16 +28,7 @@ export default function ModalManageDocumentType({ isOpen, onClose }) {
         <h2 className="text-xl font-bold mb-4 text-center">Manage Document Types</h2>
 
         {/* Type List */}
-        <ul className="mb-4 max-h-40 overflow-y-auto space-y-1">
-          {types.map((type, index) => (
-            <li
-              key={index}
-              className="px-3 py-1 bg-gray-100 rounded text-sm border"
-            >
-              {type}
-            </li>
-          ))}
-        </ul>
+      
 
         {/* Add New Type */}
         <div className="flex gap-2 mb-4">

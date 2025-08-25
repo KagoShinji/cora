@@ -1,14 +1,25 @@
 import Modal from "./Modal"; // adjust path if your Modal component is elsewhere
 import { useState } from "react";
+import { resetPasswordRequest } from "../api/api";
 
 export default function UserForgotPasswordModal({ onClose }) {
   const [email, setEmail] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // TODO: Add API call for user password reset
-    console.log("Reset link sent to:", email);
-    onClose(); // close after submit
+  const handleSubmit = async () => {
+    if (!forgotEmail) {
+      alert("Please enter your email.");
+      return;
+    }
+  
+    try {
+      await resetPasswordRequest(forgotEmail);
+      alert(`Password reset instructions sent to: ${forgotEmail}`);
+      setForgotEmail("");
+      setShowForgotModal(false);
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Failed to send password reset email");
+    }
   };
 
   return (

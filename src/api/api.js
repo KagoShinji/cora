@@ -56,6 +56,7 @@ export const loginUser = async (userData) => {
 }
 
 export const userUpdate = async (users_id, updatedData) => {
+  
   try {
     const response = await fetch(`${API_BASE_URL}/update-users/${users_id}`, {
       method: 'PUT',
@@ -206,16 +207,17 @@ export const uploadDocument = async (formData) => {
   }
 };
 
-export const submitManualEntry = async (formData) => {
+export const submitManualEntry = async (payload) => {
   try {
     const token = localStorage.getItem("access_token");
 
     const response = await fetch(`${API_BASE_URL}/manual-entry`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: formData, 
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -223,8 +225,7 @@ export const submitManualEntry = async (formData) => {
       throw new Error(errorData.detail || "Failed to submit manual document");
     }
 
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
     console.error("Manual entry failed:", error);
     throw error;
@@ -253,29 +254,46 @@ export const fetchDocument = async () => {
   }
 };
 
+export const fetchDocumentsByTitle = async (titleName) => {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(
+      `${API_BASE_URL}/documents/by-title/${titleName}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to fetch documents by title");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching documents by title:", error);
+    throw error;
+  }
+};
+
 export const viewDocument = async (docId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/documents/${docId}/view`, {
+    const token = localStorage.getItem("access_token");
+    const response = await fetch(`${API_BASE_URL}/documents/${docId}/view`, { 
       method: "GET",
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch document");
-    }
+    // ... error handling ...
 
-    const contentType = response.headers.get("Content-Type");
-
-    // Handle plain text files explicitly
-    if (contentType && contentType.includes("text/plain")) {
-      const text = await response.text();
-      const blob = new Blob([text], { type: "text/plain" });
-      return blob;
-    }
-
-    return await response.blob();
+    return await response.blob(); // Returns the PDF as a Blob object
   } catch (error) {
     console.error("Error viewing document:", error);
     throw error;
@@ -339,14 +357,47 @@ export const declineDocument = async (doc_id, status, remarks) => {
   }
 };
 
-export const generateAnswer = async (query, accessToken, onToken) => {
+export const updateDocument = async (doc_id, updatedData, file = null) => {
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("Authentication token not found.");
+
+  const formData = new FormData();
+  const payloadBase64 = btoa(JSON.stringify(updatedData)); // Base64-encode JSON
+  formData.append("payload_base64", payloadBase64);
+
+  if (file) formData.append("file", file);
+
+  const res = await fetch(`${API_BASE_URL}/edit-document/${doc_id}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.detail || "Failed to update document.");
+  }
+
+  return await res.json();
+};
+
+export const generateAnswer = async (query, accessToken, onToken, selectedFiles = []) => {
+  const formData = new FormData();
+  formData.append("query", query);
+
+  selectedFiles.forEach((file) => {
+    formData.append("file", file); // append each selected file
+  });
+
   const res = await fetch(`${API_BASE_URL}/generate`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
+      // DO NOT set Content-Type manually! The browser sets it automatically for FormData
     },
-    body: JSON.stringify({ query }),
+    body: formData,
   });
 
   if (!res.ok) {
@@ -362,6 +413,80 @@ export const generateAnswer = async (query, accessToken, onToken) => {
     if (done) break;
 
     const chunk = decoder.decode(value, { stream: true });
-    if (onToken) onToken(chunk);  // stream chunks to UI
+    if (onToken) onToken(chunk); // stream chunks to UI
+  }
+};
+
+export const createDocumentInfo = async(payload) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/add-documentInfo`,{
+      method:"POST",
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify(payload)
+    })
+    if(!response.ok){
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Something went wrong in creating Document Information')
+    }
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error("Failed to create:",error)
+    throw error
+  }
+}
+
+export const fetchDocumentInfo = async (payload) => {
+  const response = await fetch(`${API_BASE_URL}/documentInfo`)
+
+  if(!response.ok){
+    throw new Error("Error fetching document Info")
+  }
+  return await response.json()
+}
+
+
+export const changePassword = async ({ token, password }) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/change-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }), // only token + password
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to change password");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Change password error:", error);
+    throw error;
+  }
+};
+export const resetPasswordRequest = async (email) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/request-password-reset`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to send password reset email");
+    }
+
+    const data = await response.json();
+    return data; // { message: "Password reset email sent" }
+
+  } catch (error) {
+    console.error("Password reset request error:", error);
+    throw error;
   }
 };

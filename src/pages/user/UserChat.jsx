@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Mic, Plus } from "lucide-react";
-import SidebarUser from "../../components/SidebarUser"; // ⬅️ use your SidebarUser
+import { Mic, Image as ImageIcon } from "lucide-react";
+import SidebarUser from "../../components/SidebarUser";
 import { useAuthStore } from "../../stores/userStores";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
 import { generateAnswer } from "../../api/api";
@@ -9,22 +9,83 @@ export default function UserChat() {
   const [query, setQuery] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [submitted, setSubmitted] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true); // start open by default
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [listening, setListening] = useState(false);
+
   const name = useAppSettingsStore((state) => state.name);
   const currentUser = useAuthStore((s) => s.currentUser);
 
   const inputRef = useRef(null);
   const scrollRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const recognitionRef = useRef(null);
 
-  // ---- Handlers ------------------------------------------------------------
+  // --- Web Speech API ---
+  useEffect(() => {
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      recognition.onstart = () => setListening(true);
+      recognition.onend = () => setListening(false);
+
+      recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setQuery(transcript);
+      };
+
+      recognitionRef.current = recognition;
+    } else {
+      console.warn("Speech Recognition not supported in this browser.");
+    }
+  }, []);
+
+  const handleMicClick = () => {
+    if (!recognitionRef.current) return;
+    if (listening) recognitionRef.current.stop();
+    else recognitionRef.current.start();
+  };
+
+  // --- Paste Handler ---
+  const handlePaste = (e) => {
+    const items = e.clipboardData.items;
+    const files = [];
+
+    for (let item of items) {
+      if (item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) files.push(file);
+      }
+    }
+
+    if (files.length > 0) {
+      setSelectedImages((prev) => [...prev, ...files]);
+    }
+  };
+
+  // --- Handlers ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmed = query.trim();
-    if (!trimmed || isTyping) return;
+    if ((!trimmed && selectedImages.length === 0) || isTyping) return;
 
-    appendMessage({ role: "user", text: trimmed });
+    appendMessage({
+      role: "user",
+      text: trimmed,
+      images: selectedImages.map((file) => URL.createObjectURL(file)),
+    });
+
     setQuery("");
+    setSelectedImages([]);
     setSubmitted(true);
 
     const accessToken = useAuthStore.getState().access_token;
@@ -39,12 +100,10 @@ export default function UserChat() {
         setChatHistory((prev) => {
           const updated = [...prev];
           const last = updated[updated.length - 1];
-          if (last.role === "assistant") {
-            last.text = streamedAnswer;
-          }
+          if (last.role === "assistant") last.text = streamedAnswer;
           return [...updated.slice(0, -1), last];
         });
-      });
+      }, selectedImages);
     } catch (err) {
       setChatHistory((prev) => [
         ...prev.slice(0, -1),
@@ -59,24 +118,31 @@ export default function UserChat() {
     }
   };
 
-  const appendMessage = (msg) =>
-    setChatHistory((prev) => [...prev, msg]);
+  const appendMessage = (msg) => setChatHistory((prev) => [...prev, msg]);
 
   const handleNewChat = () => {
     setQuery("");
     setChatHistory([]);
     setSubmitted(false);
     setIsTyping(false);
+    setSelectedImages([]);
     inputRef.current?.focus();
   };
 
-  const onKeyDown = (e) => {
-    if (e.key === "Escape") {
-      setQuery("");
-    }
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedImages((prev) => [...prev, ...files]);
   };
 
-  // ---- Effects -------------------------------------------------------------
+  const removeImage = (idx) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "Escape") setQuery("");
+  };
+
+  // --- Scroll & Focus ---
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -86,10 +152,9 @@ export default function UserChat() {
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [chatHistory, isTyping]);
 
-  // ---- UI ------------------------------------------------------------------
+  // --- UI ---
   return (
     <div className="flex h-screen w-screen bg-white text-gray-900 overflow-hidden">
-      {/* SidebarUser integration */}
       <SidebarUser
         isOpen={sidebarOpen}
         setOpen={setSidebarOpen}
@@ -99,15 +164,11 @@ export default function UserChat() {
       {/* Logo */}
       <div
         className="fixed top-4 z-50 transition-all duration-300 text-primary font-bold text-xl select-none"
-        style={{
-          left: sidebarOpen ? "17rem" : "5rem",
-          pointerEvents: "none",
-        }}
+        style={{ left: sidebarOpen ? "17rem" : "5rem", pointerEvents: "none" }}
       >
         {name.toUpperCase()}
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4">
@@ -146,31 +207,12 @@ export default function UserChat() {
               <p className="text-sm text-primary mb-6">
                 What can I help you with?
               </p>
-              <form
-                onSubmit={handleSubmit}
-                className="w-full max-w-md flex items-center border border-primary rounded-lg px-4 py-2 bg-gray-100 text-primary"
-              >
-                <Plus size={16} className="mr-2" />
-                <input
-                  ref={inputRef}
-                  className="flex-grow bg-transparent outline-none placeholder:text-primary/50"
-                  placeholder={`Ask ${name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}`}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  disabled={isTyping}
-                />
-                <Mic size={16} />
-              </form>
             </div>
           ) : (
             <div className="flex flex-col gap-3 max-w-2xl mx-auto">
-              {chatHistory.map((chat, idx, arr) => {
+              {chatHistory.map((chat, idx) => {
                 const isCoraTyping =
-                  chat.role === "assistant" &&
-                  isTyping &&
-                  chat.text === "";
-
+                  chat.role === "assistant" && isTyping && chat.text === "";
                 return (
                   <div
                     key={idx}
@@ -183,11 +225,19 @@ export default function UserChat() {
                     <span className="font-semibold">
                       {chat.role === "user" ? "You" : "CORA"}:
                     </span>{" "}
-                    {isCoraTyping
-                      ? "CORA is typing…"
-                      : chat.text?.trim()
-                      ? chat.text.replace(/\*\*/g, "")
-                      : "[No response received]"}
+                    {chat.text?.trim() || "Cora is generating"}
+                    {chat.images?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {chat.images.map((src, i) => (
+                          <img
+                            key={i}
+                            src={src}
+                            alt="uploaded"
+                            className="w-24 h-24 object-cover rounded-lg border"
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -196,12 +246,50 @@ export default function UserChat() {
         </div>
 
         {/* Input Box */}
-        {(submitted || chatHistory.length > 0) && (
-          <form
-            onSubmit={handleSubmit}
-            className="w-full max-w-xl px-4 py-2 flex items-center border border-primary rounded-lg bg-gray-100 text-primary mx-auto mb-4"
-          >
-            <Plus size={16} className="mr-2" />
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-xl px-4 py-2 flex flex-col gap-2 border border-primary rounded-lg bg-gray-100 text-primary mx-auto mb-4"
+        >
+          {/* Image Preview */}
+          {selectedImages.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {selectedImages.map((file, idx) => (
+                <div key={idx} className="relative">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="preview"
+                    className="w-20 h-20 object-cover rounded-lg border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="absolute -top-2 -right-2 rounded-full flex items-center justify-center w-4 h-4"
+                  >
+                    x
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Input Row */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current.click()}
+              className="p-2 rounded-lg hover:bg-primary/20"
+            >
+              <ImageIcon size={18} />
+            </button>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+
             <input
               ref={inputRef}
               className="flex-grow bg-transparent outline-none placeholder:text-primary/50 disabled:opacity-60"
@@ -209,11 +297,21 @@ export default function UserChat() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKeyDown}
+              onPaste={handlePaste} // ✅ Paste images directly
               disabled={isTyping}
             />
-            <Mic size={16} />
-          </form>
-        )}
+
+            <button
+              type="button"
+              onClick={handleMicClick}
+              className={`p-2 rounded-lg ${
+                listening ? "bg-red-100 text-red-600" : "hover:bg-primary/20"
+              }`}
+            >
+              <Mic size={18} />
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

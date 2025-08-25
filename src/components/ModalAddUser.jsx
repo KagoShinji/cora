@@ -12,6 +12,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
   const [school, setSchool] = useState("");
   const [position, setPosition] = useState(""); // ✅ Position field
   const [localError, setLocalError] = useState("");
+  const [middleInitial,setMiddleInitial] = useState("")
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +28,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
     }
 
     const userData = {
-      name: `${firstName} ${lastName}`,
+      name: `${firstName} ${lastName} ${middleInitial}`,
       email,
       password,
       role,
@@ -39,6 +40,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
       await onSave(userData);
       setFirstName("");
       setLastName("");
+      setMiddleInitial("")
       setEmail("");
       setPassword("");
       setConfirmPassword("");
@@ -91,6 +93,21 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
               required
             />
           </div>
+           {/* Middle Initial*/}
+          <div>
+            <label className="block mb-1 font-medium">
+              MiddleInitial <span className="text-red-600">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Middle Initial"
+              value={middleInitial}
+              onChange={(e) => setMiddleInitial(e.target.value)}
+              className="w-full !border !border-primary !rounded-md !px-4 !py-2 !text-primary !outline-none focus:!ring-1 focus:!ring-primary"
+              required
+            />
+          </div>
+
 
           {/* Email */}
           <div>
@@ -169,7 +186,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
             />
           </div>
 
-          {/* School (conditionally for Co-Super Admin) */}
+          {/* School (conditionally for Co-Super Admin)
           {role === "co-superadmin" && (
             <div>
               <label className="block mb-1 font-medium">
@@ -185,6 +202,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
               />
             </div>
           )}
+          */}
 
           {/* Errors */}
           {(localError || error) && (

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
+import { fetchDocumentInfo } from "../api/api";
 
 export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
   const [typeOfInfo, setTypeOfInfo] = useState(""); // Type of Information
@@ -7,6 +8,9 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
   const [keywords, setKeywords] = useState([]);
   const [files, setFiles] = useState([]);
   const [showTypeModal, setShowTypeModal] = useState(false);
+  const [documentTypes, setDocumentTypes] = useState([]);
+  
+
 
   const handleFileChange = (e) => {
     const newFile = e.target.files[0];
@@ -29,9 +33,9 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
     }
 
     const formData = new FormData();
-    formData.append("typeOfInfo", typeOfInfo);
+    formData.append("title_id", typeOfInfo);
     formData.append("keywords", keywords.join(","));
-    files.forEach((file) => formData.append("files", file));
+    formData.append("file", files[0]);
 
     await onUpload(formData);
     onClose();
@@ -40,7 +44,19 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
     setKeywords([]);
     setFiles([]);
   };
-
+    useEffect(() => {
+      if (isOpen) {
+        const loadTypes = async () => {
+          try {
+            const res = await fetchDocumentInfo();
+            setDocumentTypes(res || []); 
+          } catch (err) {
+            console.error("Failed to fetch document types:", err);
+          }
+        };
+        loadTypes();
+      }
+    }, [isOpen]);
   if (!isOpen) return null;
 
   return (
@@ -65,12 +81,11 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
                   className="flex-1 border border-primary rounded-md px-4 py-2"
                 >
                   <option value="">Select type</option>
-                  <option value="enrollment">Enrollment Process</option>
-                  <option value="tuition">Tuition Fees</option>
-                  <option value="scholarship">Scholarships</option>
-                  <option value="calendar">Academic Calendar</option>
-                  <option value="facilities">Campus Facilities</option>
-                  <option value="others">Others</option>
+                  {documentTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
                 </select>
                 <button
                   type="button"

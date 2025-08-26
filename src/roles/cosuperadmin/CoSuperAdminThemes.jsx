@@ -36,12 +36,12 @@ function CoSuperAdminThemes() {
           sidebarOpen ? "ml-64" : "ml-16"
         } w-full`}
       >
-        <h1 className="text-3xl font-bold text-primary mb-8">Themes</h1>
+        <h1 style={{color:primaryColor}} className="text-3xl font-bold  mb-8">Themes</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 justify-items-center">
           {/* Logo Card */}
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs h-72 flex flex-col items-center justify-between">
-            <h2 className="text-xl font-semibold text-primary">Logo</h2>
+            <h2  className="text-xl font-semibold ">Logo</h2>
             <img
             src={logoPath ? `http://127.0.0.1:8000${logoPath}` : "/school-logo.png"}
             alt="School Logo"
@@ -60,7 +60,8 @@ function CoSuperAdminThemes() {
                         }}
                       />
             <button
-                className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+                style={{backgroundColor:primaryColor}}
+                className=" !text-white px-4 py-2 rounded-md hover:!bg-gray-800 transition-colors"
                 onClick={() => document.getElementById('logoUpload')?.click()}
               >
                 Change
@@ -69,10 +70,11 @@ function CoSuperAdminThemes() {
 
           {/* Name Card */}
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs h-72 flex flex-col items-center justify-between">
-            <h2 className="text-xl font-semibold text-primary">Name</h2>
-            <div className="text-2xl font-bold text-primary uppercase">{name}</div>
+            <h2  className="text-xl font-semibold ">Name</h2>
+            <div style={{color:primaryColor}} className="text-2xl font-bold  uppercase">{name}</div>
             <button
-                className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+              style={{backgroundColor:primaryColor}}
+                className=" !text-white px-4 py-2 rounded-md hover:!bg-gray-800 transition-colors"
                 onClick={() => setIsNameModalOpen(true)}
               >
                 Change
@@ -81,14 +83,15 @@ function CoSuperAdminThemes() {
 
           {/* Theme Color Card */}
 <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs h-72 flex flex-col items-center justify-between">
-  <h2 className="text-xl font-semibold text-primary mb-2">Themes</h2>
+  <h2  className="text-xl font-semibold text-primary mb-2">Themes</h2>
 
   <div className="flex gap-4">
     {/* Primary Color Picker */}
     <div className="relative">
       <button
+        style={{backgroundColor:primaryColor}}
         onClick={() => document.getElementById("primaryColorPicker").click()}
-        className="!bg-primary text-white px-4 py-2 rounded"
+        className=" text-white px-4 py-2 rounded"
       >
         Primary
       </button>
@@ -120,7 +123,8 @@ function CoSuperAdminThemes() {
   </div>
 
   <button
-    className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary transition-colors"
+    style={{backgroundColor:primaryColor}}
+    className=" !text-white px-4 py-2 rounded-md hover:!bg-gray-800 transition-colors"
     onClick={() => changeColor(selectedPrimary, selectedSecondary)}
   >
     Apply

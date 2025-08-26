@@ -16,6 +16,7 @@ import AdminApproverDashboard from "./roles/adminapprover/AdminApproverDashboard
 import AdminApproverDocuments from "./roles/adminapprover/AdminApproverDocuments";
 import AdminApproverLogs from "./roles/adminapprover/AdminApproverLogs";
 import UserChat from "./pages/user/UserChat";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
         <Route path="/adminapprover/documents" element={<AdminApproverDocuments />} />
         <Route path="/adminapprover/logs" element={<AdminApproverLogs />} />
         <Route path="/user/chat" element={<UserChat />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
       </Routes>
     </Router>
   );

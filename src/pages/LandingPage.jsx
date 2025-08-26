@@ -16,6 +16,7 @@ export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [middleInitial,setMiddleInitial] = useState("")
 
 
   const closeModal = () => setModal(null);
@@ -76,7 +77,7 @@ const [lastName, setLastName] = useState("");
   const handleRegister = async (e) => {
     e.preventDefault();
     const userData = {
-      name: username,
+      name: `${firstName} ${lastName} ${middleInitial}`,
       email,
       password,
     };
@@ -86,6 +87,7 @@ const [lastName, setLastName] = useState("");
         console.log("Something went wrong please try again", error);
       }
       alert("Created account successfully");
+      window.location.reload()
     } catch (err) {
       throw Error("Something went wrong please try again:", err);
     }
@@ -121,7 +123,8 @@ const [lastName, setLastName] = useState("");
         {/* Header */}
         <header className="flex justify-end gap-4 px-6 py-4">
           <button
-            className="px-4 py-1 text-sm !bg-primary text-white rounded-full"
+            style={{backgroundColor:primaryColor}}
+            className="px-4 py-1 text-sm  text-white rounded-full"
             onClick={() => setModal("login")}
           >
             Login
@@ -291,7 +294,7 @@ const [lastName, setLastName] = useState("");
           First Name <span className="text-red-600">*</span>
         </label>
         <input
-          id="register-first-name"
+          id="Enter Firstname"
           type="text"
           className="border rounded p-2"
           value={firstName}
@@ -305,11 +308,23 @@ const [lastName, setLastName] = useState("");
           Last Name <span className="text-red-600">*</span>
         </label>
         <input
-          id="register-last-name"
+          id="Enter Lastname"
           type="text"
           className="border rounded p-2"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
+        />
+      </div>
+       <div className="flex flex-col gap-1">
+        <label htmlFor="register-last-name" className="text-sm font-medium text-primary">
+          Middle Initial <span className="text-red-600">*</span>
+        </label>
+        <input
+          id="Enter Middle Initial"
+          type="text"
+          className="border rounded p-2"
+          value={middleInitial}
+          onChange={(e) => setMiddleInitial(e.target.value)}
         />
       </div>
 

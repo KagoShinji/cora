@@ -5,6 +5,7 @@ import ModalEditDepartment from "../../components/ModalEditDepartment"; // NEW
 import ModalConfirmDelete from "../../components/ModalConfirmDelete"; // NEW
 import { useAuthStore } from "../../stores/userStores";
 import { updateDepartment } from "../../api/api";
+import { useAppSettingsStore } from "../../stores/useSettingsStore";
 
 function CoSuperAdminDepartments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -25,7 +26,7 @@ function CoSuperAdminDepartments() {
   const [deletingDept, setDeletingDept] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-
+  const primaryColor = useAppSettingsStore((s)=>s.primary_color)
   
 
   useEffect(() => {
@@ -105,9 +106,10 @@ function CoSuperAdminDepartments() {
       {/* Main content */}
       <main className={`transition-all duration-300 p-8 overflow-y-auto bg-gray-100 ${sidebarOpen ? "ml-64" : "ml-16"} w-full`}>
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-primary">Departments</h1>
+          <h1  style={{color:primaryColor}}className="text-3xl font-bold ">Departments</h1>
           <button
-            className="!bg-primary text-white px-4 py-2 rounded-md hover:bg-primary transition-colors"
+            style={{backgroundColor:primaryColor}}
+            className=" text-white px-4 py-2 rounded-md hover:bg-primary transition-colors"
             onClick={() => setIsModalOpen(true)}
           >
             Add Department
@@ -128,7 +130,7 @@ function CoSuperAdminDepartments() {
         {/* Department Table */}
         <div className="bg-white shadow-md rounded-lg overflow-auto">
           <table className="min-w-full text-sm text-black">
-            <thead className="bg-primary text-white">
+            <thead style={{backgroundColor:primaryColor}} className=" text-white">
               <tr>
                 <th className="p-4 text-center">Department</th>
                 <th className="p-4 text-center">Actions</th>
@@ -141,13 +143,15 @@ function CoSuperAdminDepartments() {
                     <td className="p-4 text-center">{dept.department_name}</td>
                     <td className="p-4 flex justify-center gap-2">
                       <button
-                        className="!bg-primary text-white px-4 py-2 rounded-md hover:bg-primary transition-colors"
+                        style={{backgroundColor:primaryColor}}
+                        className=" text-white px-4 py-2 rounded-md hover:bg-primary transition-colors"
                         onClick={() => handleEditClick(dept)}
                       >
                         Edit
                       </button>
                       <button
-                        className="!bg-primary text-white px-4 py-2 rounded-md hover:bg-primary transition-colors"
+                        style={{backgroundColor:primaryColor}}
+                        className=" text-white px-4 py-2 rounded-md hover:bg-primary transition-colors"
                         onClick={() => handleDeleteClick(dept)}
                       >
                         Delete

@@ -3,7 +3,9 @@ import ModalAddDepartment from "./ModalAddDepartment";
 import { useAuthStore } from "../stores/userStores";
 
 export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
-  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName,setLastName] = useState("")
+  const [middleInitial,setMiddleInitial] = useState("")
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); 
@@ -23,7 +25,7 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
     }
 
     const userData = {
-      name: username,
+      name: `${firstName} ${lastName} ${middleInitial}`,
       email,
       password,
       role,
@@ -35,7 +37,7 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
       setUsername("");
       setEmail("");
       setPassword("");
-      setConfirmPassword(""); // ✅ Reset field
+      setConfirmPassword("");
       setRole("");
       setDepartment("");
       onClose();
@@ -63,13 +65,38 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
           <h2 className="text-2xl font-bold mb-4 text-primary text-center">Add Admin</h2>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-primary">
+            {/*Firstname*/}
             <div>
-              <label className="block mb-1 font-medium">Fullname</label>
+              <label className="block mb-1 font-medium">Firstname</label>
               <input
                 type="text"
                 placeholder="Enter Fullname"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
+                required
+              />
+            </div>
+            {/*Lastname*/}
+             <div>
+              <label className="block mb-1 font-medium">Lastname</label>
+              <input
+                type="text"
+                placeholder="Enter Lastname"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
+                required
+              />
+            </div>
+            {/*Middle Initial*/}
+             <div>
+              <label className="block mb-1 font-medium">Middle Initial</label>
+              <input
+                type="text"
+                placeholder="Enter Middle Initial"
+                value={middleInitial}
+                onChange={(e) => setMiddleInitial(e.target.value)}
                 className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
                 required
               />

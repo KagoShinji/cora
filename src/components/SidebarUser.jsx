@@ -1,4 +1,4 @@
-import { Home, FilePen, Menu } from "lucide-react";
+import { Home, FilePen, Menu, Star } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuthStore } from "../stores/userStores";
@@ -6,7 +6,11 @@ import { useAppSettingsStore } from "../stores/useSettingsStore";
 
 function SidebarUser({ isOpen, setOpen, onNewChat }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(""); // Search state
+  const [showSatisfactionModal, setShowSatisfactionModal] = useState(false);
+  const [hasShownSatisfaction, setHasShownSatisfaction] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const signout = useAuthStore((state) => state.signout);
@@ -19,6 +23,19 @@ function SidebarUser({ isOpen, setOpen, onNewChat }) {
     navigate("/");
   };
 
+  const handleNewChatClick = () => {
+    if (!hasShownSatisfaction) {
+      setShowSatisfactionModal(true);
+      setHasShownSatisfaction(true);
+    }
+    onNewChat();
+  };
+
+  const submitRating = () => {
+    console.log("Rating submitted:", rating); // You can send to backend here
+    setShowSatisfactionModal(false);
+  };
+
   return (
     <>
       {/* Sidebar */}
@@ -28,7 +45,6 @@ function SidebarUser({ isOpen, setOpen, onNewChat }) {
           isOpen ? "w-64" : "w-16"
         } flex flex-col`}
       >
-        {/* Toggle Button */}
         <div className="flex items-center justify-start p-4">
           <Menu
             onClick={() => setOpen(!isOpen)}
@@ -36,7 +52,6 @@ function SidebarUser({ isOpen, setOpen, onNewChat }) {
           />
         </div>
 
-        {/* Search Bar */}
         <div
           className={`px-4 mb-2 transition-all duration-300 ease-in-out overflow-hidden ${
             isOpen ? "h-10 opacity-100" : "h-0 opacity-0"
@@ -51,18 +66,16 @@ function SidebarUser({ isOpen, setOpen, onNewChat }) {
           />
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex flex-col gap-2 p-2 text-white">
           <div
             className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-red-800 transition"
-            onClick={onNewChat}
+            onClick={handleNewChatClick}
           >
             <FilePen size={18} className="text-white" />
             {isOpen && <span className="font-semibold">New Chat</span>}
           </div>
         </nav>
 
-        {/* Chat History */}
         <div
           className={`flex flex-col !text-white px-2 mt-2 overflow-y-auto sidebar-scroll transition-all duration-300 ease-in-out`}
         >
@@ -88,7 +101,6 @@ function SidebarUser({ isOpen, setOpen, onNewChat }) {
           </ul>
         </div>
 
-        {/* Footer */}
         {isOpen && (
           <div className="mt-auto px-2 pb-4">
             <div
@@ -110,9 +122,7 @@ function SidebarUser({ isOpen, setOpen, onNewChat }) {
             <h2 className="text-lg font-semibold text-red-800 mb-4">
               Confirm Logout
             </h2>
-            <p className="text-gray-700 mb-6">
-              Are you sure you want to log out?
-            </p>
+            <p className="text-gray-700 mb-6">Are you sure you want to log out?</p>
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowLogoutModal(false)}
@@ -127,6 +137,38 @@ function SidebarUser({ isOpen, setOpen, onNewChat }) {
                 Logout
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Satisfaction Modal */}
+      {showSatisfactionModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-80 text-center">
+            <h2 className="text-lg font-semibold text-primary mb-4">
+              Rate Satisfaction
+            </h2>
+            <p className="text-gray-700 mb-4">How accurate and relevant was the chat?</p>
+            <div className="flex justify-center gap-2 mb-6">
+              {[1,2,3,4,5].map((star) => (
+                <Star
+                  key={star}
+                  size={28}
+                  className={`cursor-pointer ${
+                    star <= (hoverRating || rating) ? "text-yellow-400" : "text-gray-300"
+                  }`}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={() => setRating(star)}
+                />
+              ))}
+            </div>
+            <button
+              onClick={submitRating}
+              className="px-4 py-2 !bg-primary text-white rounded-md hover:!bg-red-700 transition"
+            >
+              Submit
+            </button>
           </div>
         </div>
       )}

@@ -8,6 +8,7 @@ import CoSuperAdminDashboard from "./roles/cosuperadmin/CoSuperAdminDashboard";
 import CoSuperAdminAdmins from "./roles/cosuperadmin/CoSuperAdminAdmins";
 import CoSuperAdminDepartments from "./roles/cosuperadmin/CoSuperAdminDepartments";
 import CoSuperAdminThemes from "./roles/cosuperadmin/CoSuperAdminThemes";
+import CoSuperAdminDocuments from "./roles/cosuperadmin/CoSuperAdminDocuments";
 import CoSuperAdminLogs from "./roles/cosuperadmin/CoSuperAdminLogs";
 import AdminCreatorDashboard from "./roles/admincreator/AdminCreatorDashboard";
 import AdminCreatorDocuments from "./roles/admincreator/AdminCreatorDocuments";
@@ -31,6 +32,7 @@ function App() {
         <Route path="/cosuperadmin/admins" element={<CoSuperAdminAdmins />} />
         <Route path="/cosuperadmin/departments" element={<CoSuperAdminDepartments />} />
         <Route path="/cosuperadmin/themes" element={<CoSuperAdminThemes />} />
+        <Route path="/cosuperadmin/documents" element={<CoSuperAdminDocuments />} />
         <Route path="/cosuperadmin/logs" element={<CoSuperAdminLogs />} />
         <Route path="/admincreator" element={<AdminCreatorDashboard />} />
         <Route path="/admincreator/logs" element={<AdminCreatorLogs />} />

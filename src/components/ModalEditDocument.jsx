@@ -61,7 +61,7 @@ const ModalEditDocument = ({ isOpen, onClose, document, onUpdate }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
         <button onClick={onClose} className="absolute top-4 right-4">
-          <X className="w-6 h-6 text-gray-500 hover:text-gray-800" />
+          <X className="w-6 h-6 !bg-primary !text-white hover:text-gray-800" />
         </button>
 
         <h2 className="text-xl font-bold text-primary mb-4">Edit Document</h2>
@@ -127,7 +127,7 @@ const ModalEditDocument = ({ isOpen, onClose, document, onUpdate }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition"
+              className="px-4 py-2 !text-primary border !bg-white !border-primary rounded-md hover:bg-gray-50 transition"
             >
               Cancel
             </button>

@@ -4,6 +4,8 @@ import SidebarUser from "../../components/SidebarUser";
 import { useAuthStore } from "../../stores/userStores";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
 import { generateAnswer } from "../../api/api";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function UserChat() {
   const [query, setQuery] = useState("");
@@ -225,7 +227,11 @@ export default function UserChat() {
                     <span className="font-semibold">
                       {chat.role === "user" ? "You" : "CORA"}:
                     </span>{" "}
-                    {chat.text?.trim() || "Cora is generating"}
+                    <div className="whitespace-pre-wrap break-words">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {chat.text?.trim() || "Cora is generating"}
+                      </ReactMarkdown>
+                    </div>
                     {chat.images?.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
                         {chat.images.map((src, i) => (

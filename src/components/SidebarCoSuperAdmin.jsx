@@ -61,6 +61,16 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
             {isOpen && <span className="text-white">Departments</span>}
           </Link>
 
+
+          {/* Documents (NEW) */}
+  <Link
+    to="/cosuperadmin/documents"
+    className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
+  >
+    <ClipboardList size={18} className="text-white" />
+    {isOpen && <span className="text-white">Documents</span>}
+  </Link>
+
           {/* Themes */}
           <Link
             to="/cosuperadmin/themes"

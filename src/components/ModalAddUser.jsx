@@ -96,7 +96,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
            {/* Middle Initial*/}
           <div>
             <label className="block mb-1 font-medium">
-              MiddleInitial <span className="text-red-600">*</span>
+              Middle Initial <span className="text-red-600">*</span>
             </label>
             <input
               type="text"

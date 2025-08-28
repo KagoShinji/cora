@@ -21,7 +21,7 @@ function AdminApproverDocuments() {
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [keywordResults, setKeywordResults] = useState(null);
   const [highlightedDocId, setHighlightedDocId] = useState(null);
-
+  const [pdfPreview, setPdfPreview] = useState(null);
   const { documents, fetchDocuments } = useDocumentStore();
 
   useEffect(() => {
@@ -64,16 +64,17 @@ function AdminApproverDocuments() {
   };
 
   const handleViewPdf = async (docId) => {
-    try {
-      const blob = await viewDocument(docId);
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, "_blank");
-      setHighlightedDocId(docId);
-    } catch (error) {
-      console.error("Error viewing PDF:", error);
-      alert("Failed to load PDF.");
-    }
-  };
+  try {
+    const blob = await viewDocument(docId);
+    const blobUrl = URL.createObjectURL(blob);
+
+    setPdfPreview({ id: docId, url: blobUrl }); // store for preview
+    setHighlightedDocId(docId);
+  } catch (error) {
+    console.error("Error viewing PDF:", error);
+    alert("Failed to load PDF.");
+  }
+};
 
   const handleSaveEdit = async (id, content) => {
     try {
@@ -308,21 +309,39 @@ function AdminApproverDocuments() {
           {selectedDoc ? (
             <div className="flex flex-col gap-6">
               {/* PDF Files */}
-              <div>
-                <h2 className="text-lg font-bold text-primary mb-2">PDF Documents</h2>
-                {selectedDoc.files?.length > 0 ? (
-                  <ul className="space-y-2">
-                    {selectedDoc.files.map((file, idx) => (
-                      <li
-                        key={idx}
-                        className={`p-1 rounded ${highlightedDocId === file.id ? "bg-yellow-100" : ""}`}
-                      >
-                        <span onClick={() => handleViewPdf(file.id)} className="text-blue-600 cursor-pointer hover:underline">{file.title}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : <p className="text-gray-500">No PDF files found</p>}
-              </div>
+<div>
+  <h2 className="text-lg font-bold text-primary mb-2">PDF Documents</h2>
+  {selectedDoc.files?.length > 0 ? (
+    <ul className="space-y-2">
+      {selectedDoc.files.map((file, idx) => (
+        <li
+          key={idx}
+          className={`p-1 rounded ${highlightedDocId === file.id ? "bg-yellow-100" : ""}`}
+        >
+          <span
+            onClick={() => handleViewPdf(file.id)}
+            className="text-blue-600 cursor-pointer hover:underline"
+          >
+            {file.title}
+          </span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-gray-500">No PDF files found</p>
+  )}
+
+  {/* PDF Preview below */}
+  {pdfPreview && highlightedDocId === pdfPreview.id && (
+    <div className="mt-4 border rounded shadow">
+      <iframe
+        src={pdfPreview.url}
+        className="w-full h-96"
+        title="PDF Preview"
+      />
+    </div>
+  )}
+</div>
 
               {/* Manual Entries */}
               {selectedDoc.manualEntries?.length > 0 && (

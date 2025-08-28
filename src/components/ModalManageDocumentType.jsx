@@ -25,7 +25,7 @@ export default function ModalManageDocumentType({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
       <div className="bg-white w-full max-w-md rounded-lg p-6 shadow-xl border text-primary">
-        <h2 className="text-xl font-bold mb-4 text-center">Manage Document Types</h2>
+        <h2 className="text-xl font-bold mb-4 text-center">Manage Types of Information</h2>
 
         {/* Type List */}
       

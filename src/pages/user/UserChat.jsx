@@ -277,7 +277,7 @@ export default function UserChat() {
             <button
               type="button"
               onClick={() => fileInputRef.current.click()}
-              className="p-2 rounded-lg hover:bg-primary/20"
+              className="p-2 rounded-lg !bg-gray-100 hover:bg-primary/20"
             >
               <ImageIcon size={18} />
             </button>
@@ -304,7 +304,7 @@ export default function UserChat() {
             <button
               type="button"
               onClick={handleMicClick}
-              className={`p-2 rounded-lg ${
+              className={`p-2 rounded-lg !bg-gray-100 ${
                 listening ? "bg-red-100 text-red-600" : "hover:bg-primary/20"
               }`}
             >

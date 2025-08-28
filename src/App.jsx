@@ -8,13 +8,13 @@ import CoSuperAdminDashboard from "./roles/cosuperadmin/CoSuperAdminDashboard";
 import CoSuperAdminAdmins from "./roles/cosuperadmin/CoSuperAdminAdmins";
 import CoSuperAdminDepartments from "./roles/cosuperadmin/CoSuperAdminDepartments";
 import CoSuperAdminThemes from "./roles/cosuperadmin/CoSuperAdminThemes";
-import CoSuperAdminDocuments from "./roles/cosuperadmin/CoSuperAdminDocuments";
 import CoSuperAdminLogs from "./roles/cosuperadmin/CoSuperAdminLogs";
 import AdminCreatorDashboard from "./roles/admincreator/AdminCreatorDashboard";
 import AdminCreatorDocuments from "./roles/admincreator/AdminCreatorDocuments";
 import AdminCreatorLogs from "./roles/admincreator/AdminCreatorLogs";
 import AdminApproverDashboard from "./roles/adminapprover/AdminApproverDashboard";
 import AdminApproverDocuments from "./roles/adminapprover/AdminApproverDocuments";
+import AdminApproverUploadDocuments from "./roles/adminapprover/AdminApproverUploadDocuments";
 import AdminApproverLogs from "./roles/adminapprover/AdminApproverLogs";
 import UserChat from "./pages/user/UserChat";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -32,13 +32,13 @@ function App() {
         <Route path="/cosuperadmin/admins" element={<CoSuperAdminAdmins />} />
         <Route path="/cosuperadmin/departments" element={<CoSuperAdminDepartments />} />
         <Route path="/cosuperadmin/themes" element={<CoSuperAdminThemes />} />
-        <Route path="/cosuperadmin/documents" element={<CoSuperAdminDocuments />} />
         <Route path="/cosuperadmin/logs" element={<CoSuperAdminLogs />} />
         <Route path="/admincreator" element={<AdminCreatorDashboard />} />
         <Route path="/admincreator/logs" element={<AdminCreatorLogs />} />
         <Route path="/admincreator/documents" element={<AdminCreatorDocuments />} />
         <Route path="/adminapprover" element={<AdminApproverDashboard />} />
         <Route path="/adminapprover/documents" element={<AdminApproverDocuments />} />
+        <Route path="/adminapprover/uploaddocuments" element={<AdminApproverUploadDocuments />} />
         <Route path="/adminapprover/logs" element={<AdminApproverLogs />} />
         <Route path="/user/chat" element={<UserChat />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />

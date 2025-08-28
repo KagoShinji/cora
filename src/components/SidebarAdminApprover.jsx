@@ -1,33 +1,31 @@
-import { Home, FileText, ClipboardList, Menu } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Home, FileText, ClipboardList, Upload, ChevronDown, Menu } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore"; 
 
 function SidebarAdminApprover({ isOpen, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const navigate = useNavigate();
-  const user = useAuthStore((state)=>state.user)
+  const [docsOpen, setDocsOpen] = useState(false); // Collapsible state
+  const user = useAuthStore((state) => state.user);
+  const signout = useAuthStore((state) => state.signout);
 
-  const signout = useAuthStore((state)=>state.signout)
-  const primaryColor = useAppSettingsStore((state) => state.primary_color);
-  const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
+  const primaryColor = useAppSettingsStore((state) => state.primary_color) || "#1D4ED8";
+  const secondaryColor = useAppSettingsStore((state) => state.secondary_color) || "#F3F4F6";
 
   const handleLogout = async () => {
-    await signout()
-    navigate("/login");
+    await signout();
+    window.location.href = "/login";
   };
 
   return (
     <>
       <aside
-        className={`h-screen fixed top-0 left-0 z-50 bg-primary text-white transition-all duration-300 ease-in-out ${
-          isOpen ? "w-64" : "w-16"
-        } flex flex-col`}
-        style={{ backgroundColor: primaryColor || "#1D4ED8" }}
+        className={`h-screen fixed top-0 left-0 z-50 text-white transition-all duration-300 ease-in-out flex flex-col`}
+        style={{ width: isOpen ? "16rem" : "4rem", backgroundColor: primaryColor }}
       >
         {/* Toggle Icon */}
-        <div className="flex items-center justify-start p-4 pl-4">
+        <div className="flex items-center justify-start p-4">
           <Menu onClick={() => setOpen(!isOpen)} className="cursor-pointer w-5 h-5 text-white" />
         </div>
 
@@ -35,24 +33,54 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
         <nav className="flex flex-col gap-2 p-2">
           <Link
             to="/adminapprover"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
+            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition"
+            style={{ color: "white" }}
           >
-            <Home size={18} className="text-white" />
-            {isOpen && <span className="text-white">Home</span>}
+            <Home size={18} />
+            {isOpen && <span>Home</span>}
           </Link>
-          <Link
-            to="/adminapprover/documents"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
+
+          {/* Collapsible Documents Menu */}
+          <div
+            className="flex flex-col rounded transition cursor-pointer"
           >
-            <FileText size={18} className="text-white" />
-            {isOpen && <span className="text-white">Documents</span>}
-          </Link>
+            <div
+              className="flex items-center justify-between gap-2 p-2"
+              onClick={() => setDocsOpen(!docsOpen)}
+            >
+              <div className="flex items-center gap-2 ">
+                <FileText size={18} />
+                {isOpen && <span>Documents</span>}
+              </div>
+              {isOpen && <ChevronDown size={16} className={`transition-transform ${docsOpen ? "rotate-180" : "rotate-0"}`} />}
+            </div>
+
+            {/* Submenu */}
+            {docsOpen && isOpen && (
+              <div className="flex flex-col ml-6">
+                <Link
+                  to="/adminapprover/documents"
+                  className="p-2 rounded transition !text-white text-sm"
+                >
+                  Approve Documents
+                </Link>
+                <Link
+                  to="/adminapprover/uploaddocuments"
+                  className="p-2 rounded transition !text-white text-sm"
+                >
+                  Upload Documents
+                </Link>
+              </div>
+            )}
+          </div>
+
           <Link
             to="/adminapprover/logs"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
+            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition"
+            style={{ color: "white" }}
           >
-            <ClipboardList size={18} className="text-white" />
-            {isOpen && <span className="text-white">Logs</span>}
+            <ClipboardList size={18} />
+            {isOpen && <span>Logs</span>}
           </Link>
         </nav>
 
@@ -61,8 +89,8 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
           <div className="mt-auto px-2 pb-4">
             <div
               onClick={() => setShowLogoutModal(true)}
-              className="bg-white text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
-              style={{ backgroundColor: secondaryColor || "#F3F4F6" }}
+              className="rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
+              style={{ backgroundColor: secondaryColor, color: primaryColor }}
             >
               <div className="font-semibold uppercase">{user}</div>
               <div className="text-sm">Admin Approver</div>
@@ -80,13 +108,13 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="px-4 py-2 rounded !bg-primary hover:bg-gray-300 text-white"
+                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-black"
               >
                 Cancel
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 rounded !bg-green-700 hover:bg-primary text-white"
+                className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
               >
                 Logout
               </button>

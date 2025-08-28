@@ -49,7 +49,7 @@ function ModalAdminUsers({ isOpen, onClose }) {
     placeholder="Search admins..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+    className="pl-10 pr-4 py-2 w-full text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
   />
 </div>
 

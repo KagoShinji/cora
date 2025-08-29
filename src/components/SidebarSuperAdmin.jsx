@@ -77,10 +77,11 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-80">
             <h2 className="text-lg font-semibold text-primary mb-4">Confirm Logout</h2>
-            <p className="text-gray-700 mb-6">Are you sure you want to log out?</p>
+            <p  className="text-gray-700 mb-6">Are you sure you want to log out?</p>
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowLogoutModal(false)}
+                
                 className="px-4 py-2 rounded !bg-primary hover:bg-gray-300 text-white"
               >
                 Cancel

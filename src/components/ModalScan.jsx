@@ -1,199 +1,191 @@
-import { useState } from "react";
+import { useState, useRef,useEffect } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
+import { fetchDocumentInfo } from "../api/api";
 
-export default function ModalScan({ onClose }) {
+export default function ModalScan({ onClose, onUpload,isOpen }) {
   const [image, setImage] = useState(null);
-  const [textContent, setTextContent] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
   const [keywords, setKeywords] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [docType, setDocType] = useState(""); // Type of Information
+  const [docType, setDocType] = useState("");
   const [showTypeModal, setShowTypeModal] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [documentTypes, setDocumentTypes] = useState([]);
+  
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      setLoading(true);
-      simulateOCR(file);
+  // Start camera
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoRef.current.srcObject = stream;
+      videoRef.current.play();
+      setCameraActive(true);
+    } catch (err) {
+      alert("Camera not available: " + err.message);
     }
   };
 
-  const simulateOCR = (file) => {
-    // Replace this with real OCR logic later
-    setTimeout(() => {
-      setTextContent("Sample extracted text from image...");
-      setLoading(false);
-    }, 1000);
+  // Capture image from camera
+  const captureImage = () => {
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+    canvas.toBlob((blob) => {
+      setImage(new File([blob], "captured.png", { type: "image/png" }));
+    });
+    stopCamera();
   };
 
+  // Stop camera
+  const stopCamera = () => {
+    const stream = videoRef.current?.srcObject;
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    setCameraActive(false);
+  };
+
+  // Handle file upload
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) setImage(file);
+  };
+
+  // Submit
   const handleSubmit = () => {
-    if (!docType.trim() || !textContent.trim()) {
-      alert("Please select a Type of Information and fill in the extracted content.");
+    if (!docType || !image || keywords.length === 0) {
+      alert("Select a type, upload or capture an image, and add at least one keyword.");
       return;
     }
 
-    const scannedDoc = {
-      type: docType,
-      content: textContent,
-      keywords,
-      image,
-    };
-
-    console.log("Scanned Document:", scannedDoc);
+    const scannedDoc = { title_id: docType, keywords, image };
+    if (onUpload) onUpload(scannedDoc);
     onClose();
 
     // Reset
     setDocType("");
-    setTextContent("");
     setImage(null);
     setKeywords([]);
     setKeywordInput("");
   };
-
-  if (!onClose) return null;
+  useEffect(() => {
+    if (isOpen) {
+      const loadTypes = async () => {
+        try {
+          const types = await fetchDocumentInfo();
+          setDocumentTypes(types || []);
+        } catch (err) {
+          console.error("Failed to fetch document types:", err);
+        }
+      };
+      loadTypes();
+    }
+  }, [isOpen]);
 
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
         <div className="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl border border-primary/20">
-
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-primary">Scan Document</h2>
+            <button onClick={onClose} className="text-2xl font-bold">&times;</button>
           </div>
 
-          {/* Type of Information */}
-          <div className="mb-4">
-            <label className="block mb-1 !text-primary font-medium">
-              Type of Information <span className="!text-primary">*</span>
-            </label>
-            <div className="flex gap-2">
-              <select
-                value={docType}
-                onChange={(e) => setDocType(e.target.value)}
-                required
-                className="flex-1 !text-primary border border-primary rounded-md px-4 py-2"
-              >
-                <option value="">Select a type</option>
-                <option value="enrollment">Enrollment Process</option>
-                <option value="tuition">Tuition Fees</option>
-                <option value="scholarship">Scholarships</option>
-                <option value="calendar">Academic Calendar</option>
-                <option value="facilities">Campus Facilities</option>
-                <option value="others">Others</option>
-              </select>
-              <button
-                type="button"
-                onClick={() => setShowTypeModal(true)}
-                className="px-3 py-2 !bg-primary text-white rounded-md hover:bg-primary/90 transition whitespace-nowrap"
-              >
-                Manage Types
-              </button>
-            </div>
+          <div className="mb-4 flex gap-2 items-center">
+            <select
+              value={docType}
+              onChange={(e) => setDocType(e.target.value)}
+              className="flex-1 !text-primary border border-primary rounded-md px-4 py-2"
+            >
+              <option value="">Select a type</option>
+              {documentTypes.map((type) => (
+                <option key={type.id} value={type.id}>{type.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setShowTypeModal(true)}
+              className="px-3 py-2 !bg-primary text-white rounded-md"
+            >
+              Manage Types
+            </button>
           </div>
 
-          {/* Step 1: Image Upload */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-primary mb-1">
-              Use Camera or Upload Photo (Image to Text)
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleImageUpload}
-              className="w-full border border-primary rounded-md px-3 py-2 text-sm text-gray-700 outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-
-          {/* Step 2: Extracted Text */}
-          {image && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-primary mb-1">
-                Extracted Content
-              </label>
-              <textarea
-                value={textContent}
-                onChange={(e) => setTextContent(e.target.value)}
-                rows={4}
-                className="w-full border border-primary rounded-md px-3 py-2 text-gray-700 outline-none focus:ring-1 focus:ring-primary"
-                placeholder={loading ? "Processing image..." : "Edit extracted text"}
-                disabled={loading}
-              />
-            </div>
-          )}
-
-          {/* Step 3: Keywords */}
-          <div className="mb-4">
-            <label htmlFor="keywords" className="text-sm font-medium text-primary mb-1">
-              Keywords
-            </label>
-            <input
-              id="keywords"
-              type="text"
-              className="w-full border border-primary rounded-md px-3 py-2 text-gray-700 outline-none focus:ring-1 focus:ring-primary"
-              value={keywordInput}
-              onChange={(e) => setKeywordInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && keywordInput.trim()) {
-                  e.preventDefault();
-                  if (!keywords.includes(keywordInput.trim())) {
-                    setKeywords([...keywords, keywordInput.trim()]);
-                  }
-                  setKeywordInput("");
-                }
-              }}
-              placeholder="Press Enter to add keyword"
-            />
-
-            {keywords.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {keywords.map((tag, idx) => (
-                  <span
-                    key={idx}
-                    className="flex items-center gap-1 text-sm !text-primary px-2 py-1 rounded bg-gray-200/60"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => setKeywords(keywords.filter((_, i) => i !== idx))}
-                      className="text-gray-500 hover:text-red-500"
-                      style={{ all: "unset", cursor: "pointer", color: "inherit" }}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
+          {/* Upload or Camera */}
+          <div className="mb-4 flex flex-col gap-2">
+            <input type="file" accept="image/*" onChange={handleFileUpload} className="border !border-primary rounded-md px-3 py-2" />
+            {!cameraActive && <button onClick={startCamera} className="!bg-primary text-white px-4 py-2 rounded">Use Camera</button>}
+            {cameraActive && (
+              <div className="flex flex-col gap-2">
+                <video ref={videoRef} className="border border-primary rounded-md w-full h-64 object-cover" />
+                <button onClick={captureImage} className="bg-green-600 text-white px-4 py-2 rounded">Capture</button>
+                <button onClick={stopCamera} className="bg-red-600 text-white px-4 py-2 rounded">Cancel</button>
               </div>
+            )}
+            {image && (
+              <img src={URL.createObjectURL(image)} alt="Preview" className="w-full h-64 object-contain border border-gray-300 rounded-md" />
             )}
           </div>
 
+          <div className="mb-4">
+  {/* Keyword Input */}
+  <input
+    type="text"
+    value={keywordInput}
+    onChange={(e) => setKeywordInput(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" && keywordInput.trim()) {
+        e.preventDefault();
+        if (!keywords.includes(keywordInput.trim())) {
+          setKeywords([...keywords, keywordInput.trim()]);
+        }
+        setKeywordInput("");
+      }
+    }}
+    placeholder="Press Enter to add keyword"
+    className="w-full border !border-primary rounded-md px-3 py-2"
+  />
+
+  {/* Keywords List */}
+  {keywords.length > 0 && (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {keywords.map((tag, idx) => (
+        <span
+          key={idx}
+          className="flex items-center gap-1 text-sm px-2 py-1 rounded !text-primary bg-gray-200/60"
+        >
+          {tag}
+          <button
+            type="button"
+            onClick={() => setKeywords(keywords.filter((_, i) => i !== idx))}
+            className="!text-primary hover:text-red-500"
+            style={{ all: "unset", cursor: "pointer", color: "inherit" }}
+          >
+            ×
+          </button>
+        </span>
+      ))}
+    </div>
+  )}
+</div>
+
           {/* Actions */}
           <div className="flex justify-end gap-3 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 !bg-white text-primary border !border-primary rounded-md hover:bg-primary/10 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="px-4 py-2 !bg-primary text-white rounded-md hover:bg-primary/80 transition"
-            >
-              Proceed
-            </button>
+            <button onClick={onClose} className="px-4 py-2 border !border-primary rounded-md">Cancel</button>
+            <button onClick={handleSubmit} className="px-4 py-2 !bg-primary text-white rounded-md">Proceed</button>
           </div>
         </div>
       </div>
 
+      {/* Hidden canvas for capturing camera */}
+      <canvas ref={canvasRef} style={{ display: "none" }} />
+
       {/* Document Type Modal */}
-      <ModalManageDocumentType
-        isOpen={showTypeModal}
-        onClose={() => setShowTypeModal(false)}
-      />
+      <ModalManageDocumentType isOpen={showTypeModal} onClose={() => setShowTypeModal(false)} />
     </>
   );
 }

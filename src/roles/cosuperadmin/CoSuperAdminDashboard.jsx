@@ -21,6 +21,7 @@ import {
 import ModalEditDepartment from "../../components/ModalEditDepartment";
 import ModalConfirmDelete from "../../components/ModalConfirmDelete";
 import ModalAdminUsers from "../../components/ModalAdminUsers"; // ⬅️ add this
+import ModalDepartments from "../../components/ModalDepartments";
 
 function CoSuperAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -39,11 +40,14 @@ function CoSuperAdminDashboard() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
+
+  const [showDepartmentsModal, setShowDepartmentsModal] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [showAdminsModal, setShowAdminsModal] = useState(false);
   const [selectedAdminRole, setSelectedAdminRole] = useState(null);
 
   const roleMap = {
-  Creator: "admincreator",
+  Creator: "admincreator",  
   Approver: "adminapprover",
   Guest: "guest",
 };
@@ -52,6 +56,11 @@ const handleAdminSliceClick = (sliceName) => {
   setSelectedAdminRole(roleMap[sliceName] ?? null);
   setShowAdminsModal(true);
 };
+
+const handleDepartmentBarClick = () => {
+  setShowDepartmentsModal(true);
+};
+
 
 
   useEffect(() => {
@@ -208,38 +217,54 @@ const handleAdminSliceClick = (sliceName) => {
             </div>
 
             {/* Departments with Bar Chart + Labels beside */}
-            <div className="bg-gray-50 shadow rounded-lg p-6 hover:shadow-lg transition">
-              <h2 className="text-lg font-semibold text-primary mb-4 text-center">
-                Departments
-              </h2>
+<div className="bg-gray-50 shadow rounded-lg p-6 hover:shadow-lg transition">
+  <h2 className="text-lg font-semibold text-primary mb-4 text-center">
+    Departments
+  </h2>
 
-              <div className="flex items-center gap-6">
-                {/* Bar Chart */}
-                <div className="w-2/3">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={departmentData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#65171D" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+  <div className="flex items-center gap-6">
+    {/* Bar Chart */}
+    <div className="w-2/3">
+<ResponsiveContainer width="100%" height={200}>
+  <BarChart data={departmentData}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="name" />
+    <YAxis />
+    <Tooltip />
+    <Bar
+      dataKey="count"
+      cursor="pointer"
+      onClick={handleDepartmentBarClick} // just open modal
+    >
+      {departmentData.map((dept, index) => (
+        <Cell key={index} fill={COLORS[index % COLORS.length]} />
+      ))}
+    </Bar>
+  </BarChart>
+</ResponsiveContainer>
+    </div>  
 
-                {/* Labels */}
-                <ul className="space-y-2 w-1/3">
-                  {departmentData.map((entry, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center text-gray-600 justify-between text-sm"
-                    >
-                      <span className="font-medium">{entry.name}</span>
-                      <span className="text-gray-600">{entry.count}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+  {/* Modal for clicked department */}
+{showDepartmentsModal && (
+  <ModalDepartments
+    isOpen={showDepartmentsModal}
+    onClose={() => setShowDepartmentsModal(false)}
+    department={null} // null because you want full table
+  />
+)}
+                    {/* Labels */}
+    <ul className="space-y-2 w-1/3">
+      {departmentData.map((entry, index) => (
+        <li
+          key={index}
+          className="flex items-center text-gray-600 justify-between text-sm"
+        >
+          <span className="font-medium">{entry.name}</span>
+          <span className="text-gray-600">{entry.count}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
             </div>
           </div>
 

@@ -41,7 +41,7 @@ function CoSuperAdminThemes() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 justify-items-center">
           {/* Logo Card */}
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs h-72 flex flex-col items-center justify-between">
-            <h2  className="text-xl font-semibold !text-primary   ">Logo</h2>
+            <h2  style={{color:secondaryColor}} className="text-xl font-semibold    ">Logo</h2>
             <img
             src={logoPath ? `http://127.0.0.1:8000${logoPath}` : "/school-logo.png"}
             alt="School Logo"
@@ -70,7 +70,7 @@ function CoSuperAdminThemes() {
 
           {/* Name Card */}
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs h-72 flex flex-col items-center justify-between">
-            <h2  className="text-xl !text-primary font-semibold">Name</h2>
+            <h2 style={{color:secondaryColor}} className="text-xl font-semibold">Name</h2>
             <div style={{color:primaryColor}} className="text-2xl font-bold  uppercase">{name}</div>
             <button
               style={{backgroundColor:primaryColor}}
@@ -83,7 +83,7 @@ function CoSuperAdminThemes() {
 
           {/* Theme Color Card */}
 <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs h-72 flex flex-col items-center justify-between">
-  <h2  className="text-xl font-semibold text-primary mb-2">Themes</h2>
+  <h2 style={{color:secondaryColor}} className="text-xl font-semibold  mb-2">Themes</h2>
 
   <div className="flex gap-4">
     {/* Primary Color Picker */}

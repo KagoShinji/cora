@@ -42,6 +42,8 @@ function App() {
         <Route path="/adminapprover/logs" element={<AdminApproverLogs />} />
         <Route path="/user/chat" element={<UserChat />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/chat/:convId" element={<UserChat />} />
+        <Route path="/chat" element={<UserChat />} /> 
       </Routes>
     </Router>
   );

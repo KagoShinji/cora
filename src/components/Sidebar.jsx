@@ -25,27 +25,6 @@ export default function Sidebar({ open, setOpen, onNewChat }) {
       </div>
 
       {/* Chat History */}
-      {open && (
-        <div className="flex flex-col px-2 mt-4 overflow-y-auto">
-          <ul className="space-y-2 text-sm pl-2">
-            {[
-              "Tuition Fee Inquiry",
-              "Enrollment Requirements",
-              "Class Schedule",
-              "Scholarship Info",
-              "Subject Pre-requisites",
-            ].map((chat, idx) => (
-              <li
-                key={idx}
-                className="cursor-pointer truncate rounded p-2 hover:bg-primary text-left text-white"
-              >
-                {chat}
-              </li>
-            ))}
-          </ul>
-          
-        </div>
-      )}
     </aside>
   );
 }

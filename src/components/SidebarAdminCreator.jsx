@@ -60,12 +60,12 @@ function SidebarAdminCreator({ isOpen, setOpen }) {
         {isOpen && (
           <div className="mt-auto px-2 pb-4">
             <div
-              style={{ backgroundColor: secondaryColor || "#F3F4F6" }}
+              
               onClick={() => setShowLogoutModal(true)}
               className="bg-white text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
             >
-              <div className="font-semibold uppercase">{user}</div>
-              <div className="text-sm">Admin Creator</div>
+              <div style={{color:secondaryColor}} className="font-semibold uppercase">{user}</div>
+              <div style={{color:secondaryColor}} className="text-sm">Admin Creator</div>
             </div>
           </div>
         )}

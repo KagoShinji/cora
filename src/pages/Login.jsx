@@ -21,6 +21,7 @@ function Login() {
   const logoPath = useAppSettingsStore((state) => state.logo_path)
   const appName = useAppSettingsStore((state)=>state.name)
   const primaryColor = useAppSettingsStore((s)=>s.primary_color)
+  const secondaryColor = useAppSettingsStore((s)=>s.secondary_color)
 
   const navigate = useNavigate();
 
@@ -143,13 +144,13 @@ function Login() {
               className="w-40 h-40 mx-auto object-contain rounded-full border shadow-md border-primary"
             />
             <h2 style={{ color: primaryColor }} className="mt-4 text-5xl font-extrabold tracking-tight">{appName}</h2>
-            <p className="text-lg text-primary mt-1">Admin Portal</p>
+            <p style={{color:secondaryColor}} className="text-lg text-primary mt-1">Admin Portal</p>
           </div>
 
           {/* Login Form */}
           <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
             <div>
-              <label className="block text-sm font-medium text-primary mb-1">Email</label>
+              <label style={{color:secondaryColor}} className="block text-sm font-medium  mb-1">Email</label>
               <input
                 type="text"
                 placeholder="Enter your email"
@@ -160,7 +161,7 @@ function Login() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary mb-1">Password</label>
+              <label style={{color:secondaryColor}} className="block text-sm font-medium  mb-1">Password</label>
               <input
                 type="password"
                 placeholder="Enter your password"
@@ -172,7 +173,8 @@ function Login() {
               <div className="text-sm text-right mt-1">
                 <p
   onClick={() => setShowForgotModal(true)}
-  className="text-sm text-primary hover:underline cursor-pointer text-right mt-1"
+  className="text-sm  hover:underline cursor-pointer text-right mt-1"
+  style={{color:secondaryColor}}
 >
   Forgot Password?
 </p>

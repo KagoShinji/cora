@@ -14,6 +14,7 @@ export const useAuthStore = create(
       user: null,
       departments: [],
       department: null,
+      user_id:null,
 
       signup: async (userData) => {
         set({ isLoading: true, error: null });
@@ -50,6 +51,7 @@ export const useAuthStore = create(
             isAuthenticated: true,
             role: login.user.role,
             user: login.user.name,
+            user_id:login.user.id,
             department: login.user.department,
           });
           console.log(login)
@@ -120,6 +122,7 @@ export const useAuthStore = create(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
         department: state.department,
+        user_id: state.user_id,
       }),
     }
   )

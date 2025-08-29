@@ -3,7 +3,7 @@ import { Mic, Image as ImageIcon } from "lucide-react";
 import SidebarUser from "../../components/SidebarUser";
 import { useAuthStore } from "../../stores/userStores";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
-import { generateAnswer } from "../../api/api";
+import { generateAnswer, createConversation, fetchConversationById, addMessage } from "../../api/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -15,6 +15,8 @@ export default function UserChat() {
   const [isTyping, setIsTyping] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [listening, setListening] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState(null);
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
 
   const name = useAppSettingsStore((state) => state.name);
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -76,60 +78,118 @@ export default function UserChat() {
 
   // --- Handlers ---
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const trimmed = query.trim();
-    if ((!trimmed && selectedImages.length === 0) || isTyping) return;
+  e.preventDefault();
+  const trimmed = query.trim();
+  if ((!trimmed && selectedImages.length === 0) || isTyping) return;
 
-    appendMessage({
-      role: "user",
-      text: trimmed,
-      images: selectedImages.map((file) => URL.createObjectURL(file)),
-    });
+  // Check for an existing conversation or create a new one
+  let convId = currentConversationId;
+  if (!convId) {
+    try {
+      const newConv = await createConversation(trimmed);
+      convId = newConv.id;
+      setCurrentConversationId(convId);
+      // ✅ ADD THIS LINE: Increment the key to signal a sidebar refresh
+      setSidebarRefreshKey((prev) => prev + 1); 
+    } catch (err) {
+      console.error("Failed to create new conversation:", err);
+      return;
+    }
+  }
 
-    setQuery("");
-    setSelectedImages([]);
-    setSubmitted(true);
+  appendMessage({
+    role: "user",
+    text: trimmed,
+    images: selectedImages.map((file) => URL.createObjectURL(file)),
+  });
 
-    const accessToken = useAuthStore.getState().access_token;
-    let streamedAnswer = "";
+  setQuery("");
+  setSelectedImages([]);
+  setSubmitted(true);
 
-    try {
-      setIsTyping(true);
-      setChatHistory((prev) => [...prev, { role: "assistant", text: "" }]);
+  const accessToken = useAuthStore.getState().access_token;
+  let streamedAnswer = "";
 
-      await generateAnswer(trimmed, accessToken, (chunk) => {
-        streamedAnswer += chunk;
-        setChatHistory((prev) => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last.role === "assistant") last.text = streamedAnswer;
-          return [...updated.slice(0, -1), last];
-        });
-      }, selectedImages);
-    } catch (err) {
-      setChatHistory((prev) => [
-        ...prev.slice(0, -1),
-        {
-          role: "assistant",
-          text: "Sorry, something went wrong while generating a response.",
-        },
-      ]);
-      console.error("Streaming error:", err);
-    } finally {
-      setIsTyping(false);
-    }
-  };
+  // Add user message to backend
+  await addMessage(convId, { role: "user", content: trimmed });
+
+  try {
+    setIsTyping(true);
+    setChatHistory((prev) => [...prev, { role: "assistant", text: "" }]);
+
+    await generateAnswer(trimmed, accessToken, (chunk) => {
+      streamedAnswer += chunk;
+      setChatHistory((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last.role === "assistant") last.text = streamedAnswer;
+        return [...updated.slice(0, -1), last];
+      });
+    }, selectedImages);
+
+    // Add assistant message to backend after stream is complete
+    await addMessage(convId, { role: "assistant", content: streamedAnswer });
+  } catch (err) {
+    setChatHistory((prev) => [
+      ...prev.slice(0, -1),
+      {
+        role: "assistant",
+        text: "Sorry, something went wrong while generating a response.",
+      },
+    ]);
+    console.error("Streaming error:", err);
+  } finally {
+    setIsTyping(false);
+  }
+};
 
   const appendMessage = (msg) => setChatHistory((prev) => [...prev, msg]);
 
-  const handleNewChat = () => {
+  const handleNewChat = async () => {
     setQuery("");
     setChatHistory([]);
     setSubmitted(false);
     setIsTyping(false);
     setSelectedImages([]);
+    setCurrentConversationId(null); // Reset conversation ID for new chat
     inputRef.current?.focus();
   };
+  
+ const handleSelectChat = async (convId) => {
+    // 1. Reset the current chat state
+    setQuery("");
+    setSubmitted(true); // Set to true to display the chat area
+    setIsTyping(false);
+    setSelectedImages([]);
+    
+    // 2. Set the current conversation ID
+    setCurrentConversationId(convId);
+
+    // 3. Fetch the full conversation from the backend
+    try {
+        const convData = await fetchConversationById(convId);
+        
+        // 4. Update the chatHistory state with the fetched messages
+        if (convData.messages) {
+            setChatHistory(
+                convData.messages.map((msg) => ({
+                    role: msg.role,
+                    text: msg.content,
+                }))
+            );
+        } else {
+            setChatHistory([]);
+        }
+    } catch (error) {
+        console.error("Failed to load conversation:", error);
+        setChatHistory([
+            {
+                role: "assistant",
+                text: "Sorry, failed to load this conversation.",
+            },
+        ]);
+    }
+};
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
@@ -161,6 +221,9 @@ export default function UserChat() {
         isOpen={sidebarOpen}
         setOpen={setSidebarOpen}
         onNewChat={handleNewChat}
+        onSelectChat={handleSelectChat}
+        currentConversationId={currentConversationId}
+        sidebarRefreshKey={sidebarRefreshKey}
       />
 
       {/* Logo */}
@@ -303,7 +366,7 @@ export default function UserChat() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKeyDown}
-              onPaste={handlePaste} // ✅ Paste images directly
+              onPaste={handlePaste}
               disabled={isTyping}
             />
 

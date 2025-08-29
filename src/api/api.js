@@ -490,3 +490,71 @@ export const resetPasswordRequest = async (email) => {
     throw error;
   }
 };
+
+export const fetchConversations = async () => {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch(`${API_BASE_URL}/conversations`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+       Authorization: `Bearer ${token}`
+
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Error fetching conversations");
+  }
+  return await response.json();
+};
+
+export const fetchConversationById = async (convId) => {
+    const token = localStorage.getItem("access_token");
+    const response = await fetch(`${API_BASE_URL}/conversations/${convId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Error fetching conversation");
+    }
+    return await response.json();
+};
+
+// ✅ Example: create conversation
+export const createConversation = async (title) => {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch(`${API_BASE_URL}/conversations`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    // The payload no longer needs to include the user_id
+    body: JSON.stringify({ title }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(err || "Error creating conversation");
+  }
+  return await response.json();
+};
+
+export const addMessage = async (convId, payload) => {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch(`${API_BASE_URL}/conversations/${convId}/messages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) throw new Error("Error adding message");
+  return await response.json();
+};

@@ -195,7 +195,7 @@ const [lastName, setLastName] = useState("");
       </div>
 
       {/* Modals */}
-      {/* Login Modal */}
+{/* Login Modal */}
 {modal === "login" && (
   <Modal title="Login to your account" onClose={closeModal}>
     <form
@@ -217,6 +217,7 @@ const [lastName, setLastName] = useState("");
         <input
           id="login-email"
           type="email"
+          placeholder="Enter your email"
           className="border rounded p-2"
           onChange={(e) => setEmail(e.target.value)}
           value={email}
@@ -227,10 +228,11 @@ const [lastName, setLastName] = useState("");
       <div className="flex flex-col gap-1">
         <label htmlFor="login-password" className="text-sm font-medium text-primary">
           Password <span className="text-red-600">*</span>
-        </label>  
+        </label>
         <input
           id="login-password"
           type="password"
+          placeholder="Enter your password"
           className="border rounded p-2"
           onChange={(e) => setPassword(e.target.value)}
           value={password}
@@ -294,8 +296,9 @@ const [lastName, setLastName] = useState("");
           First Name <span className="text-red-600">*</span>
         </label>
         <input
-          id="Enter Firstname"
+          id="register-first-name"
           type="text"
+          placeholder="Enter First Name"
           className="border rounded p-2"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
@@ -308,23 +311,28 @@ const [lastName, setLastName] = useState("");
           Last Name <span className="text-red-600">*</span>
         </label>
         <input
-          id="Enter Lastname"
+          id="register-last-name"
           type="text"
+          placeholder="Enter Last Name"
           className="border rounded p-2"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
         />
       </div>
-       <div className="flex flex-col gap-1">
-        <label htmlFor="register-last-name" className="text-sm font-medium text-primary">
-          Middle Initial <span className="text-red-600">*</span>
+
+      {/* Middle Initial */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="register-middle-initial" className="text-sm font-medium text-primary">
+          Middle Initial
         </label>
         <input
-          id="Enter Middle Initial"
+          id="register-middle-initial"
           type="text"
+          placeholder="Enter Middle Initial"
           className="border rounded p-2"
           value={middleInitial}
           onChange={(e) => setMiddleInitial(e.target.value)}
+          maxLength={1}
         />
       </div>
 
@@ -336,6 +344,7 @@ const [lastName, setLastName] = useState("");
         <input
           id="register-email"
           type="email"
+          placeholder="Enter Email Address"
           className="border rounded p-2"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -350,6 +359,7 @@ const [lastName, setLastName] = useState("");
         <input
           id="register-password"
           type="password"
+          placeholder="Enter Password"
           className="border rounded p-2"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -364,6 +374,7 @@ const [lastName, setLastName] = useState("");
         <input
           id="register-confirm-password"
           type="password"
+          placeholder="Confirm Password"
           className="border rounded p-2"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}

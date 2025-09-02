@@ -374,46 +374,6 @@ const handleDepartmentBarClick = () => {
   </div>
 </div>
 
-          {/* Table */}
-          <div className="overflow-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-primary text-white">
-                <tr>
-                  <th className="p-4 text-center align-middle">Department</th>
-                  <th className="p-4 text-center align-middle">Timestamp</th>
-                  <th className="p-4 text-center align-middle">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {departments.map((dept) => (
-                  <tr key={dept.id} className="hover:bg-gray-100">
-                    <td className="p-4 text-black text-center align-middle">
-                      {dept.department_name}
-                    </td>
-                    <td className="p-4 text-black text-center align-middle">
-                      March 23, 2025 10:42 AM
-                    </td>
-                    <td className="p-4 text-center align-middle">
-                      <div className="flex justify-center gap-3">
-                        <button
-                          className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors"
-                          onClick={() => handleEditClick(dept)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-red-700 transition-colors"
-                          onClick={() => handleDeleteClick(dept)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </main>
 

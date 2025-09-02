@@ -64,7 +64,7 @@ const ModalEditDocument = ({ isOpen, onClose, document, onUpdate }) => {
           <X className="w-6 h-6 !bg-primary !text-white hover:text-gray-800" />
         </button>
 
-        <h2 className="text-xl font-bold text-primary mb-4">Edit Document</h2>
+        <h2 className="text-xl font-bold !text-primary mb-4">Edit Document</h2>
 
         {document?.remarks && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md" role="alert">

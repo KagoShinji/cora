@@ -10,6 +10,7 @@ function ModalAdminUsers({ isOpen, onClose }) {
   const error = useAuthStore((state) => state.error);
 
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState(""); // NEW state
 
   // Fetch users when modal opens
   useEffect(() => {
@@ -18,9 +19,14 @@ function ModalAdminUsers({ isOpen, onClose }) {
     }
   }, [isOpen, fetchUsers]);
 
-  const filtered = users.filter((user) =>
-    (user.name || "").toLowerCase().includes(search.toLowerCase())
-  );
+  // Filtering logic
+  const filtered = users.filter((user) => {
+    const matchesSearch = (user.name || "")
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const matchesRole = roleFilter ? user.role === roleFilter : true;
+    return matchesSearch && matchesRole;
+  });
 
   if (!isOpen) return null;
 
@@ -30,7 +36,7 @@ function ModalAdminUsers({ isOpen, onClose }) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 !bg-primary  text-white hover:text-red-600 transition"
+          className="absolute top-4 right-4 !bg-primary text-white hover:text-red-600 transition rounded-full px-2 py-1"
         >
           ✖
         </button>
@@ -39,19 +45,37 @@ function ModalAdminUsers({ isOpen, onClose }) {
           Users
         </h2>
 
-        {/* Search */}
-<div className="relative w-1/3 mb-6">
-  <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-    <Search size={18} />
-  </span>
-  <input
-    type="text"
-    placeholder="Search admins..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    className="pl-10 pr-4 py-2 w-full text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-  />
-</div>
+        {/* Search + Filter Row */}
+        <div className="flex justify-between items-center mb-6">
+          {/* Search */}
+          <div className="relative w-1/3">
+            <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
+              <Search size={18} />
+            </span>
+            <input
+              type="text"
+              placeholder="Search admins..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+          </div>
+
+          {/* Role Filter */}
+          <div className="w-1/4">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-600"
+            >
+              <option value="">All Roles</option>
+              <option value="co-superadmin">Co-SuperAdmin</option>
+              <option value="admindcreator">Admin Creator</option>
+              <option value="adminapprover">Admin Approver</option>
+              <option value="user">User</option>
+            </select>
+          </div>
+        </div>
 
         {/* Loading/Error States */}
         {isLoading && <p className="text-gray-500">Loading...</p>}

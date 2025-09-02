@@ -110,17 +110,21 @@ function AdminApproverDashboard() {
                   <td className="p-4 text-center">
                     {new Date(doc.upload_timestamp).toLocaleString()}
                   </td>
-                  <td
-                    className={`p-4 text-center font-semibold ${
-                      doc.status === "pending"
-                        ? "text-yellow-500"
-                        : doc.status === "completed"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {doc.status?.charAt(0).toUpperCase() + doc.status?.slice(1)}
-                  </td>
+                  <td className="p-4 text-center">
+  <span
+    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+      doc.status === "pending"
+        ? "bg-yellow-100 text-yellow-700"
+        : doc.status === "completed"
+        ? "bg-green-100 text-green-700"   // Approved → Green
+        : "bg-red-100 text-red-700"
+    }`}
+  >
+    {doc.status === "completed"
+      ? "Approved"
+      : doc.status?.charAt(0).toUpperCase() + doc.status?.slice(1)}
+  </span>
+</td>
                   <td className="p-4 text-center">
                     <div className="flex justify-center gap-2">
                       <button

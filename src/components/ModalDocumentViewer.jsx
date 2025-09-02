@@ -35,13 +35,6 @@ export default function ModalDocumentViewer({ isOpen, onClose, doc, onSave }) {
           {doc.title}
         </h2>
 
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
-        >
-          <X size={24} />
-        </button>
-
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">
             Content

@@ -89,11 +89,11 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
           <div className="mt-auto px-2 pb-4">
             <div
               onClick={() => setShowLogoutModal(true)}
-              className="rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
-              style={{ backgroundColor: secondaryColor, color: primaryColor }}
+              className="rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition bg-white"
+             
             >
-              <div className="font-semibold uppercase">{user}</div>
-              <div className="text-sm">Admin Approver</div>
+              <div style={{color:secondaryColor}} className="font-semibold uppercase">{user}</div>
+              <div  style={{color:secondaryColor}} className="text-sm">Admin Approver</div>
             </div>
           </div>
         )}
@@ -114,7 +114,7 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
+                className="px-4 py-2 rounded !bg-green-700 hover:bg-primary text-white"
               >
                 Logout
               </button>

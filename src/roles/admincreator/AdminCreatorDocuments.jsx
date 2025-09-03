@@ -140,6 +140,26 @@ function AdminCreatorDocuments() {
       alert("Failed to preview document. Please check if the file exists.");
     }
   };
+  const handleScanUpload = async (scannedDoc) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", scannedDoc.image);
+    formData.append("title_id", scannedDoc.title_id);
+    formData.append("keywords", scannedDoc.keywords.join(","));
+
+    await useDocumentStore.getState().createDocument(
+      scannedDoc.image,
+      scannedDoc.title_id,
+      scannedDoc.keywords
+    );
+
+    alert("Scanned document uploaded successfully!");
+    fetchDocuments();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to upload scanned document: " + error.message);
+  }
+};
 
   useEffect(() => {
     fetchDocuments(filterStatus === "all" ? "" : filterStatus); 
@@ -168,7 +188,13 @@ function AdminCreatorDocuments() {
             <h2 className="text-xl font-semibold text-primary mb-4">Scan Documents</h2>
             <button onClick={() => setShowScanModal(true)} className="!bg-primary text-white px-4 py-2 rounded">Upload</button>
           </div>
-          {showScanModal && <ModalScan onClose={() => setShowScanModal(false)} />}
+          {showScanModal && (
+            <ModalScan 
+              isOpen={showScanModal} 
+              onClose={() => setShowScanModal(false)} 
+              onUpload={handleScanUpload} 
+            />
+          )}
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
             <Pencil className="text-primary w-12 h-12 mb-4" />
             <h2 className="text-xl font-semibold text-primary mb-4">Manual Entry</h2>

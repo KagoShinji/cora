@@ -6,6 +6,7 @@ import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import { useNavigate } from "react-router-dom";
 import UserForgotPasswordModal from "../components/UserForgotPasswordModal";
+import { resetPasswordRequest } from "../api/api";
 
 export default function LandingPage() {
   const [query, setQuery] = useState("");
@@ -261,7 +262,7 @@ const [lastName, setLastName] = useState("");
 {/* User Forgot Password Modal */}
 {modal === "user-forgot-password" && (
   <UserForgotPasswordModal
-    onClose={() => setModal("login")} // go back to login modal when closed
+    onClose={() => setModal("login")} 
   />
 )}
 

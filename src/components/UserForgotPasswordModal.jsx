@@ -5,17 +5,18 @@ import { resetPasswordRequest } from "../api/api";
 export default function UserForgotPasswordModal({ onClose }) {
   const [email, setEmail] = useState("");
 
-  const handleSubmit = async () => {
-    if (!forgotEmail) {
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // prevent page reload
+    if (!email.trim()) {
       alert("Please enter your email.");
       return;
     }
-  
+
     try {
-      await resetPasswordRequest(forgotEmail);
-      alert(`Password reset instructions sent to: ${forgotEmail}`);
-      setForgotEmail("");
-      setShowForgotModal(false);
+      await resetPasswordRequest(email);
+      alert(`Password reset instructions sent to: ${email}`);
+      setEmail(""); // clear input
+      onClose(); // close modal
     } catch (error) {
       console.error(error);
       alert(error.message || "Failed to send password reset email");

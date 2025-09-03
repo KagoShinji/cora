@@ -3,7 +3,14 @@ import { Mic, Image as ImageIcon } from "lucide-react";
 import SidebarUser from "../../components/SidebarUser";
 import { useAuthStore } from "../../stores/userStores";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
-import { generateAnswer } from "../../api/api";
+import {
+  generateAnswer,
+  createConversation,
+  fetchConversationById,
+  addMessage,
+} from "../../api/api";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function UserChat() {
   const [query, setQuery] = useState("");
@@ -13,6 +20,8 @@ export default function UserChat() {
   const [isTyping, setIsTyping] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [listening, setListening] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState(null);
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
 
   const name = useAppSettingsStore((state) => state.name);
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -22,7 +31,20 @@ export default function UserChat() {
   const fileInputRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // --- Web Speech API ---
+  // --- Text to Speech (TTS) ---
+  const speak = (text) => {
+    if (!window.speechSynthesis) {
+      console.warn("Speech Synthesis not supported in this browser.");
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // --- Web Speech API (STT) ---
   useEffect(() => {
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       const SpeechRecognition =
@@ -78,6 +100,20 @@ export default function UserChat() {
     const trimmed = query.trim();
     if ((!trimmed && selectedImages.length === 0) || isTyping) return;
 
+    // Check for an existing conversation or create a new one
+    let convId = currentConversationId;
+    if (!convId) {
+      try {
+        const newConv = await createConversation(trimmed);
+        convId = newConv.id;
+        setCurrentConversationId(convId);
+        setSidebarRefreshKey((prev) => prev + 1);
+      } catch (err) {
+        console.error("Failed to create new conversation:", err);
+        return;
+      }
+    }
+
     appendMessage({
       role: "user",
       text: trimmed,
@@ -91,19 +127,35 @@ export default function UserChat() {
     const accessToken = useAuthStore.getState().access_token;
     let streamedAnswer = "";
 
+    // Add user message to backend
+    await addMessage(convId, { role: "user", content: trimmed });
+
     try {
       setIsTyping(true);
       setChatHistory((prev) => [...prev, { role: "assistant", text: "" }]);
 
-      await generateAnswer(trimmed, accessToken, (chunk) => {
-        streamedAnswer += chunk;
-        setChatHistory((prev) => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last.role === "assistant") last.text = streamedAnswer;
-          return [...updated.slice(0, -1), last];
-        });
-      }, selectedImages);
+      await generateAnswer(
+        trimmed,
+        accessToken,
+        (chunk) => {
+          streamedAnswer += chunk;
+          setChatHistory((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last.role === "assistant") last.text = streamedAnswer;
+            return [...updated.slice(0, -1), last];
+          });
+        },
+        selectedImages
+      );
+
+      // Add assistant message to backend after stream is complete
+      await addMessage(convId, { role: "assistant", content: streamedAnswer });
+
+      // 🔊 Speak the assistant's reply after it's fully generated
+      if (streamedAnswer.trim()) {
+        speak(streamedAnswer);
+      }
     } catch (err) {
       setChatHistory((prev) => [
         ...prev.slice(0, -1),
@@ -120,13 +172,44 @@ export default function UserChat() {
 
   const appendMessage = (msg) => setChatHistory((prev) => [...prev, msg]);
 
-  const handleNewChat = () => {
+  const handleNewChat = async () => {
     setQuery("");
     setChatHistory([]);
     setSubmitted(false);
     setIsTyping(false);
     setSelectedImages([]);
+    setCurrentConversationId(null);
     inputRef.current?.focus();
+  };
+
+  const handleSelectChat = async (convId) => {
+    setQuery("");
+    setSubmitted(true);
+    setIsTyping(false);
+    setSelectedImages([]);
+    setCurrentConversationId(convId);
+
+    try {
+      const convData = await fetchConversationById(convId);
+      if (convData.messages) {
+        setChatHistory(
+          convData.messages.map((msg) => ({
+            role: msg.role,
+            text: msg.content,
+          }))
+        );
+      } else {
+        setChatHistory([]);
+      }
+    } catch (error) {
+      console.error("Failed to load conversation:", error);
+      setChatHistory([
+        {
+          role: "assistant",
+          text: "Sorry, failed to load this conversation.",
+        },
+      ]);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -159,6 +242,9 @@ export default function UserChat() {
         isOpen={sidebarOpen}
         setOpen={setSidebarOpen}
         onNewChat={handleNewChat}
+        onSelectChat={handleSelectChat}
+        currentConversationId={currentConversationId}
+        sidebarRefreshKey={sidebarRefreshKey}
       />
 
       {/* Logo */}
@@ -225,7 +311,11 @@ export default function UserChat() {
                     <span className="font-semibold">
                       {chat.role === "user" ? "You" : "CORA"}:
                     </span>{" "}
-                    {chat.text?.trim() || "Cora is generating"}
+                    <div className="whitespace-pre-wrap break-words">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {chat.text?.trim() || "Cora is generating"}
+                      </ReactMarkdown>
+                    </div>
                     {chat.images?.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
                         {chat.images.map((src, i) => (
@@ -297,7 +387,7 @@ export default function UserChat() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKeyDown}
-              onPaste={handlePaste} // ✅ Paste images directly
+              onPaste={handlePaste}
               disabled={isTyping}
             />
 

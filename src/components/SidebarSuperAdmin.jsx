@@ -61,12 +61,12 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
         {isOpen && (
           <div className="mt-auto px-2 pb-4">
             <div
-              style={{ backgroundColor: secondaryColor || "#F3F4F6" }}
+             
               onClick={() => setShowLogoutModal(true)}
               className="bg-white text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
             >
-              <div className="font-semibold uppercase">{user}</div>
-              <div className="text-sm">Super Admin</div>
+              <div style={{color:secondaryColor}} className="font-semibold uppercase">{user}</div>
+              <div style={{color:secondaryColor}} className="text-sm">Super Admin</div>
             </div>
           </div>
         )}
@@ -77,10 +77,11 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-80">
             <h2 className="text-lg font-semibold text-primary mb-4">Confirm Logout</h2>
-            <p className="text-gray-700 mb-6">Are you sure you want to log out?</p>
+            <p  className="text-gray-700 mb-6">Are you sure you want to log out?</p>
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowLogoutModal(false)}
+                
                 className="px-4 py-2 rounded !bg-primary hover:bg-gray-300 text-white"
               >
                 Cancel

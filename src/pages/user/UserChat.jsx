@@ -3,7 +3,12 @@ import { Mic, Image as ImageIcon } from "lucide-react";
 import SidebarUser from "../../components/SidebarUser";
 import { useAuthStore } from "../../stores/userStores";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
-import { generateAnswer, createConversation, fetchConversationById, addMessage } from "../../api/api";
+import {
+  generateAnswer,
+  createConversation,
+  fetchConversationById,
+  addMessage,
+} from "../../api/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -26,7 +31,20 @@ export default function UserChat() {
   const fileInputRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // --- Web Speech API ---
+  // --- Text to Speech (TTS) ---
+  const speak = (text) => {
+    if (!window.speechSynthesis) {
+      console.warn("Speech Synthesis not supported in this browser.");
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // --- Web Speech API (STT) ---
   useEffect(() => {
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       const SpeechRecognition =
@@ -78,70 +96,79 @@ export default function UserChat() {
 
   // --- Handlers ---
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  const trimmed = query.trim();
-  if ((!trimmed && selectedImages.length === 0) || isTyping) return;
+    e.preventDefault();
+    const trimmed = query.trim();
+    if ((!trimmed && selectedImages.length === 0) || isTyping) return;
 
-  // Check for an existing conversation or create a new one
-  let convId = currentConversationId;
-  if (!convId) {
-    try {
-      const newConv = await createConversation(trimmed);
-      convId = newConv.id;
-      setCurrentConversationId(convId);
-      // ✅ ADD THIS LINE: Increment the key to signal a sidebar refresh
-      setSidebarRefreshKey((prev) => prev + 1); 
-    } catch (err) {
-      console.error("Failed to create new conversation:", err);
-      return;
-    }
-  }
+    // Check for an existing conversation or create a new one
+    let convId = currentConversationId;
+    if (!convId) {
+      try {
+        const newConv = await createConversation(trimmed);
+        convId = newConv.id;
+        setCurrentConversationId(convId);
+        setSidebarRefreshKey((prev) => prev + 1);
+      } catch (err) {
+        console.error("Failed to create new conversation:", err);
+        return;
+      }
+    }
 
-  appendMessage({
-    role: "user",
-    text: trimmed,
-    images: selectedImages.map((file) => URL.createObjectURL(file)),
-  });
+    appendMessage({
+      role: "user",
+      text: trimmed,
+      images: selectedImages.map((file) => URL.createObjectURL(file)),
+    });
 
-  setQuery("");
-  setSelectedImages([]);
-  setSubmitted(true);
+    setQuery("");
+    setSelectedImages([]);
+    setSubmitted(true);
 
-  const accessToken = useAuthStore.getState().access_token;
-  let streamedAnswer = "";
+    const accessToken = useAuthStore.getState().access_token;
+    let streamedAnswer = "";
 
-  // Add user message to backend
-  await addMessage(convId, { role: "user", content: trimmed });
+    // Add user message to backend
+    await addMessage(convId, { role: "user", content: trimmed });
 
-  try {
-    setIsTyping(true);
-    setChatHistory((prev) => [...prev, { role: "assistant", text: "" }]);
+    try {
+      setIsTyping(true);
+      setChatHistory((prev) => [...prev, { role: "assistant", text: "" }]);
 
-    await generateAnswer(trimmed, accessToken, (chunk) => {
-      streamedAnswer += chunk;
-      setChatHistory((prev) => {
-        const updated = [...prev];
-        const last = updated[updated.length - 1];
-        if (last.role === "assistant") last.text = streamedAnswer;
-        return [...updated.slice(0, -1), last];
-      });
-    }, selectedImages);
+      await generateAnswer(
+        trimmed,
+        accessToken,
+        (chunk) => {
+          streamedAnswer += chunk;
+          setChatHistory((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last.role === "assistant") last.text = streamedAnswer;
+            return [...updated.slice(0, -1), last];
+          });
+        },
+        selectedImages
+      );
 
-    // Add assistant message to backend after stream is complete
-    await addMessage(convId, { role: "assistant", content: streamedAnswer });
-  } catch (err) {
-    setChatHistory((prev) => [
-      ...prev.slice(0, -1),
-      {
-        role: "assistant",
-        text: "Sorry, something went wrong while generating a response.",
-      },
-    ]);
-    console.error("Streaming error:", err);
-  } finally {
-    setIsTyping(false);
-  }
-};
+      // Add assistant message to backend after stream is complete
+      await addMessage(convId, { role: "assistant", content: streamedAnswer });
+
+      // 🔊 Speak the assistant's reply after it's fully generated
+      if (streamedAnswer.trim()) {
+        speak(streamedAnswer);
+      }
+    } catch (err) {
+      setChatHistory((prev) => [
+        ...prev.slice(0, -1),
+        {
+          role: "assistant",
+          text: "Sorry, something went wrong while generating a response.",
+        },
+      ]);
+      console.error("Streaming error:", err);
+    } finally {
+      setIsTyping(false);
+    }
+  };
 
   const appendMessage = (msg) => setChatHistory((prev) => [...prev, msg]);
 
@@ -151,45 +178,39 @@ export default function UserChat() {
     setSubmitted(false);
     setIsTyping(false);
     setSelectedImages([]);
-    setCurrentConversationId(null); // Reset conversation ID for new chat
+    setCurrentConversationId(null);
     inputRef.current?.focus();
   };
-  
- const handleSelectChat = async (convId) => {
-    // 1. Reset the current chat state
+
+  const handleSelectChat = async (convId) => {
     setQuery("");
-    setSubmitted(true); // Set to true to display the chat area
+    setSubmitted(true);
     setIsTyping(false);
     setSelectedImages([]);
-    
-    // 2. Set the current conversation ID
     setCurrentConversationId(convId);
 
-    // 3. Fetch the full conversation from the backend
     try {
-        const convData = await fetchConversationById(convId);
-        
-        // 4. Update the chatHistory state with the fetched messages
-        if (convData.messages) {
-            setChatHistory(
-                convData.messages.map((msg) => ({
-                    role: msg.role,
-                    text: msg.content,
-                }))
-            );
-        } else {
-            setChatHistory([]);
-        }
+      const convData = await fetchConversationById(convId);
+      if (convData.messages) {
+        setChatHistory(
+          convData.messages.map((msg) => ({
+            role: msg.role,
+            text: msg.content,
+          }))
+        );
+      } else {
+        setChatHistory([]);
+      }
     } catch (error) {
-        console.error("Failed to load conversation:", error);
-        setChatHistory([
-            {
-                role: "assistant",
-                text: "Sorry, failed to load this conversation.",
-            },
-        ]);
+      console.error("Failed to load conversation:", error);
+      setChatHistory([
+        {
+          role: "assistant",
+          text: "Sorry, failed to load this conversation.",
+        },
+      ]);
     }
-};
+  };
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);

@@ -157,10 +157,8 @@ function SuperAdminUsers() {
   <tr>
     <th className="p-4 text-center">User</th>
     <th className="p-4 text-center">Email</th>
-    {/*<th className="p-4 text-center">School</th>*/}
     <th className="p-4 text-center">Role</th>
-    <th className="p-4 text-center">Position</th> {/* NEW */}
-    {/*<th className="p-4 text-center">Timestamp</th>*/}
+    <th className="p-4 text-center">Position</th>
     <th className="p-4 text-center">Actions</th>
   </tr>
 </thead>

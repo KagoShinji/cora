@@ -1,39 +1,39 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { verifyResetToken, changePassword } from "../api/api"; // backend calls
+import { verifyResetToken, changePassword } from "../api/api";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
   const navigate = useNavigate();
+  const token = searchParams.get("token") ? decodeURIComponent(searchParams.get("token")) : null;
 
-  const [loading, setLoading] = useState(true);
-  const [validToken, setValidToken] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Verify token with backend
+  // Verify token when component mounts
   useEffect(() => {
     if (!token) {
-      navigate("/", { replace: true });
+      navigate("/", { replace: true }); // redirect if no token
       return;
     }
 
-    const checkToken = async () => {
+    const verify = async () => {
       try {
-        await verifyResetToken(token); // backend verifies token
-        setValidToken(true);
-      } catch (err) {
+        await verifyResetToken(token); // backend check
+        setTokenValid(true);
+      } catch {
         alert("Invalid or expired reset link.");
-        navigate("/", { replace: true });
+        navigate("/", { replace: true }); // redirect if invalid
       } finally {
         setLoading(false);
       }
     };
 
-    checkToken();
+    verify();
   }, [token, navigate]);
 
   const handleSubmit = async (e) => {
@@ -55,7 +55,7 @@ export default function ResetPasswordPage() {
       setLoading(true);
       const res = await changePassword({ token, password });
       setMessage(res.message);
-      setValidToken(false); // prevent reusing the token
+      setTokenValid(false); // prevent reuse
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -64,12 +64,13 @@ export default function ResetPasswordPage() {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (!validToken) return null; // do not render form if token invalid
+  if (!tokenValid) return null; // prevent rendering if token invalid
 
   return (
     <div className="flex items-center justify-center h-screen w-screen bg-gray-100">
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-lg mx-4 sm:mx-0">
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Reset Your Password</h2>
+
         {message && <p className="text-green-600 mb-4 text-center">{message}</p>}
         {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
 

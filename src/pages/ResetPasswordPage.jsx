@@ -1,42 +1,54 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom"; // to get token from URL
-import { changePassword } from "../api/api"; // import your function
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { changePassword } from "../api/api";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
-  const token = decodeURIComponent(searchParams.get("token"));
+  const token = searchParams.get("token"); // don't decode yet
+  const navigate = useNavigate();
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setMessage("");
-  setError("");
+  // Redirect if token is missing
+  useEffect(() => {
+    if (!token) {
+      alert("Invalid or missing reset token.");
+      navigate("/", { replace: true }); // back to landing page
+    }
+  }, [token, navigate]);
 
-  if (!password || !confirmPassword) {
-    setError("Please fill in both fields.");
-    return;
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setError("");
 
-  if (password !== confirmPassword) {
-    setError("Passwords do not match.");
-    return;
-  }
+    if (!password || !confirmPassword) {
+      setError("Please fill in both fields.");
+      return;
+    }
 
-  try {
-    setLoading(true);
-    const res = await changePassword({ token, password });
-    setMessage(res.message);
-  } catch (err) {
-    setError(err.message || "Something went wrong.");
-  } finally {
-    setLoading(false);
-  }
-};
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await changePassword({ token, password });
+      setMessage(res.message);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Do not render form if no token
+  if (!token) return null;
 
   return (
     <div className="flex items-center justify-center h-screen w-screen bg-gray-100">

@@ -1,48 +1,57 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom"; // to get token from URL
-import { changePassword } from "../api/api"; // import your function
+import { useEffect,useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { changePassword } from "../api/api";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
-  const token = decodeURIComponent(searchParams.get("token"));
+  const navigate = useNavigate();
+  const token = searchParams.get("token"); // get token from query
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setMessage("");
-  setError("");
+  // Block access if no token
+  useEffect(() => {
+    if (!token) {
+      navigate("/", { replace: true }); // redirect to home if no token
+    }
+  }, [token, navigate]);
 
-  if (!password || !confirmPassword) {
-    setError("Please fill in both fields.");
-    return;
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setError("");
 
-  if (password !== confirmPassword) {
-    setError("Passwords do not match.");
-    return;
-  }
+    if (!password || !confirmPassword) {
+      setError("Please fill in both fields.");
+      return;
+    }
 
-  try {
-    setLoading(true);
-    const res = await changePassword({ token, password });
-    setMessage(res.message);
-  } catch (err) {
-    setError(err.message || "Something went wrong.");
-  } finally {
-    setLoading(false);
-  }
-};
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await changePassword({ token, password });
+      setMessage(res.message);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center h-screen w-screen bg-gray-100">
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-lg mx-4 sm:mx-0">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Reset Your Password</h2>
-        
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+          Reset Your Password
+        </h2>
+
         {message && <p className="text-green-600 mb-4 text-center">{message}</p>}
         {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
 

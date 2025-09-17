@@ -33,7 +33,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
           videoRef.current.play().catch(console.error);
-        }
+        } 
       }, 100);
       
     } catch (err) {

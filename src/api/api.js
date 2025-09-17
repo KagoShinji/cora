@@ -383,19 +383,51 @@ export const updateDocument = async (doc_id, updatedData, file = null) => {
   return await res.json();
 };
 
-export const generateAnswer = async (query, accessToken, onToken, selectedFiles = []) => {
+export const generateAnswer = async (
+  query,
+  accessToken,
+  onToken,
+  selectedFiles = []
+) => {
   const formData = new FormData();
   formData.append("query", query);
 
+  // --- Attach files ---
   selectedFiles.forEach((file) => {
-    formData.append("file", file); // append each selected file
+    formData.append("files", file);
   });
 
+  // --- Attach device info ---
+  // Local time
+  const now = new Date();
+  const formattedTime = now.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+  formData.append("device_time", formattedTime);
+
+  // Battery
+  if (navigator.getBattery) {
+    const batteryObj = await navigator.getBattery();
+    formData.append("battery", Math.round(batteryObj.level * 100));
+  }
+
+  // Geolocation
+  if (navigator.geolocation) {
+    await new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          formData.append("lat", pos.coords.latitude);
+          formData.append("lon", pos.coords.longitude);
+          resolve();
+        },
+        () => resolve() // fallback if blocked
+      );
+    });
+  }
+
+  // --- Fetch ---
   const res = await fetch(`${API_BASE_URL}/generate`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      // DO NOT set Content-Type manually! The browser sets it automatically for FormData
     },
     body: formData,
   });
@@ -405,6 +437,7 @@ export const generateAnswer = async (query, accessToken, onToken, selectedFiles 
     throw new Error(errorText || "Failed to generate answer");
   }
 
+  // --- Streaming ---
   const reader = res.body.getReader();
   const decoder = new TextDecoder("utf-8");
 
@@ -413,7 +446,7 @@ export const generateAnswer = async (query, accessToken, onToken, selectedFiles 
     if (done) break;
 
     const chunk = decoder.decode(value, { stream: true });
-    if (onToken) onToken(chunk); // stream chunks to UI
+    if (onToken) onToken(chunk);
   }
 };
 

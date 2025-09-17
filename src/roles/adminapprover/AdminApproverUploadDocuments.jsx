@@ -46,6 +46,21 @@ function AdminApproverUploadDocuments() {
     }
   };
 
+    const handleScanUpload = async (scannedDoc) => {
+  try {
+    await useDocumentStore.getState().createDocument(
+      scannedDoc.image,
+      scannedDoc.title_id,
+      scannedDoc.keywords
+    );
+    alert("Scanned document uploaded successfully!");
+    fetchDocuments(); // refresh the list
+  } catch (error) {
+    console.error(error);
+    alert("Failed to upload scanned document: " + error.message);
+  }
+};
+
   const filteredDocs = documents.filter((doc) => {
     const matchesSearch =
       doc.uploaded_by_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -96,24 +111,28 @@ function AdminApproverUploadDocuments() {
             </button>
           </div>
 
-          {/* Scan */}
-          <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
-            <ScanLine className="text-primary w-12 h-12 mb-4" />
-            <h2 className="text-xl font-semibold text-primary mb-4">
-              Scan Documents
-            </h2>
-            <button
-              onClick={() => setShowScanModal(true)}
-              className="!bg-primary text-white px-4 py-2 rounded"
-            >
-              Upload
-            </button>
-          </div>
+                {/* Scan Documents Card */}
+      <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
+        <ScanLine className="text-primary w-12 h-12 mb-4" />
+        <h2 className="text-xl font-semibold text-primary mb-4">
+          Scan Documents
+        </h2>
+        <button
+          onClick={() => setShowScanModal(true)}
+          className="!bg-primary text-white px-4 py-2 rounded"
+        >
+          Upload
+        </button>
+      </div>
 
-          {/* Modal Scan */}
-          {showScanModal && (
-            <ModalScan onClose={() => setShowScanModal(false)} />
-          )}
+      {/* ModalScan */}
+      {showScanModal && (
+        <ModalScan
+          isOpen={showScanModal}
+          onClose={() => setShowScanModal(false)}
+          onUpload={handleScanUpload}
+        />
+      )}
 
           {/* Manual Entry */}
           <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">

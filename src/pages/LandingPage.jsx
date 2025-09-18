@@ -27,8 +27,10 @@ export default function LandingPage() {
   const error = useAuthStore((state) => state.error);
   const name = useAppSettingsStore((state) => state.name);
   const primaryColor = useAppSettingsStore((state)=>state.primary_color)
-const [firstName, setFirstName] = useState("");
-const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const getSettings = useAppSettingsStore((state) => state.getSettings);
+
 
 
   const handleSubmit = (e) => {
@@ -98,6 +100,10 @@ const [lastName, setLastName] = useState("");
     const el = document.getElementById("chat-scroll");
     if (el) el.scrollTop = el.scrollHeight;
   }, [chatHistory]);
+
+  useEffect(() => {
+   getSettings();
+  }, []);
 
   return (
     <div className="flex h-screen w-screen bg-white text-gray-900 overflow-hidden">

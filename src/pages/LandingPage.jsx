@@ -18,6 +18,8 @@ export default function LandingPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [middleInitial,setMiddleInitial] = useState("")
+  const [loading, setLoading] = useState(true);
+
 
 
   const closeModal = () => setModal(null);
@@ -102,10 +104,27 @@ export default function LandingPage() {
   }, [chatHistory]);
 
   useEffect(() => {
-   getSettings();
-  }, []);
+  const fetchSettings = async () => {
+    try {
+      await getSettings();
+    } catch (err) {
+      console.error("Failed to fetch settings:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  fetchSettings();
+}, []);
+if (loading) {
   return (
+    <div className="flex items-center justify-center h-screen w-screen bg-white text-gray-900">
+    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+    </div>
+  );
+}
+  return (
+      
     <div className="flex h-screen w-screen bg-white text-gray-900 overflow-hidden">
       {/* Sidebar */}
       <Sidebar

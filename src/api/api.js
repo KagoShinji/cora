@@ -398,10 +398,24 @@ export const generateAnswer = async (
   });
 
   // --- Attach device info ---
-  // Local time
+
+  // Local time (12-hour format with GMT offset)
   const now = new Date();
-  const formattedTime = now.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+  const formattedTime = now.toLocaleString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  });
   formData.append("device_time", formattedTime);
+
+  // Timezone name
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  formData.append("timezone", tz);
 
   // Battery
   if (navigator.getBattery) {
@@ -409,18 +423,25 @@ export const generateAnswer = async (
     formData.append("battery", Math.round(batteryObj.level * 100));
   }
 
-  // Geolocation
-  if (navigator.geolocation) {
-    await new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          formData.append("lat", pos.coords.latitude);
-          formData.append("lon", pos.coords.longitude);
-          resolve();
-        },
-        () => resolve() // fallback if blocked
-      );
-    });
+  // --- Conditional geolocation for weather ---
+  const lowerQuery = query.toLowerCase();
+  if (
+    lowerQuery.includes("weather") ||
+    lowerQuery.includes("temperature") ||
+    lowerQuery.includes("forecast")
+  ) {
+    if (navigator.geolocation) {
+      await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            formData.append("lat", pos.coords.latitude);
+            formData.append("lon", pos.coords.longitude);
+            resolve();
+          },
+          () => resolve() // fallback if blocked
+        );
+      });
+    }
   }
 
   // --- Fetch ---

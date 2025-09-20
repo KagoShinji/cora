@@ -10,7 +10,7 @@ function ModalAdminUsers({ isOpen, onClose }) {
   const error = useAuthStore((state) => state.error);
 
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState(""); // NEW state
+  const [roleFilter, setRoleFilter] = useState("");
 
   // Fetch users when modal opens
   useEffect(() => {
@@ -19,12 +19,19 @@ function ModalAdminUsers({ isOpen, onClose }) {
     }
   }, [isOpen, fetchUsers]);
 
-  // Filtering logic
   const filtered = users.filter((user) => {
+    if (
+      user.role?.toLowerCase() === "superadmin" ||
+      user.role?.toLowerCase() === "co-superadmin"
+    ) {
+      return false;
+    }
+
     const matchesSearch = (user.name || "")
       .toLowerCase()
       .includes(search.toLowerCase());
     const matchesRole = roleFilter ? user.role === roleFilter : true;
+
     return matchesSearch && matchesRole;
   });
 
@@ -69,10 +76,10 @@ function ModalAdminUsers({ isOpen, onClose }) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-600"
             >
               <option value="">All Roles</option>
-              <option value="co-superadmin">Co-SuperAdmin</option>
-              <option value="admindcreator">Admin Creator</option>
+              <option value="admincreator">Admin Creator</option>
               <option value="adminapprover">Admin Approver</option>
               <option value="user">User</option>
+              {/* ⚠️ Notice: superadmin & co-superadmin removed here too */}
             </select>
           </div>
         </div>

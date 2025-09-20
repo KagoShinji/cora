@@ -116,7 +116,7 @@ function CoSuperAdminAdmins() {
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-primary">Admin Users</h1>
+          <h1 className="text-3xl font-bold text-primary">Users</h1>
           <button
             className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary"
             onClick={() => setShowAddModal(true)}
@@ -129,7 +129,7 @@ function CoSuperAdminAdmins() {
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Search admin users..."
+            placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border border-gray-300 rounded px-4 py-2 w-full max-w-sm"

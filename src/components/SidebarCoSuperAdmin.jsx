@@ -49,7 +49,7 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
             className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
           >
             <Users size={18} className="text-white" />
-            {isOpen && <span className="text-white">Admins</span>}
+            {isOpen && <span className="text-white">Users</span>}
           </Link>
 
           {/* Departments */}

@@ -5,6 +5,12 @@ import Sidebar from "../../components/SidebarCoSuperAdmin";
 import { useAuthStore } from "../../stores/userStores";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import ModalEditDepartment from "../../components/ModalEditDepartment";
+import ModalConfirmDelete from "../../components/ModalConfirmDelete";
+import ModalAdminUsers from "../../components/ModalAdminUsers";
+import ModalDepartments from "../../components/ModalDepartments";
+import { getUser,mostSearchData} from "../../api/api";
+
 
 // NEW: Charts
 import {
@@ -21,10 +27,6 @@ import {
 } from "recharts";
 
 // NEW: modals
-import ModalEditDepartment from "../../components/ModalEditDepartment";
-import ModalConfirmDelete from "../../components/ModalConfirmDelete";
-import ModalAdminUsers from "../../components/ModalAdminUsers";
-import ModalDepartments from "../../components/ModalDepartments";
 
 function CoSuperAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -52,6 +54,9 @@ function CoSuperAdminDashboard() {
   const [searchEndDate, setSearchEndDate] = useState(new Date());
   const [ratingStartDate, setRatingStartDate] = useState(null);
   const [ratingEndDate, setRatingEndDate] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [loading,setLoading] = useState()
+  
 
   const roleMap = {
     Creator: "admincreator",  
@@ -90,18 +95,6 @@ function CoSuperAdminDashboard() {
     { name: "Very Poor", count: 3, rating: 1 },
   ];
 
-  // Sample data (replace with real backend later)
-  const adminData = [
-    { name: "Creator", value: 8 },
-    { name: "Approver", value: 5 },
-    { name: "Guest", value: 3 },
-  ];
-  const departmentData = [
-    { name: "IT", count: 10 },
-    { name: "HR", count: 7 },
-    { name: "Finance", count: 5 },
-    { name: "Marketing", count: 6 },
-  ];
 
   const COLORS = ["#E53E3E", "#3182CE", "#38A169"];
   const SEARCH_COLORS = ["#2D3748", "#4A5568", "#718096", "#A0AEC0", "#CBD5E0", "#E2E8F0"];
@@ -158,6 +151,54 @@ function CoSuperAdminDashboard() {
       setIsDeleting(false);
     }
   };
+  
+ useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getUser();
+        setUsers(data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  useEffect(()=>{
+    
+  })
+
+  const userChart = users.reduce((acc, user) => {
+    const role = user.role || "Unknown";
+
+    // skip superadmin + co-superadmin
+    if (role === "superadmin" || role === "co-superadmin") return acc;
+
+    const found = acc.find((item) => item.name === role);
+    if (found) {
+      found.value += 1;
+    } else {
+      acc.push({ name: role, value: 1 });
+    }
+    return acc;
+  }, []);
+
+  const deptChart = users.reduce((acc, user) => {
+  const department = user.department || "Unknown"
+   
+  if(department === "Unknown") return acc;
+  const found = acc.find((item) => item.name === department);
+  if (found) {
+    found.count += 1; 
+  } else {
+    acc.push({ name: department, count: 1 }); // add new
+  }
+
+  return acc;
+}, []);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -359,7 +400,7 @@ function CoSuperAdminDashboard() {
           {/* Enhanced Analytics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             {/* Enhanced Admins with Pie Chart + Labels beside */}
-            <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 relative z-0">
+            <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 relative z-0" onClick={() => handleAdminSliceClick("Users")}>
               <div className="flex items-center justify-center mb-4">
                 <div className="bg-primary/10 rounded-full p-2 mr-2">
                   <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
@@ -367,67 +408,64 @@ function CoSuperAdminDashboard() {
                   </svg>
                 </div>
                 <h2 className="text-lg font-bold text-gray-800">
-                  Admin Users
+                  Users
                 </h2>
               </div>
 
               <div className="flex items-center gap-6">
                 {/* Enhanced Pie Chart */}
                 <div className="w-2/3 relative z-0">
-                  <ResponsiveContainer width="100%" height={220}>
-                    <PieChart>
-                      <Pie
-                        data={adminData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        innerRadius={45}
-                        paddingAngle={3}
-                        onClick={() => setShowAdminsModal(true)}
-                      >
-                        {adminData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                            onClick={() => handleAdminSliceClick(entry.name)}
-                            style={{ 
-                              cursor: "pointer",
-                              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
-                            }}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value, name) => [`${value} users`, name]}
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                   <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={userChart}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      innerRadius={45}
+                      paddingAngle={3}
+                    >
+                      {userChart.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                          style={{
+                            cursor: "pointer",
+                            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+                          }}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value, name) => [`${value} users`, name]}
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
                   {/* Center text */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-800">
-                        {adminData.reduce((sum, item) => sum + item.value, 0)}
-                      </div>
-                      <div className="text-xs text-gray-500">Total</div>
+                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-800">
+                      {userChart.reduce((sum, item) => sum + item.value, 0)}
                     </div>
+                    <div className="text-xs text-gray-500">Total</div>
                   </div>
                 </div>
+              </div>
 
                 {/* Enhanced Labels */}
                 <ul className="space-y-3 w-1/3">
-                  {adminData.map((entry, index) => (
+                  {userChart.map((entry, index) => (
                     <li
                       key={index}
                       className="flex items-center justify-between p-2 rounded-lg bg-white/50 hover:bg-white/80 transition-colors cursor-pointer"
-                      onClick={() => handleAdminSliceClick(entry.name)}
                     >
                       <div className="flex items-center gap-3">
                         <span
@@ -462,7 +500,7 @@ function CoSuperAdminDashboard() {
                 {/* Enhanced Bar Chart */}
                 <div className="w-2/3 relative z-0">
                   <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={departmentData}>
+                    <BarChart data={deptChart}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                       <XAxis 
                         dataKey="name" 
@@ -487,10 +525,10 @@ function CoSuperAdminDashboard() {
                       <Bar
                         dataKey="count"
                         cursor="pointer"
-                        onClick={handleDepartmentBarClick}
+                        
                         radius={[4, 4, 0, 0]}
                       >
-                        {departmentData.map((dept, index) => (
+                        {deptChart.map((dept, index) => (
                           <Cell 
                             key={index} 
                             fill={COLORS[index % COLORS.length]}
@@ -504,11 +542,10 @@ function CoSuperAdminDashboard() {
 
                 {/* Enhanced Labels */}
                 <ul className="space-y-3 w-1/3">
-                  {departmentData.map((entry, index) => (
+                  {deptChart.map((entry, index) => (
                     <li
                       key={index}
                       className="flex items-center justify-between p-2 rounded-lg bg-white/50 hover:bg-white/80 transition-colors cursor-pointer"
-                      onClick={handleDepartmentBarClick}
                     >
                       <div className="flex items-center gap-3">
                         <span
@@ -611,8 +648,8 @@ function CoSuperAdminDashboard() {
                 </ul>
               </div>
             </div>
-
-            {/* Manual Entries with Enhanced Bar Chart */}
+        
+            {/* Manual Entries with Enhanced Bar Chart 
             <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 relative z-0">
               <div className="flex items-center justify-center mb-4">
                 <div className="bg-primary/10 rounded-full p-2 mr-2">
@@ -626,7 +663,7 @@ function CoSuperAdminDashboard() {
               </div>
 
               <div className="flex items-center gap-6">
-                {/* Enhanced Bar Chart */}
+              
                 <div className="w-2/3 relative z-0">
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart
@@ -673,7 +710,6 @@ function CoSuperAdminDashboard() {
                   </ResponsiveContainer>
                 </div>
 
-                {/* Enhanced Labels */}
                 <ul className="space-y-3 w-1/3">
                   {[
                     { name: "Form A", count: 15 },
@@ -699,6 +735,7 @@ function CoSuperAdminDashboard() {
                 </ul>
               </div>
             </div>
+          */}
           </div>
         </div>
       </main>

@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://Veybeng-cora-test.hf.space/users";
+const API_BASE_URL = "http://127.0.0.1:8000/users";
 
 export const createUsers = async (userData) => {
     try {
@@ -611,4 +611,22 @@ export const addMessage = async (convId, payload) => {
 
   if (!response.ok) throw new Error("Error adding message");
   return await response.json();
+};
+
+export const mostSearchData = async () => {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(`${API_BASE_URL}/top-titles`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch most searched data");
+  }
+
+  return response.json();
 };

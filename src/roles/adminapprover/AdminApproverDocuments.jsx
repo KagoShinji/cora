@@ -1,14 +1,68 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import SidebarAdminApprover from "../../components/SidebarAdminApprover";
 import { useDocumentStore } from "../../stores/useDocumentStore";
 import ApproveModal from "../../components/ApproveModal";
 import DeclineModal from "../../components/DeclineModal";
-import { approveDocument, declineDocument, viewDocument, updateDocument } from "../../api/api";
+import {
+  approveDocument,
+  declineDocument,
+  viewDocument,
+  updateDocument,
+} from "../../api/api";
 import ModalDocumentViewer from "../../components/ModalDocumentViewer";
 import ArchiveModal from "../../components/ArchiveModal";
+import { useAppSettingsStore } from "../../stores/useSettingsStore";
+
+import {
+  Search,
+  Eye,
+  FileText,
+  Camera,
+  Tags,
+  CheckCircle2,
+  XCircle,
+  Archive as ArchiveIcon,
+  FileSearch,
+  Menu,
+} from "lucide-react";
 
 function AdminApproverDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Responsive breakpoint (md < 768px)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mql = window.matchMedia("(max-width: 767.98px)");
+    const handler = (e) => setIsMobile(!!e.matches);
+    handler(mql); // initialize
+    if (typeof mql.addEventListener === "function") {
+      mql.addEventListener("change", handler);
+      return () => mql.removeEventListener("change", handler);
+    } else if (typeof mql.addListener === "function") {
+      mql.addListener(handler);
+      return () => mql.removeListener(handler);
+    }
+  }, []);
+
+  // Prevent background scroll when mobile drawer is open
+  useEffect(() => {
+    if (!isMobile) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = sidebarOpen ? "hidden" : prev || "";
+    return () => {
+      document.body.style.overflow = prev || "";
+    };
+  }, [isMobile, sidebarOpen]);
+
+  // Close drawer on Escape (mobile only)
+  useEffect(() => {
+    if (!isMobile || !sidebarOpen) return;
+    const onKey = (e) => e.key === "Escape" && setSidebarOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isMobile, sidebarOpen]);
+
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("pending-approval");
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -22,11 +76,19 @@ function AdminApproverDocuments() {
   const [keywordResults, setKeywordResults] = useState(null);
   const [highlightedDocId, setHighlightedDocId] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
+
   const { documents, fetchDocuments } = useDocumentStore();
+  const primaryColor = useAppSettingsStore((s) => s.primary_color) || "#3b82f6";
 
   useEffect(() => {
     fetchDocuments(filterStatus === "all" ? "" : filterStatus);
-  }, [filterStatus]);
+  }, [filterStatus, fetchDocuments]);
+
+  // Desktop offset: 17rem open / 5rem closed; Mobile: overlay (0 offset)
+  const sidebarOffset = useMemo(
+    () => (isMobile ? "0" : sidebarOpen ? "17rem" : "5rem"),
+    [isMobile, sidebarOpen]
+  );
 
   const handleApprove = async (docId) => {
     try {
@@ -40,9 +102,9 @@ function AdminApproverDocuments() {
     }
   };
 
-  const handleDecline = async (docId, remarks) => {
+  const handleDecline = async (docId, r) => {
     try {
-      await declineDocument(docId, "declined", remarks);
+      await declineDocument(docId, "declined", r);
       await fetchDocuments();
       setSelectedDoc(null);
       setShowDeclineModal(false);
@@ -64,17 +126,16 @@ function AdminApproverDocuments() {
   };
 
   const handleViewPdf = async (docId) => {
-  try {
-    const blob = await viewDocument(docId);
-    const blobUrl = URL.createObjectURL(blob);
-
-    setPdfPreview({ id: docId, url: blobUrl }); // store for preview
-    setHighlightedDocId(docId);
-  } catch (error) {
-    console.error("Error viewing PDF:", error);
-    alert("Failed to load PDF.");
-  }
-};
+    try {
+      const blob = await viewDocument(docId);
+      const blobUrl = URL.createObjectURL(blob);
+      setPdfPreview({ id: docId, url: blobUrl });
+      setHighlightedDocId(docId);
+    } catch (error) {
+      console.error("Error viewing PDF:", error);
+      alert("Failed to load PDF.");
+    }
+  };
 
   const handleSaveEdit = async (id, content) => {
     try {
@@ -110,31 +171,49 @@ function AdminApproverDocuments() {
       const addedKeywords = new Set();
 
       relatedDocs.forEach((d) => {
-        let versionLabel = d.status === "approved"
-          ? (d.is_latest ? "latest version" : `v${d.version}`)
-          : "pending-approval";
+        const versionLabel =
+          d.status === "approved"
+            ? d.is_latest
+              ? "latest version"
+              : `v${d.version}`
+            : "pending-approval";
 
         if (d.filename) {
-          previewData.files.push({ id: d.id, name: d.filename, title: `${d.title} (${versionLabel})` });
+          previewData.files.push({
+            id: d.id,
+            name: d.filename,
+            title: `${d.title} (${versionLabel})`,
+          });
         }
 
         if (d.content && !addedManualEntries.has(d.id)) {
-          previewData.manualEntries.push({ id: d.id, title: `${d.title} (${versionLabel})`, content: d.content, });
+          previewData.manualEntries.push({
+            id: d.id,
+            title: `${d.title} (${versionLabel})`,
+            content: d.content,
+          });
           addedManualEntries.add(d.id);
         }
 
         if (d.scanned_content && !addedScannedDocs.has(d.id)) {
-          previewData.scannedDocuments.push({ id: d.id, title: `${d.title} (${versionLabel})`, content: d.scanned_content,  });
+          previewData.scannedDocuments.push({
+            id: d.id,
+            title: `${d.title} (${versionLabel})`,
+            content: d.scanned_content,
+          });
           addedScannedDocs.add(d.id);
         }
 
         if (typeof d.keywords === "string" && d.keywords.length > 0) {
-          d.keywords.split(",").map(tag => tag.trim()).forEach(tag => {
-            if (!addedKeywords.has(tag)) {
-              previewData.keywords.push(tag);
-              addedKeywords.add(tag);
-            }
-          });
+          d.keywords
+            .split(",")
+            .map((tag) => tag.trim())
+            .forEach((tag) => {
+              if (!addedKeywords.has(tag)) {
+                previewData.keywords.push(tag);
+                addedKeywords.add(tag);
+              }
+            });
         }
       });
 
@@ -149,36 +228,54 @@ function AdminApproverDocuments() {
 
     const docsWithKeyword = documents.filter((doc) => {
       if (typeof doc.keywords === "string") {
-        const docKeywords = doc.keywords.split(",").map(k => k.trim());
+        const docKeywords = doc.keywords.split(",").map((k) => k.trim());
         return docKeywords.includes(cleanedTag);
       }
       return false;
     });
 
-    const groupedDocs = docsWithKeyword.reduce((acc, doc) => {
-      const title = doc.title || "Manual Entry";
-      if (!acc[title]) acc[title] = [];
-      acc[title].push(doc);
+    const grouped = docsWithKeyword.reduce((acc, d) => {
+      const t = d.title || "Manual Entry";
+      if (!acc[t]) acc[t] = [];
+      acc[t].push(d);
       return acc;
     }, {});
 
     const resultsData = { documents: [], manualEntries: [], scannedDocuments: [] };
 
-    Object.keys(groupedDocs).forEach(title => {
-      groupedDocs[title].forEach((doc) => {
-        let versionLabel = doc.status === "approved"
-          ? (doc.is_latest ? "latest version" : `v${doc.version}`)
-          : "pending-approval";
+    Object.keys(grouped).forEach((title) => {
+      grouped[title].forEach((d) => {
+        const versionLabel =
+          d.status === "approved"
+            ? d.is_latest
+              ? "latest version"
+              : `v${d.version}`
+            : "pending-approval";
 
-        if (doc.filename) resultsData.documents.push({ id: doc.id, title: `${title} (${versionLabel})`, filename: doc.filename });
-        if (doc.content) resultsData.manualEntries.push({ id: doc.id, title: `${title} (${versionLabel})`, content: doc.content,});
-        if (doc.scanned_content) resultsData.scannedDocuments.push({ id: doc.id, title: `${title} (${versionLabel})`, content: doc.scanned_content });
+        if (d.filename)
+          resultsData.documents.push({
+            id: d.id,
+            title: `${title} (${versionLabel})`,
+            filename: d.filename,
+          });
+        if (d.content)
+          resultsData.manualEntries.push({
+            id: d.id,
+            title: `${title} (${versionLabel})`,
+            content: d.content,
+          });
+        if (d.scanned_content)
+          resultsData.scannedDocuments.push({
+            id: d.id,
+            title: `${title} (${versionLabel})`,
+            content: d.scanned_content,
+          });
       });
     });
 
     setKeywordResults(resultsData);
     setKeywordFilter(tag);
-    setHighlightedDocId(null); // Reset highlight
+    setHighlightedDocId(null);
   };
 
   const clearKeywordFilter = () => {
@@ -198,273 +295,609 @@ function AdminApproverDocuments() {
   });
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      <div className={`transition-all duration-300 h-screen fixed top-0 left-0 z-40 ${sidebarOpen ? "w-64" : "w-16"}`}>
-        <SidebarAdminApprover isOpen={sidebarOpen} setOpen={setSidebarOpen} />
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
+      {/* Mobile backdrop (tap to close) */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar (mobile drawer / desktop collapsible) */}
+      <div
+        id="approver-sidebar"
+        className={[
+          "fixed top-0 left-0 h-screen z-50 transition-all duration-300",
+          isMobile
+            ? `w-64 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`
+            : `${sidebarOpen ? "w-64" : "w-16"}`,
+        ].join(" ")}
+      >
+        <SidebarAdminApprover isOpen={sidebarOpen} setOpen={setSidebarOpen} isMobile={isMobile} />
       </div>
 
-      <main className={`flex flex-col md:flex-row transition-all duration-300 bg-gray-100 ${sidebarOpen ? "ml-64" : "ml-16"} w-full`}>
-        <div className="w-full md:w-[70%] p-8 overflow-y-auto border-r border-gray-300">
-          <h1 className="text-3xl font-bold text-primary mb-6">Documents</h1>
+      {/* Main (pushes on desktop, overlays on mobile) */}
+      <main
+        className="flex flex-col md:flex-row transition-all duration-300 w-full"
+        style={{ marginLeft: sidebarOffset }}
+      >
+        {/* Left: Documents */}
+        <div className="w-full md:w-[70%] p-6 overflow-y-auto border-r border-gray-200 bg-gray-50">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            {/* Mobile: burger + title (same as dashboard) */}
+            <div className="md:hidden flex items-center gap-3 w-full">
+              <Menu
+                onClick={() => setSidebarOpen(true)}
+                role="button"
+                tabIndex={0}
+                aria-label="Open menu"
+                className="h-6 w-6 cursor-pointer"
+                style={{ color: primaryColor }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setSidebarOpen(true);
+                }}
+                aria-pressed={sidebarOpen}
+              />
+              <div className="flex-1 min-w-0">
+                <h1
+                  className="text-2xl sm:text-3xl font-bold leading-tight truncate"
+                  style={{ color: primaryColor }}
+                >
+                  Documents
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Review and take action on submissions
+                </p>
+              </div>
+            </div>
 
-          {/* Search & Filter */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <input
-              type="text"
-              placeholder="Search by name or notes..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="border border-gray-300 rounded px-4 py-2 w-full max-w-md text-black"
-            />
-            <div className="flex gap-2">
-              {["all", "pending-approval", "approved", "declined", "archived"].map(
-                (status) => (
-                  <button
-                    key={status}
-                    onClick={() => setFilterStatus(status)}
-                    className={`px-4 py-2 rounded-md font-semibold ${filterStatus === status ? "!bg-blue-700 text-white" : "!bg-primary text-white border"}`}
-                  >
-                    {status.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </button>
-                )
-              )}
+            {/* Desktop title */}
+            <div className="hidden md:block">
+              <h1
+                className="text-3xl font-bold mb-2"
+                style={{ color: primaryColor }}
+              >
+                Documents
+              </h1>
+              <p className="text-gray-600">Review and take action on submissions</p>
             </div>
           </div>
 
-          {/* Document Table */}
-          <div className="bg-white shadow-md rounded-lg overflow-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-primary text-white">
-                <tr>
-                  <th className="p-4 text-center">Created by</th>
-                  <th className="p-4 text-center">Type of Information</th>
-                  <th className="p-4 text-center">File</th>
-                  <th className="p-4 text-center">Status</th>
-                  <th className="p-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDocs.length > 0 ? (
-                  filteredDocs.map((doc) => (
-                    <tr
-                      key={doc.id}
-                     
-                    >
-                      <td className="p-4 text-center text-black">{doc.uploaded_by_name}</td>
-                      <td className="p-4 text-center text-black">{doc.title}</td>
-                      <td className="p-4 text-center">
-                        <button
-                          onClick={() => {
-                            handlePreview(doc);
-                            setHighlightedDocId(doc.id);
-                          }}
-                          className="!bg-primary !text-white px-3 py-1 rounded hover:!bg-primary/80"
-                        >
-                          View
-                        </button>
-                      </td>
-                      <td className="p-4 text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                          doc.status === "pending-approval" ? "bg-yellow-100 text-yellow-700" :
-                          doc.status === "approved" ? "bg-green-100 text-green-700" :
-                          doc.status === "declined" ? "bg-red-100 text-red-700" :
-                          "bg-gray-200 text-gray-800"
-                        }`}>
-                          {doc.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-center">
-                        {(doc.status === "pending-approval" || doc.status === "declined") ? (
-                          <div className="flex justify-center gap-2">
-                            {doc.status === "pending-approval" && (
-                              <>
-                                <button onClick={() => { setSelectedDoc(doc); setShowApproveModal(true); }} className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80">Approve</button>
-                                <button onClick={() => { setSelectedDoc(doc); setShowDeclineModal(true); }} className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-primary/80">Decline</button>
-                              </>
-                            )}
-                            {doc.status !== "pending-approval" && (
-                              <button onClick={() => { setSelectedDoc(doc); setShowArchiveModal(true); }} className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-red-900">{doc.archived ? "Unarchive" : "Archive"}</button>
-                            )}
-                          </div>
-                        ) : doc.status === "approved" ? (
-                          <div className="flex justify-center gap-2">
-                            <button onClick={() => { setSelectedDoc(doc); setShowArchiveModal(true); }} className="!bg-primary !text-white px-4 py-2 rounded-md hover:!bg-red-900">{doc.archived ? "Unarchive" : "Archive"}</button>
-                          </div>
-                        ) : (<span className="text-gray-500 italic"></span>)}
+          {/* Search + Filters Card */}
+          <div className="!bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
+                  style={{ color: primaryColor }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search by name or notes..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none"
+                  style={{ border: `2px solid ${primaryColor}`, backgroundColor: "#fff" }}
+                />
+              </div>
+
+              {/* Filters */}
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setFilterStatus("all")}
+                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
+                    ${
+                      filterStatus === "all"
+                        ? "!bg-gray-900 !text-white"
+                        : "!bg-gray-100 !text-gray-700 hover:!bg-gray-200 !border !border-gray-300"
+                    }`}
+                >
+                  All
+                </button>
+
+                <button
+                  onClick={() => setFilterStatus("pending-approval")}
+                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
+                    ${
+                      filterStatus === "pending-approval"
+                        ? "!bg-blue-600 !text-white"
+                        : "!bg-blue-50 !text-blue-700 hover:!bg-blue-100 !border !border-blue-200"
+                    }`}
+                >
+                  Pending
+                </button>
+
+                <button
+                  onClick={() => setFilterStatus("approved")}
+                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
+                    ${
+                      filterStatus === "approved"
+                        ? "!bg-green-600 !text-white"
+                        : "!bg-green-50 !text-green-700 hover:!bg-green-100 !border !border-green-200"
+                    }`}
+                >
+                  Approved
+                </button>
+
+                <button
+                  onClick={() => setFilterStatus("declined")}
+                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
+                    ${
+                      filterStatus === "declined"
+                        ? "!bg-red-600 !text-white"
+                        : "!bg-red-50 !text-red-700 hover:!bg-red-100 !border !border-red-200"
+                    }`}
+                >
+                  Declined
+                </button>
+
+                <button
+                  onClick={() => setFilterStatus("archived")}
+                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
+                    ${
+                      filterStatus === "archived"
+                        ? "!bg-slate-700 !text-white"
+                        : "!bg-slate-50 !text-slate-700 hover:!bg-slate-100 !border !border-slate-200"
+                    }`}
+                >
+                  Archived
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Table Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-900">Document List</h3>
+              <p className="text-sm text-gray-600 mt-1">{filteredDocs.length} documents found</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Created by
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Type of Information
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      File
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredDocs.length > 0 ? (
+                    filteredDocs.map((doc) => (
+                      <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 text-center text-gray-900">{doc.uploaded_by_name}</td>
+                        <td className="px-6 py-4 text-center text-gray-900">{doc.title}</td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => {
+                              handlePreview(doc);
+                              setHighlightedDocId(doc.id);
+                            }}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-md !bg-blue-600 !text-white text-sm font-medium shadow hover:!bg-blue-700 transition"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+                              doc.status === "pending-approval"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : doc.status === "approved"
+                                ? "bg-green-100 text-green-700"
+                                : doc.status === "declined"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-gray-200 text-gray-800"
+                            }`}
+                          >
+                            {doc.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {(doc.status === "pending-approval" || doc.status === "declined") ? (
+                            <div className="flex justify-center gap-2">
+                              {doc.status === "pending-approval" && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedDoc(doc);
+                                      setShowApproveModal(true);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-4 py-2 rounded-md !bg-green-600 !text-white text-sm font-medium hover:!bg-green-700 transition"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedDoc(doc);
+                                      setShowDeclineModal(true);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-4 py-2 rounded-md !bg-red-600 !text-white text-sm font-medium hover:!bg-red-700 transition"
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                    Decline
+                                  </button>
+                                </>
+                              )}
+                              {doc.status !== "pending-approval" && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedDoc(doc);
+                                    setShowArchiveModal(true);
+                                  }}
+                                  className="inline-flex items-center gap-1 px-4 py-2 rounded-md !bg-slate-700 !text-white text-sm font-medium hover:!bg-slate-800 transition"
+                                >
+                                  <ArchiveIcon className="w-4 h-4" />
+                                  {doc.archived ? "Unarchive" : "Archive"}
+                                </button>
+                              )}
+                            </div>
+                          ) : doc.status === "approved" ? (
+                            <div className="flex justify-center gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedDoc(doc);
+                                  setShowArchiveModal(true);
+                                }}
+                                className="inline-flex items-center gap-1 px-4 py-2 rounded-md !bg-slate-700 !text-white text-sm font-medium hover:!bg-slate-800 transition"
+                              >
+                                <ArchiveIcon className="w-4 h-4" />
+                                {doc.archived ? "Unarchive" : "Archive"}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-gray-500 italic"></span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="text-center py-6 text-gray-500">
+                        No {filterStatus} documents found.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center py-6 text-gray-500">No {filterStatus} documents found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        {/* Sidebar Preview */}
-        <div className="w-full md:w-[30%] p-4 bg-white overflow-auto border-l border-gray-300">
+        {/* Right: Preview (modern CMS-styled cards with icons) */}
+        <div className="w-full md:w-[30%] p-6 bg-white overflow-y-auto border-l border-gray-200">
           {selectedDoc ? (
             <div className="flex flex-col gap-6">
-              {/* PDF Files */}
-<div>
-  <h2 className="text-lg font-bold text-primary mb-2">PDF Documents</h2>
-  {selectedDoc.files?.length > 0 ? (
-    <ul className="space-y-2">
-      {selectedDoc.files.map((file, idx) => (
-        <li
-          key={idx}
-          className={`p-1 rounded ${highlightedDocId === file.id ? "bg-yellow-100" : ""}`}
-        >
-          <span
-            onClick={() => handleViewPdf(file.id)}
-            className="text-blue-600 cursor-pointer hover:underline"
-          >
-            {file.title}
-          </span>
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p className="text-gray-500">No PDF files found</p>
-  )}
+              {/* PDFs */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+                  <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg !bg-blue-50">
+                    <FileSearch className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <h2 className="text-sm font-semibold text-gray-900">PDF Documents</h2>
+                </div>
+                <div className="p-4">
+                  {selectedDoc.files?.length > 0 ? (
+                    <ul className="space-y-2">
+                      {selectedDoc.files.map((file, idx) => (
+                        <li
+                          key={idx}
+                          className={`px-3 py-2 rounded-md border text-sm cursor-pointer flex items-center justify-between ${
+                            highlightedDocId === file.id
+                              ? "bg-yellow-50 border-yellow-200"
+                              : "bg-white border-gray-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span
+                            onClick={() => handleViewPdf(file.id)}
+                            className="text-blue-700 hover:underline"
+                          >
+                            {file.title}
+                          </span>
+                          <Eye className="w-4 h-4 text-blue-600" />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No PDF files found</p>
+                  )}
 
-  {/* PDF Preview below */}
-  {pdfPreview && highlightedDocId === pdfPreview.id && (
-    <div className="mt-4 border rounded shadow">
-      <iframe
-        src={pdfPreview.url}
-        className="w-full h-96"
-        title="PDF Preview"
-      />
-    </div>
-  )}
-</div>
+                  {pdfPreview && highlightedDocId === pdfPreview.id && (
+                    <div className="mt-4 border rounded-lg shadow-sm overflow-hidden">
+                      <iframe src={pdfPreview.url} className="w-full h-96" title="PDF Preview" />
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* Manual Entries */}
               {selectedDoc.manualEntries?.length > 0 && (
-                <div className="mt-6">
-                  <h2 className="text-lg font-bold text-primary mb-2">Manual Entries</h2>
-                  <ul className="list-disc list-inside space-y-1">
-                    {selectedDoc.manualEntries.map((entry) => (
-                      <li
-                        key={entry.id}
-                        className={`p-1 rounded ${highlightedDocId === entry.id ? "bg-yellow-100" : ""}`}
-                      >
-                        <span
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg !bg-emerald-50">
+                      <FileText className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <h2 className="text-sm font-semibold text-gray-900">Manual Entries</h2>
+                  </div>
+                  <div className="p-4">
+                    <ul className="space-y-2">
+                      {selectedDoc.manualEntries.map((entry) => (
+                        <li
+                          key={entry.id}
+                          className={`px-3 py-2 rounded-md border text-sm cursor-pointer flex items-center justify-between ${
+                            highlightedDocId === entry.id
+                              ? "bg-yellow-50 border-yellow-200"
+                              : "bg-white border-gray-200 hover:bg-gray-50"
+                          }`}
                           onClick={() => {
-                            setDocModalData({ id: entry.id, title: entry.title, content: entry.content });
+                            setDocModalData({
+                              id: entry.id,
+                              title: entry.title,
+                              content: entry.content,
+                            });
                             setDocModalOpen(true);
                             setHighlightedDocId(entry.id);
                           }}
-                          className="text-blue-600 cursor-pointer hover:underline"
                         >
-                          {entry.title}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                          <span className="text-emerald-700">{entry.title}</span>
+                          <Eye className="w-4 h-4 text-emerald-600" />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               )}
 
               {/* Scanned Documents */}
               {selectedDoc.scannedDocuments?.length > 0 && (
-                <div className="mt-6">
-                  <h2 className="text-lg font-bold !text-primary mb-2">Scanned Documents</h2>
-                  <ul className="list-disc list-inside space-y-1">
-                    {selectedDoc.scannedDocuments.map((scan) => (
-                      <li
-                        key={scan.id}
-                        className={`p-1 rounded ${highlightedDocId === scan.id ? "bg-yellow-100" : ""}`}
-                      >
-                        <span
-                          onClick={() => { setDocModalData({ title: scan.title, content: scan.content, id: scan.id }); setDocModalOpen(true); setHighlightedDocId(scan.id); }}
-                          className="text-blue-600 cursor-pointer hover:underline"
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg !bg-orange-50">
+                      <Camera className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <h2 className="text-sm font-semibold text-gray-900">Scanned Documents</h2>
+                  </div>
+                  <div className="p-4">
+                    <ul className="space-y-2">
+                      {selectedDoc.scannedDocuments.map((scan) => (
+                        <li
+                          key={scan.id}
+                          className={`px-3 py-2 rounded-md border text-sm cursor-pointer flex items-center justify-between ${
+                            highlightedDocId === scan.id
+                              ? "bg-yellow-50 border-yellow-200"
+                              : "bg-white border-gray-200 hover:bg-gray-50"
+                          }`}
+                          onClick={() => {
+                            setDocModalData({
+                              title: scan.title,
+                              content: scan.content,
+                              id: scan.id,
+                            });
+                            setDocModalOpen(true);
+                            setHighlightedDocId(scan.id);
+                          }}
                         >
-                          {scan.title}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                          <span className="text-orange-700">{scan.title}</span>
+                          <Eye className="w-4 h-4 text-orange-600" />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               )}
 
               {/* Keywords */}
-              <div>
-                <h2 className="text-lg font-bold text-primary mb-2">Keywords</h2>
-                {Array.isArray(selectedDoc.keywords) && selectedDoc.keywords.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedDoc.keywords.map((tag, idx) => (
-                      <span key={idx} className="flex items-center gap-1 text-sm !text-primary px-2 py-1 rounded bg-gray-200/60 cursor-pointer hover:bg-gray-300" onClick={() => handleKeywordClick(tag)}>{tag}</span>
-                    ))}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+                  <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg !bg-indigo-50">
+                    <Tags className="w-4 h-4 text-indigo-600" />
                   </div>
-                ) : <p className="text-gray-500">No keywords</p>}
+                  <h2 className="text-sm font-semibold text-gray-900">Keywords</h2>
+                </div>
+                <div className="p-4">
+                  {Array.isArray(selectedDoc.keywords) && selectedDoc.keywords.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedDoc.keywords.map((tag, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleKeywordClick(tag)}
+                          className="px-2 py-0.5 rounded-full border text-xs font-medium !bg-blue-50 !text-blue-700 border-blue-200 hover:!bg-blue-100 transition"
+                          title={`Filter by "${tag}"`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No keywords</p>
+                  )}
+                </div>
               </div>
-            </div>
-          ) : <p className="text-gray-500 italic">Select a document to preview</p>}
 
-          {/* Keyword Filter Results */}
-          {keywordFilter && keywordResults && (
-            <div className="mt-6 border-t border-gray-300 pt-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-primary">Related to: "{keywordFilter}"</h2>
-                <span onClick={clearKeywordFilter} className="text-sm text-gray-500 cursor-pointer hover:text-primary hover:underline">✕ Clear</span>
-              </div>
-
-              <h3 className="font-semibold !text-primary mt-4">Manual Entries</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {keywordResults.manualEntries.length > 0 ? (
-                  keywordResults.manualEntries.map((entry) => (
-                    <li
-                      key={entry.id}
-                      className={`p-1 rounded ${highlightedDocId === entry.id ? "bg-yellow-100" : ""}`}
+              {keywordFilter && keywordResults && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg !bg-indigo-50">
+                        <Tags className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <h2 className="text-sm font-semibold text-gray-900">
+                        Related to: <span className="text-blue-700">"{keywordFilter}"</span>
+                      </h2>
+                    </div>
+                    {/* Inline Clear link (no button) */}
+                    <span
+                      onClick={clearKeywordFilter}
+                      role="button"
+                      tabIndex={0}
+                      className="text-sm text-gray-600 cursor-pointer hover:text-blue-700 hover:underline"
                     >
-                      <span
-                        onClick={() => { setDocModalData({ id: entry.id, title: entry.title, content: entry.content }); setDocModalOpen(true); setHighlightedDocId(entry.id); }}
-                        className="text-blue-600 cursor-pointer hover:underline"
-                      >
-                        {entry.title}
-                      </span>
-                    </li>
-                  ))
-                ) : <p className="text-gray-500 italic">No Manual Entries found</p>}
-              </ul>
+                      ✕ Clear
+                    </span>
+                  </div>
 
-              <h3 className="font-semibold !text-primary mt-4">Scanned Documents</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {keywordResults.scannedDocuments.length > 0 ? (
-                  keywordResults.scannedDocuments.map((scan) => (
-                    <li
-                      key={scan.id}
-                      className={`p-1 rounded ${highlightedDocId === scan.id ? "bg-yellow-100" : ""}`}
-                    >
-                      <span
-                        onClick={() => { setDocModalData({ title: scan.title, content: scan.content, id: scan.id }); setDocModalOpen(true); setHighlightedDocId(scan.id); }}
-                        className="text-blue-600 cursor-pointer hover:underline"
-                      >
-                        {scan.title}
-                      </span>
-                    </li>
-                  ))
-                ) : <p className="text-gray-500 italic">No Scanned Documents found</p>}
-              </ul>
+                  <div className="p-4 space-y-5">
+                    {/* PDF Documents bucket */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="inline-flex items-center justify-center w-6 h-6 rounded-md !bg-blue-50">
+                          <FileSearch className="w-3.5 h-3.5 text-blue-600" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900">PDF Documents</h3>
+                      </div>
+                      {keywordResults.documents.length > 0 ? (
+                        <ul className="space-y-2">
+                          {keywordResults.documents.map((file) => (
+                            <li
+                              key={file.id}
+                              className={`px-3 py-2 rounded-md border text-sm cursor-pointer flex items-center justify-between ${
+                                highlightedDocId === file.id
+                                  ? "bg-yellow-50 border-yellow-200"
+                                  : "bg-white border-gray-200 hover:bg-gray-50"
+                              }`}
+                            >
+                              <span
+                                onClick={() => {
+                                  handleViewPdf(file.id);
+                                  setHighlightedDocId(file.id);
+                                }}
+                                className="text-blue-700 hover:underline"
+                                title={file.filename || file.title}
+                              >
+                                {file.title}
+                              </span>
+                              <Eye className="w-4 h-4 text-blue-600" />
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 italic text-sm">No PDF files found</p>
+                      )}
+                    </div>
+
+                    {/* Manual Entries bucket */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="inline-flex items-center justify-center w-6 h-6 rounded-md !bg-emerald-50">
+                          <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900">Manual Entries</h3>
+                      </div>
+                      {keywordResults.manualEntries.length > 0 ? (
+                        <ul className="space-y-2">
+                          {keywordResults.manualEntries.map((entry) => (
+                            <li
+                              key={entry.id}
+                              className={`px-3 py-2 rounded-md border text-sm cursor-pointer flex items-center justify-between ${
+                                highlightedDocId === entry.id
+                                  ? "bg-yellow-50 border-yellow-200"
+                                  : "bg-white border-gray-200 hover:bg-gray-50"
+                              }`}
+                              onClick={() => {
+                                setDocModalData({ id: entry.id, title: entry.title, content: entry.content });
+                                setDocModalOpen(true);
+                                setHighlightedDocId(entry.id);
+                              }}
+                            >
+                              <span className="text-emerald-700">{entry.title}</span>
+                              <Eye className="w-4 h-4 text-emerald-600" />
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 italic text-sm">No Manual Entries found</p>
+                      )}
+                    </div>
+
+                    {/* Scanned Documents bucket */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="inline-flex items-center justify-center w-6 h-6 rounded-md !bg-orange-50">
+                          <Camera className="w-3.5 h-3.5 text-orange-600" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900">Scanned Documents</h3>
+                      </div>
+                      {keywordResults.scannedDocuments.length > 0 ? (
+                        <ul className="space-y-2">
+                          {keywordResults.scannedDocuments.map((scan) => (
+                            <li
+                              key={scan.id}
+                              className={`px-3 py-2 rounded-md border text-sm cursor-pointer flex items-center justify-between ${
+                                highlightedDocId === scan.id
+                                  ? "bg-yellow-50 border-yellow-200"
+                                  : "bg-white border-gray-200 hover:bg-gray-50"
+                              }`}
+                              onClick={() => {
+                                setDocModalData({ title: scan.title, content: scan.content, id: scan.id });
+                                setDocModalOpen(true);
+                                setHighlightedDocId(scan.id);
+                              }}
+                            >
+                              <span className="text-orange-700">{scan.title}</span>
+                              <Eye className="w-4 h-4 text-orange-600" />
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 italic text-sm">No Scanned Documents found</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+          ) : (
+            <p className="text-gray-500 italic">Select a document to preview</p>
           )}
         </div>
       </main>
 
       {/* Modals */}
-      <ApproveModal open={showApproveModal} onClose={() => setShowApproveModal(false)} onConfirm={() => handleApprove(selectedDoc?.id)} document={selectedDoc} />
-      <DeclineModal open={showDeclineModal} onClose={() => setShowDeclineModal(false)} onConfirm={(remarks) => handleDecline(selectedDoc?.id, remarks)} document={selectedDoc} remarks={remarks} setRemarks={setRemarks} />
+      <ApproveModal
+        open={showApproveModal}
+        onClose={() => setShowApproveModal(false)}
+        onConfirm={() => handleApprove(selectedDoc?.id)}
+        document={selectedDoc}
+      />
+      <DeclineModal
+        open={showDeclineModal}
+        onClose={() => setShowDeclineModal(false)}
+        onConfirm={(r) => handleDecline(selectedDoc?.id, r)}
+        document={selectedDoc}
+        remarks={remarks}
+        setRemarks={setRemarks}
+      />
       <ModalDocumentViewer
         isOpen={docModalOpen}
         onClose={() => setDocModalOpen(false)}
         doc={docModalData}
         onSave={handleSaveEdit}
       />
-      <ArchiveModal open={showArchiveModal} onClose={() => setShowArchiveModal(false)} onConfirm={() => handleArchive(selectedDoc)} document={selectedDoc} />
+      <ArchiveModal
+        open={showArchiveModal}
+        onClose={() => setShowArchiveModal(false)}
+        onConfirm={() => handleArchive(selectedDoc)}
+        document={selectedDoc}
+      />
     </div>
   );
 }

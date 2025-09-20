@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { Mic, Image as ImageIcon } from "lucide-react";
+// src/pages/user/UserChat.jsx
+import { useEffect, useRef, useState, useMemo } from "react";
+import { Mic, Image as ImageIcon, Menu } from "lucide-react";
 import SidebarUser from "../../components/SidebarUser";
 import { useAuthStore } from "../../stores/userStores";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
@@ -24,12 +25,50 @@ export default function UserChat() {
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
 
   const name = useAppSettingsStore((state) => state.name);
+  const primaryColor = useAppSettingsStore((state) => state.primary_color);
   const currentUser = useAuthStore((s) => s.currentUser);
 
   const inputRef = useRef(null);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
   const recognitionRef = useRef(null);
+
+  // === Responsive: track mobile breakpoint (md < 768px) ===
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767.98px)");
+    const handler = (e) => setIsMobile(e.matches);
+    handler(mql);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  // Tiny helpers for tints/opacity based on hex strings
+  const tint20 = useMemo(
+    () => (primaryColor?.startsWith?.("#") ? `${primaryColor}20` : primaryColor),
+    [primaryColor]
+  );
+  const tint15 = useMemo(
+    () => (primaryColor?.startsWith?.("#") ? `${primaryColor}15` : primaryColor),
+    [primaryColor]
+  );
+
+  // Keep content offset in sync with SidebarUser width
+  // Desktop: 17rem/5rem; Mobile: overlay -> 0 offset
+  const sidebarOffset = useMemo(
+    () => (isMobile ? "0" : sidebarOpen ? "17rem" : "5rem"),
+    [isMobile, sidebarOpen]
+  );
+
+  // Prevent background scroll when mobile drawer is open
+  useEffect(() => {
+    if (!isMobile) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = sidebarOpen ? "hidden" : prev || "";
+    return () => {
+      document.body.style.overflow = prev || "";
+    };
+  }, [isMobile, sidebarOpen]);
 
   // --- Text to Speech (TTS) ---
   const speak = (text) => {
@@ -238,6 +277,7 @@ export default function UserChat() {
   // --- UI ---
   return (
     <div className="flex h-screen w-screen bg-white text-gray-900 overflow-hidden">
+      {/* Sidebar */}
       <SidebarUser
         isOpen={sidebarOpen}
         setOpen={setSidebarOpen}
@@ -245,72 +285,102 @@ export default function UserChat() {
         onSelectChat={handleSelectChat}
         currentConversationId={currentConversationId}
         sidebarRefreshKey={sidebarRefreshKey}
+        isMobile={isMobile}
       />
 
-      {/* Logo */}
+      {/* Desktop fixed logo (hidden on mobile) */}
       <div
-        className="fixed top-4 z-50 transition-all duration-300 text-primary font-bold text-xl select-none"
-        style={{ left: sidebarOpen ? "17rem" : "5rem", pointerEvents: "none" }}
+        className="hidden md:block fixed top-4 z-50 transition-all duration-300 font-bold text-xl select-none"
+        style={{
+          left: sidebarOffset,
+          pointerEvents: "none",
+          color: primaryColor,
+        }}
       >
         {name.toUpperCase()}
       </div>
 
-      <div className="flex-1 flex flex-col">
+      {/* Content wrapper shifts with sidebar (0 on mobile) */}
+      <div
+        className="flex-1 flex flex-col"
+        style={{
+          marginLeft: sidebarOffset,
+          transition: "margin-left 300ms ease",
+        }}
+      >
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4">
+          {/* Mobile: burger + logo inline */}
+          <div className="md:hidden flex items-center gap-3">
+            <Menu
+              onClick={() => setSidebarOpen(true)}
+              role="button"
+              tabIndex={0}
+              aria-label="Open menu"
+              className="h-5 w-5 cursor-pointer"
+              style={{ color: primaryColor }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") setSidebarOpen(true);
+              }}
+              aria-pressed={sidebarOpen}
+            />
+            <span
+              className="font-bold text-lg select-none"
+              style={{ color: primaryColor }}
+            >
+              {name.toUpperCase()}
+            </span>
+          </div>
+
           {currentUser && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 ml-auto md:ml-0">
               <div className="text-right leading-tight">
-                <div className="text-sm font-semibold text-primary">
+                <div className="text-sm font-semibold" style={{ color: primaryColor }}>
                   {currentUser.name || currentUser.email || "User"}
                 </div>
                 {currentUser.email && (
-                  <div className="text-xs text-primary/70">
+                  <div className="text-xs" style={{ color: primaryColor, opacity: 0.7 }}>
                     {currentUser.email}
                   </div>
                 )}
               </div>
-              <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center text-sm">
-                {(currentUser.name || currentUser.email || "U")
-                  .charAt(0)
-                  .toUpperCase()}
+              <div
+                className="h-8 w-8 rounded-full text-white flex items-center justify-center text-sm"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {(currentUser.name || currentUser.email || "U").charAt(0).toUpperCase()}
               </div>
             </div>
           )}
         </header>
 
         {/* Chat Area */}
-        <div
-          ref={scrollRef}
-          id="chat-scroll"
-          className="flex-grow overflow-y-auto px-4 py-6"
-        >
+        <div ref={scrollRef} id="chat-scroll" className="flex-grow overflow-y-auto px-4 py-6">
           {!submitted && chatHistory.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-4">
-              <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-1">
+              <h1 className="text-3xl sm:text-4xl font-bold mb-1" style={{ color: primaryColor }}>
                 Hello!
               </h1>
-              <p className="text-sm text-primary mb-6">
+              <p className="text-sm mb-6" style={{ color: primaryColor }}>
                 What can I help you with?
               </p>
             </div>
           ) : (
             <div className="flex flex-col gap-3 max-w-2xl mx-auto">
               {chatHistory.map((chat, idx) => {
-                const isCoraTyping =
-                  chat.role === "assistant" && isTyping && chat.text === "";
+                const isCoraTyping = chat.role === "assistant" && isTyping && chat.text === "";
+                const isUser = chat.role === "user";
                 return (
                   <div
                     key={idx}
-                    className={`p-3 rounded-lg text-sm ${
-                      chat.role === "user"
-                        ? "bg-gray-100 text-gray-800"
-                        : "bg-primary/10 text-primary"
-                    } ${isCoraTyping ? "animate-pulse" : ""}`}
+                    className={`p-3 rounded-lg text-sm ${isCoraTyping ? "animate-pulse" : ""}`}
+                    style={
+                      isUser
+                        ? { backgroundColor: "#f3f4f6", color: "#1f2937" }
+                        : { backgroundColor: tint15, color: primaryColor }
+                    }
                   >
-                    <span className="font-semibold">
-                      {chat.role === "user" ? "You" : "CORA"}:
-                    </span>{" "}
+                    <span className="font-semibold">{isUser ? "You" : "CORA"}:</span>{" "}
                     <div className="whitespace-pre-wrap break-words">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {chat.text?.trim() || "Cora is generating"}
@@ -336,72 +406,163 @@ export default function UserChat() {
         </div>
 
         {/* Input Box */}
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-xl px-4 py-2 flex flex-col gap-2 border border-primary rounded-lg bg-gray-100 text-primary mx-auto mb-4"
-        >
-          {/* Image Preview */}
-          {selectedImages.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {selectedImages.map((file, idx) => (
-                <div key={idx} className="relative">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt="preview"
-                    className="w-20 h-20 object-cover rounded-lg border"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(idx)}
-                    className="absolute -top-2 -right-2 rounded-full flex items-center justify-center w-4 h-4"
-                  >
-                    x
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Input Row */}
-          <div className="flex items-center gap-2">
+<form
+  onSubmit={handleSubmit}
+  className="
+    sticky bottom-0    /* stay visible above content */
+    w-full
+    px-3 md:px-4 py-2
+    bg-white/80 backdrop-blur
+  "
+  style={{
+    borderColor: primaryColor,
+    // iOS/Android safe area: keeps the composer above home indicator
+    paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)",
+  }}
+>
+  <div
+    className="
+      mx-auto
+      w-full
+      max-w-full
+      sm:max-w-xl
+      md:max-w-2xl
+      lg:max-w-2xl
+      rounded-xl
+      bg-gray-100
+      border
+      flex flex-col gap-2
+      p-2 md:p-3
+    "
+    style={{ borderColor: primaryColor, color: primaryColor }}
+  >
+    {/* Image Preview (wraps on small screens, scrolls if many) */}
+    {selectedImages.length > 0 && (
+      <div className="flex flex-row flex-wrap gap-2 overflow-x-auto">
+        {selectedImages.map((file, idx) => (
+          <div key={idx} className="relative shrink-0">
+            <img
+              src={URL.createObjectURL(file)}
+              alt="preview"
+              className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border"
+            />
             <button
               type="button"
-              onClick={() => fileInputRef.current.click()}
-              className="p-2 rounded-lg !bg-gray-100 hover:bg-primary/20"
+              onClick={() => removeImage(idx)}
+              className="absolute -top-2 -right-2 rounded-full flex items-center justify-center w-5 h-5 md:w-4 md:h-4 text-white text-xs"
+              style={{ backgroundColor: primaryColor }}
+              aria-label="Remove image"
+              title="Remove image"
             >
-              <ImageIcon size={18} />
-            </button>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              hidden
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
-
-            <input
-              ref={inputRef}
-              className="flex-grow bg-transparent outline-none placeholder:text-primary/50 disabled:opacity-60"
-              placeholder="Ask Cora"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={onKeyDown}
-              onPaste={handlePaste}
-              disabled={isTyping}
-            />
-
-            <button
-              type="button"
-              onClick={handleMicClick}
-              className={`p-2 rounded-lg !bg-gray-100 ${
-                listening ? "bg-red-100 text-red-600" : "hover:bg-primary/20"
-              }`}
-            >
-              <Mic size={18} />
+              ×
             </button>
           </div>
-        </form>
+        ))}
+      </div>
+    )}
+
+    {/* Input Row */}
+    <div className="flex items-center gap-2">
+      {/* Attach */}
+      <div
+        className="
+          shrink-0
+          rounded-lg
+          p-2 md:p-2
+          bg-gray-100 hover:bg-gray-200
+          transition
+        "
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = tint20)}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
+        role="button"
+        tabIndex={0}
+        aria-label="Attach images"
+        title="Attach images"
+        onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && fileInputRef.current?.click()}
+      >
+        <ImageIcon
+          size={20}
+          className="md:h-[18px] md:w-[18px]"
+          style={{ color: primaryColor }}
+        />
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        ref={fileInputRef}
+        onChange={handleFileChange}
+      />
+
+      {/* Text input: grows, wraps long text nicely */}
+      <input
+        ref={inputRef}
+        className="
+          min-w-0 flex-grow
+          bg-transparent outline-none disabled:opacity-60
+          text-sm md:text-base
+          placeholder:text-xs md:placeholder:text-sm
+          py-2
+        "
+        placeholder="Ask Cora"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={onKeyDown}
+        onPaste={handlePaste}
+        disabled={isTyping}
+        style={{ color: primaryColor }}
+      />
+
+      {/* Mic */}
+      <div
+        className="shrink-0 rounded-lg p-2 bg-gray-100 transition cursor-pointer"
+        style={{
+          backgroundColor: listening ? "#fee2e2" : "#f3f4f6",
+          color: listening ? "#dc2626" : undefined,
+        }}
+        onMouseEnter={(e) => {
+          if (!listening) e.currentTarget.style.backgroundColor = tint20;
+        }}
+        onMouseLeave={(e) => {
+          if (!listening) e.currentTarget.style.backgroundColor = "#f3f4f6";
+        }}
+        onClick={handleMicClick}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleMicClick()}
+        role="button"
+        tabIndex={0}
+        aria-pressed={listening}
+        aria-label="Voice input"
+        title="Voice input"
+      >
+        <Mic
+          size={20}
+          className="md:h-[18px] md:w-[18px]"
+          style={{ color: listening ? undefined : primaryColor }}
+        />
+      </div>
+
+      {/* Submit (icon-only on mobile, keep form submit behavior) */}
+<button
+  type="submit"
+  className="
+    hidden sm:inline-flex
+    items-center justify-center
+    rounded-full        /* full round edges */
+    px-5 py-2           /* enough horizontal padding to stretch it */
+    text-sm font-medium
+    text-white
+    transition
+  "
+  style={{ backgroundColor: primaryColor }}
+  disabled={isTyping || (!query.trim() && selectedImages.length === 0)}
+>
+  Send
+</button>
+    </div>
+  </div>
+</form>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import { useAuthStore } from '../stores/userStores';
 import { resetPasswordRequest } from "../api/api";
-
+import { X, Mail, Info, Send } from "lucide-react";
 
 const credentialsMap = {
   'superadmin@gmail.com': { password: "super123", role: "superadmin", path: "/superadmin" },
@@ -12,19 +12,18 @@ const credentialsMap = {
   'adminapprover@gmail.com': { password: "admin123", role: "admin-approver", path: "/adminapprover" },
 };
 
-
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-  const logoPath = useAppSettingsStore((state) => state.logo_path)
-  const appName = useAppSettingsStore((state)=>state.name)
-  const primaryColor = useAppSettingsStore((s)=>s.primary_color)
-  const secondaryColor = useAppSettingsStore((s)=>s.secondary_color)
+
+  const logoPath = useAppSettingsStore((state) => state.logo_path);
+  const appName = useAppSettingsStore((state) => state.name);
+  const primaryColor = useAppSettingsStore((s) => s.primary_color);
+  const secondaryColor = useAppSettingsStore((s) => s.secondary_color);
 
   const navigate = useNavigate();
-
   const signin = useAuthStore((state) => state.signin);
 
   const handleLogin = async (e) => {
@@ -36,11 +35,7 @@ function Login() {
       return;
     }
 
-    const userData = {
-      email: email,
-      password: password
-    };
-
+    const userData = { email, password };
     const login = await signin(userData);
 
     if (!login) {
@@ -48,8 +43,8 @@ function Login() {
       return;
     } else {
       alert("Login successfully");
-
     }
+
     switch (login.user.role) {
       case 'superadmin':
         navigate('/superadmin');
@@ -64,69 +59,122 @@ function Login() {
         navigate('/adminapprover');
         break;
       case 'user':
-        navigate('/users')
+        navigate('/users');
+        break;
       default:
         alert('Unauthorized role or unknown user.');
     }
   };
 
   const handleForgotSubmit = async () => {
-  if (!forgotEmail) {
-    alert("Please enter your email.");
-    return;
-  }
-
-  try {
-    await resetPasswordRequest(forgotEmail);
-    alert(`Password reset instructions sent to: ${forgotEmail}`);
-    setForgotEmail("");
-    setShowForgotModal(false);
-  } catch (error) {
-    console.error(error);
-    alert(error.message || "Failed to send password reset email");
-  }
-};
+    if (!forgotEmail) {
+      alert("Please enter your email.");
+      return;
+    }
+    try {
+      await resetPasswordRequest(forgotEmail);
+      alert(`Password reset instructions sent to: ${forgotEmail}`);
+      setForgotEmail("");
+      setShowForgotModal(false);
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Failed to send password reset email");
+    }
+  };
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
-      {/* Background image with overlay */}
+      {/* Background image + subtle glass overlay */}
       <div className="absolute inset-0">
         <img
           src="/bg-image.jpg"
           alt="Background"
-          className="w-full h-full object-cover opacity-50"
+          className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-white/30 backdrop-blur-sm" />
       </div>
 
       {/* Forgot Password Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
-          <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl border">
-            <h2 className="text-2xl font-bold mb-4 text-primary text-center">Forgot Password</h2>
-            <p className="text-sm text-gray-600 mb-4 text-center">
-              Enter your email to receive password reset instructions.
-            </p>
-            <input
-              type="email"
-              value={forgotEmail}
-              onChange={(e) => setForgotEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary mb-4"
-              required
-            />
-            <div className="flex justify-end gap-3">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="forgot-title"
+          aria-describedby="forgot-desc"
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+
+          {/* Modal card */}
+          <div className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden">
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4 border-b border-gray-200">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-200">
+                  <Mail className="h-5 w-5 text-gray-700" aria-hidden="true" />
+                </div>
+                <div className="flex-1">
+                  <h2 id="forgot-title" className="text-xl font-semibold text-gray-900">
+                    Forgot Password
+                  </h2>
+                  <p
+                    id="forgot-desc"
+                    className="mt-1 flex items-center gap-1 text-sm text-gray-600"
+                  >
+                    <Info className="h-4 w-4 text-gray-400" aria-hidden="true" />
+                    Enter your email to receive reset instructions.
+                  </p>
+                </div>
+                <X
+                  onClick={() => setShowForgotModal(false)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Close dialog"
+                  className="h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-700"
+                  title="Close"
+                />
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <label
+                htmlFor="forgot-email"
+                className="block text-sm font-medium text-gray-800 mb-2"
+              >
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="forgot-email"
+                type="email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              {/* Send (primary) */}
               <button
+                type="button"
+                onClick={handleForgotSubmit}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+              >
+                <Send className="h-4 w-4" />
+                Send
+              </button>
+              {/* Cancel (danger) */}
+              <button
+                type="button"
                 onClick={() => setShowForgotModal(false)}
-                className="px-4 py-2 !bg-white text-primary border !border-primary rounded-md hover:bg-primary/10 transition"
+                className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-white !bg-red-500 shadow-sm hover:shadow-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
               >
                 Cancel
-              </button>
-              <button
-                onClick={handleForgotSubmit}
-                className="px-4 py-2 !bg-primary text-white rounded-md hover:bg-primary/90 transition"
-              >
-                Send
               </button>
             </div>
           </div>
@@ -135,55 +183,87 @@ function Login() {
 
       {/* Centered login card */}
       <div className="relative z-10 flex items-center justify-center h-full px-4">
-        <div className="bg-white/90 backdrop-blur-lg p-8 sm:p-10 rounded-2xl shadow-2xl max-w-md w-full text-center text-black">
-          {/* School Logo */}
-          <div className="mb-6">
+        <div className="bg-white/90 backdrop-blur-lg p-8 sm:p-10 rounded-2xl shadow-2xl max-w-md w-full text-black ring-1 ring-white/40">
+          {/* School Logo / Branding */}
+          <div className="mb-8 text-center">
             <img
               src={logoPath ? `http://127.0.0.1:8000${logoPath}` : "/school-logo.png"}
               alt="School Logo"
-              className="w-40 h-40 mx-auto object-contain rounded-full border shadow-md border-primary"
+              className="w-28 h-28 sm:w-32 sm:h-32 mx-auto object-contain rounded-full border shadow-sm"
+              style={{ borderColor: primaryColor || '#e5e7eb' }}
             />
-            <h2 style={{ color: primaryColor }} className="mt-4 text-5xl font-extrabold tracking-tight">{appName}</h2>
-            <p style={{color:secondaryColor}} className="text-lg text-primary mt-1">Admin Portal</p>
+            <h2
+              style={{ color: primaryColor }}
+              className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight"
+            >
+              {appName}
+            </h2>
+            <p
+              style={{ color: secondaryColor }}
+              className="text-sm sm:text-base mt-1"
+            >
+              Admin Portal
+            </p>
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
+          <form onSubmit={handleLogin} className="flex flex-col gap-5 text-left">
+            {/* Email */}
             <div>
-              <label style={{color:secondaryColor}} className="block text-sm font-medium  mb-1">Email</label>
+              <label
+                style={{ color: secondaryColor }}
+                htmlFor="login-email"
+                className="block text-sm font-medium mb-2"
+              >
+                Email
+              </label>
               <input
-                type="text"
-                placeholder="Enter your email"
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary text-black"
+                id="login-email"
+                type="email"
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
               />
             </div>
+
+            {/* Password */}
             <div>
-              <label style={{color:secondaryColor}} className="block text-sm font-medium  mb-1">Password</label>
+              <label
+                style={{ color: secondaryColor }}
+                htmlFor="login-password"
+                className="block text-sm font-medium mb-2"
+              >
+                Password
+              </label>
               <input
+                id="login-password"
                 type="password"
                 placeholder="Enter your password"
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary text-black"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
               />
-              <div className="text-sm text-right mt-1">
+              <div className="text-right mt-2">
                 <p
-  onClick={() => setShowForgotModal(true)}
-  className="text-sm  hover:underline cursor-pointer text-right mt-1"
-  style={{color:secondaryColor}}
->
-  Forgot Password?
-</p>
+                  onClick={() => setShowForgotModal(true)}
+                  className="text-sm cursor-pointer hover:underline underline-offset-4"
+                  style={{ color: secondaryColor }}
+                >
+                  Forgot Password?
+                </p>
               </div>
             </div>
+
+            {/* Login Button */}
             <button
               type="submit"
-              style={{backgroundColor:primaryColor}}
-              className=" text-white py-2 rounded font-semibold hover:bg-primary transition"
+              style={{ backgroundColor: primaryColor }}
+              className="w-full text-white py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition"
             >
               Login
             </button>

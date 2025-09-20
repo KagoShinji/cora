@@ -4,12 +4,8 @@ import Sidebar from "../../components/SidebarCoSuperAdmin";
 import { useAuthStore } from "../../stores/userStores";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import ModalEditDepartment from "../../components/ModalEditDepartment";
-import ModalConfirmDelete from "../../components/ModalConfirmDelete";
-import ModalAdminUsers from "../../components/ModalAdminUsers";
-import ModalDepartments from "../../components/ModalDepartments";
-import { getUser,mostSearchData} from "../../api/api";
-
+import { Menu } from "lucide-react";
+import { useAppSettingsStore } from "../../stores/useSettingsStore";
 
 // Charts
 import {
@@ -25,7 +21,11 @@ import {
   CartesianGrid,
 } from "recharts";
 
-// NEW: modals
+// Modals
+import ModalEditDepartment from "../../components/ModalEditDepartment";
+import ModalConfirmDelete from "../../components/ModalConfirmDelete";
+import ModalAdminUsers from "../../components/ModalAdminUsers";
+import ModalDepartments from "../../components/ModalDepartments";
 
 function CoSuperAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -56,9 +56,6 @@ function CoSuperAdminDashboard() {
   const [searchEndDate, setSearchEndDate] = useState(new Date());
   const [ratingStartDate, setRatingStartDate] = useState(null);
   const [ratingEndDate, setRatingEndDate] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [loading,setLoading] = useState()
-  
 
   const roleMap = {
     Creator: "admincreator",
@@ -126,6 +123,18 @@ function CoSuperAdminDashboard() {
     { name: "Very Poor", count: 3, rating: 1 },
   ];
 
+  const adminData = [
+    { name: "Creator", value: 8 },
+    { name: "Approver", value: 5 },
+    { name: "Guest", value: 3 },
+  ];
+
+  const departmentData = [
+    { name: "IT", count: 10 },
+    { name: "HR", count: 7 },
+    { name: "Finance", count: 5 },
+    { name: "Marketing", count: 6 },
+  ];
 
   // Color schemes
   const COLORS = ["#E53E3E", "#3182CE", "#38A169"];
@@ -186,54 +195,6 @@ function CoSuperAdminDashboard() {
       setIsDeleting(false);
     }
   };
-  
- useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await getUser();
-        setUsers(data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, []);
-
-  useEffect(()=>{
-    
-  })
-
-  const userChart = users.reduce((acc, user) => {
-    const role = user.role || "Unknown";
-
-    // skip superadmin + co-superadmin
-    if (role === "superadmin" || role === "co-superadmin") return acc;
-
-    const found = acc.find((item) => item.name === role);
-    if (found) {
-      found.value += 1;
-    } else {
-      acc.push({ name: role, value: 1 });
-    }
-    return acc;
-  }, []);
-
-  const deptChart = users.reduce((acc, user) => {
-  const department = user.department || "Unknown"
-   
-  if(department === "Unknown") return acc;
-  const found = acc.find((item) => item.name === department);
-  if (found) {
-    found.count += 1; 
-  } else {
-    acc.push({ name: department, count: 1 }); // add new
-  }
-
-  return acc;
-}, []);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
@@ -447,19 +408,58 @@ function CoSuperAdminDashboard() {
             </div>
           </div>
 
-          {/* Enhanced Analytics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            {/* Enhanced Admins with Pie Chart + Labels beside */}
-            <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 relative z-0" onClick={() => handleAdminSliceClick("Users")}>
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-primary/10 rounded-full p-2 mr-2">
-                  <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd"/>
-                  </svg>
+          {/* User Experience Rating */}
+          <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-emerald-200 hover:-translate-y-1 overflow-hidden">
+            <div className="relative z-10">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center">
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg mr-3">
+                    <svg
+                      className="w-6 h-6 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2
+                      className="text-xl font-semibold mb-1"
+                      style={{ color: primaryColor }}
+                    >
+                      User Experience Rating
+                    </h2>
+                    <p className="text-sm text-gray-600">Satisfaction metrics</p>
+                  </div>
                 </div>
-                <h2 className="text-lg font-bold text-gray-800">
-                  Users
-                </h2>
+
+                {/* Date Range Picker */}
+                <div className="flex items-center space-x-2">
+                  <DatePicker
+                    selected={ratingStartDate}
+                    onChange={(date) => setRatingStartDate(date)}
+                    selectsStart
+                    startDate={ratingStartDate}
+                    endDate={ratingEndDate}
+                    className="text-black border border-gray-300 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                  <span className="text-gray-400">to</span>
+                  <DatePicker
+                    selected={ratingEndDate}
+                    onChange={(date) => setRatingEndDate(date)}
+                    selectsEnd
+                    startDate={ratingStartDate}
+                    endDate={ratingEndDate}
+                    minDate={ratingStartDate}
+                    className="text-black border border-gray-300 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
               </div>
 
               <p className="text-xs text-gray-500 text-center mb-6 bg-gray-50 rounded-lg py-2">
@@ -468,59 +468,171 @@ function CoSuperAdminDashboard() {
               </p>
 
               <div className="flex items-center gap-6">
-                {/* Enhanced Pie Chart */}
-                <div className="w-2/3 relative z-0">
-                   <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={userChart}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      innerRadius={45}
-                      paddingAngle={3}
-                    >
-                      {userChart.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                          style={{
-                            cursor: "pointer",
-                            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
-                          }}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value, name) => [`${value} users`, name]}
-                      contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                  {/* Center text */}
-                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-800">
-                      {userChart.reduce((sum, item) => sum + item.value, 0)}
-                    </div>
-                    <div className="text-xs text-gray-500">Total</div>
-                  </div>
+                {/* Bar Chart */}
+                <div className="w-2/3">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={userExperienceRatings}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis
+                        dataKey="name"
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        fontSize={11}
+                        tick={{ fill: "#64748b" }}
+                      />
+                      <YAxis tick={{ fill: "#64748b" }} />
+      <Tooltip
+        formatter={(value) => [`${value} responses`, "Count"]}
+        labelFormatter={(label) => `Rating: ${label}`}
+        wrapperStyle={{ zIndex: 9999, pointerEvents: "none" }}
+        allowEscapeViewBox={{ x: true, y: true }}
+        contentStyle={{
+          backgroundColor: "#ffffff",
+          border: "1px solid #e2e8f0",
+          borderRadius: "12px",
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+          color: "#0f172a"
+        }}
+        itemStyle={{ color: "#0f172a" }}
+        labelStyle={{ color: "#334155", fontWeight: 600 }}
+      />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                        {userExperienceRatings.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={RATING_COLORS[index % RATING_COLORS.length]}
+                            style={{
+                              filter:
+                                "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+                            }}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-              </div>
 
                 {/* Labels */}
                 <ul className="space-y-3 w-1/3">
-                  {userChart.map((entry, index) => (
+                  {userExperienceRatings.map((entry, index) => (
                     <li
                       key={index}
-                      className="flex items-center justify-between p-2 rounded-lg bg-white/50 hover:bg-white/80 transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="w-4 h-4 rounded-full shadow-sm"
+                          style={{
+                            backgroundColor:
+                              RATING_COLORS[index % RATING_COLORS.length],
+                          }}
+                        ></span>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm text-gray-900">
+                            {entry.name}
+                          </span>
+                          <span className="text-yellow-400 text-xs">
+                            {"★".repeat(entry.rating)}
+                            {"☆".repeat(5 - entry.rating)}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-700 shadow-sm">
+                        {entry.count}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Analytics Cards Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          {/* Admin Users Card */}
+          <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 hover:-translate-y-1 overflow-hidden">
+
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {adminData.reduce((sum, item) => sum + item.value, 0)}
+                  </div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wide">Total</div>
+                </div>
+              </div>
+
+              <h3 className="text-xl font-semibold mb-2" style={{ color: primaryColor }}>
+                Admin Users
+              </h3>
+              <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                System administrators by role and access level.
+              </p>
+
+              <div className="flex items-center gap-6">
+                {/* Pie Chart */}
+                <div className="w-2/3 relative">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={adminData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        innerRadius={45}
+                        paddingAngle={3}
+                        onClick={() => setShowAdminsModal(true)}
+                      >
+                        {adminData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                            onClick={() => handleAdminSliceClick(entry.name)}
+                            style={{
+                              cursor: "pointer",
+                              filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
+                            }}
+                          />
+                        ))}
+                      </Pie>
+      <Tooltip
+        formatter={(value, name) => [`${value} users`, name]}
+        wrapperStyle={{ zIndex: 9999, pointerEvents: "none" }}
+        allowEscapeViewBox={{ x: true, y: true }}
+        contentStyle={{
+          backgroundColor: "#ffffff",
+          border: "1px solid #e2e8f0",
+          borderRadius: "12px",
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+          color: "#0f172a"
+        }}
+        itemStyle={{ color: "#0f172a" }}
+        labelStyle={{ color: "#334155", fontWeight: 600 }}
+      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Labels */}
+                <ul className="space-y-3 w-1/3">
+                  {adminData.map((entry, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                      onClick={() => handleAdminSliceClick(entry.name)}
                     >
                       <div className="flex items-center gap-3">
                         <span
@@ -531,86 +643,6 @@ function CoSuperAdminDashboard() {
                       </div>
                       <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-700 shadow-sm">
                         {entry.value}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Enhanced Departments with Bar Chart + Labels beside */}
-            <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 relative z-0">
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-primary/10 rounded-full p-2 mr-2">
-                  <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h4a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2v-2z" clipRule="evenodd"/>
-                  </svg>
-                </div>
-                <h2 className="text-lg font-bold text-gray-800">
-                  Departments
-                </h2>
-              </div>
-
-              <div className="flex items-center gap-6">
-                {/* Enhanced Bar Chart */}
-                <div className="w-2/3 relative z-0">
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={deptChart}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 12, fill: '#64748b' }}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 12, fill: '#64748b' }}
-                      />
-                      <Tooltip 
-                        formatter={(value, name) => [`${value} users`, 'Count']}
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
-                      <Bar
-                        dataKey="count"
-                        cursor="pointer"
-                        
-                        radius={[4, 4, 0, 0]}
-                      >
-                        {deptChart.map((dept, index) => (
-                          <Cell 
-                            key={index} 
-                            fill={COLORS[index % COLORS.length]}
-                            style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Enhanced Labels */}
-                <ul className="space-y-3 w-1/3">
-                  {deptChart.map((entry, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center justify-between p-2 rounded-lg bg-white/50 hover:bg-white/80 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="w-4 h-4 rounded-sm shadow-sm"
-                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                        ></span>
-                        <span className="font-medium text-gray-700 text-sm">{entry.name}</span>
-                      </div>
-                      <span className="bg-gray-100 px-2 py-1 rounded-full text-xs font-bold text-gray-700">
-                        {entry.count}
                       </span>
                     </li>
                   ))}
@@ -822,13 +854,20 @@ function CoSuperAdminDashboard() {
                 </ul>
               </div>
             </div>
-        
-            {/* Manual Entries with Enhanced Bar Chart 
-            <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 relative z-0">
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-primary/10 rounded-full p-2 mr-2">
-                  <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd"/>
+          </div>
+
+          {/* Manual Entries Card */}
+          <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-red-200 hover:-translate-y-1 overflow-hidden">
+
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl shadow-lg">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="text-right">
@@ -845,8 +884,8 @@ function CoSuperAdminDashboard() {
               </p>
 
               <div className="flex items-center gap-6">
-              
-                <div className="w-2/3 relative z-0">
+                {/* Bar Chart */}
+                <div className="w-2/3">
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart
                       data={[
@@ -897,6 +936,7 @@ function CoSuperAdminDashboard() {
                   </ResponsiveContainer>
                 </div>
 
+                {/* Labels */}
                 <ul className="space-y-3 w-1/3">
                   {[
                     { name: "Form A", count: 15 },
@@ -924,7 +964,6 @@ function CoSuperAdminDashboard() {
                 </ul>
               </div>
             </div>
-          */}
           </div>
         </div>
       </main>

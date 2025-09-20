@@ -12,14 +12,11 @@ function ModalAdminUsers({ isOpen, onClose }) {
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
-<<<<<<< HEAD
-=======
 
   // Theme primary color
   const primaryColor = useAppSettingsStore((s) => s.primary_color) || "#3b82f6";
 
   const allowedRoles = ["admincreator", "adminapprover"];
->>>>>>> 7bb83e5a08edaf31ea0dae7b10306f7bb481c622
 
   useEffect(() => {
     if (isOpen) {
@@ -27,23 +24,6 @@ function ModalAdminUsers({ isOpen, onClose }) {
     }
   }, [isOpen, fetchUsers]);
 
-<<<<<<< HEAD
-  const filtered = users.filter((user) => {
-    if (
-      user.role?.toLowerCase() === "superadmin" ||
-      user.role?.toLowerCase() === "co-superadmin"
-    ) {
-      return false;
-    }
-
-    const matchesSearch = (user.name || "")
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesRole = roleFilter ? user.role === roleFilter : true;
-
-    return matchesSearch && matchesRole;
-  });
-=======
   const filtered = users
     .filter((user) => allowedRoles.includes(user.role?.toLowerCase()))
     .filter((user) => {
@@ -53,7 +33,6 @@ function ModalAdminUsers({ isOpen, onClose }) {
       const matchesRole = roleFilter ? user.role === roleFilter : true;
       return matchesSearch && matchesRole;
     });
->>>>>>> 7bb83e5a08edaf31ea0dae7b10306f7bb481c622
 
   if (!isOpen) return null;
 
@@ -93,26 +72,9 @@ function ModalAdminUsers({ isOpen, onClose }) {
             />
           </div>
 
-<<<<<<< HEAD
-          {/* Role Filter */}
-          <div className="w-1/4">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-600"
-            >
-              <option value="">All Roles</option>
-              <option value="admincreator">Admin Creator</option>
-              <option value="adminapprover">Admin Approver</option>
-              <option value="user">User</option>
-              {/* ⚠️ Notice: superadmin & co-superadmin removed here too */}
-            </select>
-          </div>
-=======
           {/* Decorative Elements (kept) — ensure they don't block clicks */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 rounded-full blur-2xl pointer-events-none"></div>
->>>>>>> 7bb83e5a08edaf31ea0dae7b10306f7bb481c622
         </div>
 
         {/* Content Area */}

@@ -1,73 +1,249 @@
-import { useState } from "react";
+// src/pages/admincreator/AdminCreatorDashboard.jsx
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import SidebarAdminCreator from "../../components/SidebarAdminCreator";
+import { useAppSettingsStore } from "../../stores/useSettingsStore";
+import { FileText, ClipboardList, ChevronRight, Menu } from "lucide-react";
 
 function AdminCreatorDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Responsive breakpoint (md < 768px)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767.98px)");
+    const handler = (e) => setIsMobile(e.matches);
+    handler(mql);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  // Prevent background scroll when mobile drawer is open
+  useEffect(() => {
+    if (!isMobile) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = sidebarOpen ? "hidden" : prev || "";
+    return () => {
+      document.body.style.overflow = prev || "";
+    };
+  }, [isMobile, sidebarOpen]);
+
+  // Theme color for headings/accents
+  const primaryColor = useAppSettingsStore((s) => s.primary_color) || "#3b82f6";
+
+  // Desktop offset: 17rem open / 5rem closed; Mobile: overlay (0 offset)
+  const sidebarOffset = useMemo(
+    () => (isMobile ? "0" : sidebarOpen ? "17rem" : "5rem"),
+    [isMobile, sidebarOpen]
+  );
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      {/* Sidebar */}
-      <div className={`fixed top-0 left-0 h-screen transition-all duration-300 ${sidebarOpen ? "w-64" : "w-16"}`}>
-        <SidebarAdminCreator isOpen={sidebarOpen} setOpen={setSidebarOpen} />
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
+      {/* Mobile backdrop (tap to close) */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar (mobile = drawer; desktop = collapsible) */}
+      <div
+        className={[
+          "fixed top-0 left-0 h-screen z-50 transition-all duration-300",
+          isMobile
+            ? `w-64 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`
+            : `${sidebarOpen ? "w-64" : "w-16"}`
+        ].join(" ")}
+      >
+        <SidebarAdminCreator
+          isOpen={sidebarOpen}
+          setOpen={setSidebarOpen}
+          isMobile={isMobile}
+        />
       </div>
 
-      {/* Main content */}
+      {/* Main content (shifts on desktop, not on mobile) */}
       <main
-        className={`transition-all duration-300 flex-1 p-8 overflow-y-auto bg-gray-100 ${
-          sidebarOpen ? "ml-64" : "ml-16"
-        }`}
+        className="transition-all duration-300 p-6 overflow-y-auto bg-gray-50 w-full"
+        style={{ marginLeft: sidebarOffset }}
       >
-        <h1 className="text-3xl font-bold text-primary mb-6">Dashboard</h1>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          {/* Mobile: burger + large title */}
+          <div className="md:hidden flex items-center gap-3">
+            <Menu
+              onClick={() => setSidebarOpen(true)}
+              role="button"
+              tabIndex={0}
+              aria-label="Open menu"
+              className="h-6 w-6 cursor-pointer"
+              style={{ color: primaryColor }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") setSidebarOpen(true);
+              }}
+              aria-pressed={sidebarOpen}
+            />
+            <div className="flex-1">
+              <h1
+                className="text-2xl sm:text-3xl font-bold leading-tight"
+                style={{ color: primaryColor }}
+              >
+                Dashboard
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-600">
+                Create documents and track your recent activity
+              </p>
+            </div>
+          </div>
 
-        {/* Cards */}
+          {/* Desktop title */}
+          <div className="hidden md:block">
+            <h1
+              className="text-3xl font-bold mb-2"
+              style={{ color: primaryColor }}
+            >
+              Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Create documents and track your recent activity
+            </p>
+          </div>
+        </div>
+
+        {/* Modernized Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          <Link to="/admincreator/documents">
-            <div className="bg-white shadow-md rounded-lg p-6 flex items-center justify-center flex-col cursor-pointer hover:shadow-lg transition">
-              <div className="text-4xl mb-2">📄</div>
-              <h2 className="text-xl font-semibold text-primary">Documents</h2>
+          {/* Documents Card */}
+          <Link to="/admincreator/documents" className="group">
+            <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 hover:-translate-y-1 overflow-hidden">
+
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-blue-200 transition-all duration-300">
+                    <FileText className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <div
+                      className="text-2xl font-bold"
+                      style={{ color: primaryColor }}
+                    >
+                      —
+                    </div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">
+                      Quick Access
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  Documents
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  Create and manage your documents quickly with a modern editor
+                  and streamlined workflow.
+                </p>
+
+                <div className="flex items-center text-blue-600 font-medium text-sm group-hover:text-blue-700 transition-colors">
+                  <span>Open Documents</span>
+                  <ChevronRight className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
             </div>
           </Link>
-          <Link to="/admincreator/logs">
-            <div className="bg-white shadow-md rounded-lg p-6 flex items-center justify-center flex-col cursor-pointer hover:shadow-lg transition">
-              <div className="text-4xl mb-2">📝</div>
-              <h2 className="text-xl font-semibold text-primary">Logs</h2>
+
+          {/* Logs Card */}
+          <Link to="/admincreator/logs" className="group">
+            <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-emerald-200 hover:-translate-y-1 overflow-hidden">
+              <div className="absolute top-6 right-4 w-20 h-20 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full opacity-40 group-hover:opacity-60 transition-opacity"></div>
+              <div className="absolute bottom-4 left-4 w-12 h-12 bg-gradient-to-tr from-emerald-50 to-teal-50 rounded-full opacity-30"></div>
+
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg group-hover:shadow-emerald-200 transition-all duration-300">
+                    <ClipboardList className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-emerald-600">Live</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">
+                      Status
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                  Activity Logs
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  Review your recent actions and keep an eye on important
+                  activity.
+                </p>
+
+                <div className="flex items-center text-emerald-600 font-medium text-sm group-hover:text-emerald-700 transition-colors">
+                  <span>View Logs</span>
+                  <ChevronRight className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
             </div>
           </Link>
         </div>
 
         {/* Logs Table */}
-        {/* Logs Table */}
-<div className="bg-white shadow-md rounded-lg overflow-auto">
-  <div className="p-4">
-    <table className="min-w-full text-sm text-black">
-      <thead className="bg-primary text-white">
-        <tr>
-          <th className="p-4 text-center align-middle">Description</th>
-          <th className="p-4 text-center align-middle">Timestamp</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr className="border-t border-gray-300 hover:bg-gray-100">
-          <td className="p-4 text-center align-middle">Approved new student document</td>
-          <td className="p-4 text-center align-middle">July 15, 2025 09:10 AM</td>
-        </tr>
-        <tr className="border-t border-gray-300 hover:bg-gray-100">
-          <td className="p-4 text-center align-middle">Reviewed and rejected outdated form</td>
-          <td className="p-4 text-center align-middle">July 14, 2025 01:45 PM</td>
-        </tr>
-        <tr className="border-t border-gray-300 hover:bg-gray-100">
-          <td className="p-4 text-center align-middle">Logged in to Admin Panel</td>
-          <td className="p-4 text-center align-middle">July 14, 2025 08:00 AM</td>
-        </tr>
-        <tr className="border-t border-gray-300 hover:bg-gray-100">
-          <td className="p-4 text-center align-middle">Checked logs activity</td>
-          <td className="p-4 text-center align-middle">July 13, 2025 06:30 PM</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+            <p className="text-sm text-gray-600 mt-1">Latest admin creator actions</p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Timestamp
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                <tr className="hover:bg-gray-50 transition-colors duration-200">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    Approved new student document
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    July 15, 2025 09:10 AM
+                  </td>
+                </tr>
+                <tr className="hover:bg-gray-50 transition-colors duration-200">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    Reviewed and rejected outdated form
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    July 14, 2025 01:45 PM
+                  </td>
+                </tr>
+                <tr className="hover:bg-gray-50 transition-colors duration-200">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    Logged in to Admin Panel
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    July 14, 2025 08:00 AM
+                  </td>
+                </tr>
+                <tr className="hover:bg-gray-50 transition-colors duration-200">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    Checked logs activity
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    July 13, 2025 06:30 PM
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </main>
     </div>
   );

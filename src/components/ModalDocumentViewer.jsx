@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, FileText, Info, Save } from "lucide-react";
+import { useAppSettingsStore } from "../stores/useSettingsStore";
 
 export default function ModalDocumentViewer({ isOpen, onClose, doc, onSave }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
 
-  // Update state when 'doc' prop changes
+  const primaryColor = useAppSettingsStore((s) => s.primary_color) || "#1D4ED8";
+
   useEffect(() => {
     if (doc) {
-      setEditedContent(doc.content ?? ""); // Handles null or undefined
-      setIsEditing(false); // Reset editing state on new doc
+      setEditedContent(doc.content ?? "");
+      setIsEditing(false);
     }
   }, [doc]);
 
@@ -20,73 +22,145 @@ export default function ModalDocumentViewer({ isOpen, onClose, doc, onSave }) {
       console.error("Cannot save: doc.id is missing");
       return;
     }
-
-    if (onSave) {
-      // Pass both id and content separately
-      onSave(doc.id, editedContent);
-    }
+    onSave?.(doc.id, editedContent);
     setIsEditing(false);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
-      <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl border relative">
-        <h2 className="text-2xl font-bold mb-6 text-primary text-center">
-          {doc.title}
-        </h2>
+  const handleBackdrop = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Content
-          </label>
-          <textarea
-            value={editedContent}
-            onChange={(e) => setEditedContent(e.target.value)}
-            readOnly={!isEditing}
-            className={`w-full border rounded-md px-3 py-2 text-gray-700 ${
-              isEditing
-                ? "border-primary bg-white focus:ring-1 focus:ring-primary"
-                : "border-gray-300 bg-gray-100 cursor-not-allowed"
-            }`}
-            rows={8}
-            placeholder="No content yet"
-          />
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="doc-viewer-title"
+      aria-describedby="doc-viewer-desc"
+      onMouseDown={handleBackdrop}
+      style={{ "--pc": primaryColor }}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+
+      {/* Modal card */}
+      <div
+        className="relative w-full max-w-2xl mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-gray-200">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-200">
+              <FileText className="h-5 w-5 text-gray-700" aria-hidden="true" />
+            </div>
+            <div className="flex-1">
+              <h2 id="doc-viewer-title" className="text-xl font-semibold text-gray-900">
+                {doc.title || "Document"}
+              </h2>
+              <p
+                id="doc-viewer-desc"
+                className="mt-1 flex items-center gap-1 text-sm text-gray-600"
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+                View or edit the document content below, then save your changes.
+              </p>
+            </div>
+
+            {/* Close (X icon only) */}
+            <X
+              onClick={onClose}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") onClose();
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Close dialog"
+              className="h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-700"
+              title="Close"
+            />
+          </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-6">
+        {/* Body */}
+        <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)]">
+          <div className="space-y-5">
+            <div>
+              <label
+                htmlFor="doc-content"
+                className="block text-sm font-medium text-gray-800 mb-2"
+              >
+                Content
+              </label>
+              <textarea
+                id="doc-content"
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                readOnly={!isEditing}
+                rows={10}
+                placeholder="No content yet"
+                className={[
+                  "w-full px-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition",
+                  isEditing
+                    ? "border-gray-300 bg-white focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                    : "border-gray-300 bg-gray-100 cursor-not-allowed",
+                ].join(" ")}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer buttons */}
+        <div className="flex justify-end gap-3 pt-4 px-6 pb-6 border-t border-gray-200">
           {isEditing ? (
             <>
+              {/* Cancel = red */}
               <button
+                type="button"
                 onClick={() => {
                   setIsEditing(false);
                   setEditedContent(doc.content ?? "");
                 }}
-                className="px-4 py-2 !bg-white !border-primary text-primary rounded-md hover:bg-gray-500 transition"
+                className="px-5 py-2.5 rounded-xl text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 !bg-red-600 !text-white hover:!bg-red-700"
               >
                 Cancel
               </button>
+
+              {/* Save = green */}
               <button
+                type="button"
                 onClick={handleSave}
-                className="px-4 py-2 !bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 !bg-green-600 !text-white hover:!bg-green-700"
               >
+                <Save className="h-4 w-4" />
                 Save
               </button>
             </>
           ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-4 py-2 !bg-primary text-white rounded-md hover:bg-primary/90 transition"
-            >
-              Edit
-            </button>
-          )}
+            <>
+              {/* Edit = blue */}
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 !bg-blue-600 !text-white hover:!bg-blue-700"
+              >
+                Edit
+              </button>
 
-          <button
-            onClick={onClose}
-            className="px-4 py-2 !bg-primary text-white rounded-md hover:bg-gray-700 transition"
-          >
-            Close
-          </button>
+              {/* Close = primary (from theme) */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 !text-white"
+                style={{
+                  backgroundColor: primaryColor,
+                  "--tw-ring-color": primaryColor,
+                }}
+              >
+                Close
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

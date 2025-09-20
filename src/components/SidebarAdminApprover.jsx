@@ -1,12 +1,14 @@
-import { Home, FileText, ClipboardList, Upload, ChevronDown, Menu } from "lucide-react";
+import { Home, FileText, ClipboardList, ChevronDown, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useAuthStore } from "../stores/userStores";
-import { useAppSettingsStore } from "../stores/useSettingsStore"; 
+import { useAppSettingsStore } from "../stores/useSettingsStore";
+import LogoutModal from "./LogoutModal";
 
 function SidebarAdminApprover({ isOpen, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [docsOpen, setDocsOpen] = useState(false); // Collapsible state
+
   const user = useAuthStore((state) => state.user);
   const signout = useAuthStore((state) => state.signout);
 
@@ -15,13 +17,13 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
 
   const handleLogout = async () => {
     await signout();
-    window.location.href = "/login";
+    window.location.href = "/login"; // keep behavior as-is
   };
 
   return (
     <>
       <aside
-        className={`h-screen fixed top-0 left-0 z-50 text-white transition-all duration-300 ease-in-out flex flex-col`}
+        className="h-screen fixed top-0 left-0 z-50 text-white transition-all duration-300 ease-in-out flex flex-col"
         style={{ width: isOpen ? "16rem" : "4rem", backgroundColor: primaryColor }}
       >
         {/* Toggle Icon */}
@@ -41,33 +43,30 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
           </Link>
 
           {/* Collapsible Documents Menu */}
-          <div
-            className="flex flex-col rounded transition cursor-pointer"
-          >
+          <div className="flex flex-col rounded transition cursor-pointer">
             <div
               className="flex items-center justify-between gap-2 p-2"
               onClick={() => setDocsOpen(!docsOpen)}
             >
-              <div className="flex items-center gap-2 ">
+              <div className="flex items-center gap-2">
                 <FileText size={18} />
                 {isOpen && <span>Documents</span>}
               </div>
-              {isOpen && <ChevronDown size={16} className={`transition-transform ${docsOpen ? "rotate-180" : "rotate-0"}`} />}
+              {isOpen && (
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${docsOpen ? "rotate-180" : "rotate-0"}`}
+                />
+              )}
             </div>
 
             {/* Submenu */}
             {docsOpen && isOpen && (
               <div className="flex flex-col ml-6">
-                <Link
-                  to="/adminapprover/documents"
-                  className="p-2 rounded transition !text-white text-sm"
-                >
+                <Link to="/adminapprover/documents" className="p-2 rounded transition !text-white text-sm">
                   Approve Documents
                 </Link>
-                <Link
-                  to="/adminapprover/uploaddocuments"
-                  className="p-2 rounded transition !text-white text-sm"
-                >
+                <Link to="/adminapprover/uploaddocuments" className="p-2 rounded transition !text-white text-sm">
                   Upload Documents
                 </Link>
               </div>
@@ -90,38 +89,25 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
             <div
               onClick={() => setShowLogoutModal(true)}
               className="rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition bg-white"
-             
             >
-              <div style={{color:secondaryColor}} className="font-semibold uppercase">{user}</div>
-              <div  style={{color:secondaryColor}} className="text-sm">Admin Approver</div>
+              <div style={{ color: secondaryColor }} className="font-semibold uppercase">
+                {user}
+              </div>
+              <div style={{ color: secondaryColor }} className="text-sm">
+                Admin Approver
+              </div>
             </div>
           </div>
         )}
       </aside>
 
-      {/* Logout Modal */}
-      {showLogoutModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-80">
-            <h2 className="text-lg font-semibold text-primary mb-4">Confirm Logout</h2>
-            <p className="text-gray-700 mb-6">Are you sure you want to log out?</p>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                className="px-4 py-2 rounded !bg-primary hover:bg-gray-400 text-white"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded !bg-green-700 hover:bg-primary text-white"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Shared Logout Modal via Portal */}
+      <LogoutModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        primaryColor={primaryColor}
+      />
     </>
   );
 }

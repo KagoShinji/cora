@@ -1,5 +1,14 @@
 import { useEffect } from "react";
+import { X, AlertTriangle, Info, Loader2 } from "lucide-react";
 
+/**
+ * Props:
+ * - isOpen: boolean
+ * - onClose: () => void
+ * - onConfirm: () => void
+ * - isLoading: boolean
+ * - error: string
+ */
 export default function ModalConfirmDelete({
   isOpen,
   onClose,
@@ -13,40 +22,114 @@ export default function ModalConfirmDelete({
       if (e.key === "Escape") onClose?.();
     };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      window.removeEventListener("keydown", handler);
+      document.body.style.overflow = "";
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
+  const handleBackdrop = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
-      <div className="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl border text-center">
-        <h2 className="text-xl font-bold mb-4 text-primary">Delete Confirmation</h2>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-delete-title"
+      aria-describedby="confirm-delete-desc"
+      onMouseDown={handleBackdrop}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
 
-        <p className="text-primary mb-4">Do you want to delete this?</p>
+      {/* Modal */}
+      <div
+        className="relative w-full max-w-sm mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-gray-200">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 border border-red-200">
+              <AlertTriangle className="h-5 w-5 text-red-600" aria-hidden="true" />
+            </div>
+            <div className="flex-1">
+              <h2
+                id="confirm-delete-title"
+                className="text-xl font-semibold text-gray-900"
+              >
+                Confirm Deletion
+              </h2>
+              <p
+                id="confirm-delete-desc"
+                className="mt-1 flex items-center gap-1 text-sm text-gray-600"
+              >
+                <Info className="h-4 w-4 text-gray-400" aria-hidden="true" />
+                This <strong>cannot</strong> be undone.
+              </p>
+            </div>
+            <X
+              onClick={onClose}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") onClose();
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Close dialog"
+              className="h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-700"
+              title="Close"
+            />
+          </div>
+        </div>
 
-        {error && (
-          <p className="text-red-600 bg-red-100 border border-red-400 rounded p-2 text-sm mb-3">
-            {error}
+        {/* Body */}
+        <div className="p-6">
+          <p className="text-sm text-gray-700 mb-4">
+            Are you sure you want to permanently delete this item? This action
+            is irreversible.
           </p>
-        )}
 
-        <div className="flex justify-center gap-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 !bg-white text-primary border !border-primary rounded-md hover:bg-primary/10 transition disabled:opacity-50"
-            disabled={isLoading}
-          >
-            Cancel
-          </button>
+          {/* Error */}
+          {error && (
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 text-sm mb-4"
+            >
+              {error}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+          {/* Delete first as primary danger */}
           <button
             type="button"
             onClick={onConfirm}
-            className="px-4 py-2 !bg-primary text-white rounded-md hover:bg-red-700 transition disabled:opacity-50"
             disabled={isLoading}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-red-600 text-white text-sm font-semibold shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <AlertTriangle className="h-4 w-4" />
+            )}
             {isLoading ? "Deleting..." : "Delete"}
+          </button>
+          {/* Cancel */}
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-5 py-2.5 rounded-xl border border-gray-300 !bg-green-500 text-sm font-medium text-white shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            Cancel
           </button>
         </div>
       </div>

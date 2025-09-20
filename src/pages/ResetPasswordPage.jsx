@@ -1,21 +1,21 @@
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { changePassword } from "../api/api";
+import { Info, Save } from "lucide-react"; // ✅ make sure to install/import
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get("token"); // get token from query
+  const token = searchParams.get("token");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Block access if no token
   useEffect(() => {
     if (!token) {
-      navigate("/", { replace: true }); // redirect to home if no token
+      navigate("/", { replace: true });
     }
   }, [token, navigate]);
 
@@ -28,7 +28,6 @@ export default function ResetPasswordPage() {
       setError("Please fill in both fields.");
       return;
     }
-
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -58,34 +57,51 @@ export default function ResetPasswordPage() {
         {!message && (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-gray-700 mb-1">New Password</label>
+              <label
+                htmlFor="new-password"
+                className="block text-sm font-medium text-gray-800 mb-2"
+              >
+                New Password <span className="text-red-500">*</span>
+              </label>
               <input
+                id="new-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
                 placeholder="Enter new password"
+                required
               />
             </div>
 
             <div>
-              <label className="block text-gray-700 mb-1">Confirm Password</label>
+              <label
+                htmlFor="confirm-password"
+                className="block text-sm font-medium text-gray-800 mb-2"
+              >
+                Confirm Password <span className="text-red-500">*</span>
+              </label>
               <input
+                id="confirm-password"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
                 placeholder="Confirm new password"
+                required
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full !bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-500 transition-colors"
-            >
-              {loading ? "Resetting..." : "Reset Password"}
-            </button>
+            <div className="flex justify-end pt-4 border-t border-gray-200">
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Save className="h-4 w-4" />
+                {loading ? "Resetting..." : "Reset Password"}
+              </button>
+            </div>
           </form>
         )}
       </div>

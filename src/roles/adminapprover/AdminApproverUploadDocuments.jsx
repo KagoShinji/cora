@@ -1,30 +1,76 @@
-import { useState, useEffect } from "react";
-import SidebarAdminApprover from "../../components/SidebarAdminApprover"; // updated import
+import { useState, useEffect, useMemo } from "react";
+import SidebarAdminApprover from "../../components/SidebarAdminApprover";
 import ModalUploadDocument from "../../components/ModalUploadDocument";
 import ModalManualEntry from "../../components/ModalManualEntry";
 import ModalScan from "../../components/ModalScan";
-import { Upload, ScanLine, Pencil } from "lucide-react";
+import { Upload, ScanLine, Pencil, Search, Menu } from "lucide-react";
 import { useDocumentStore } from "../../stores/useDocumentStore";
 import { submitManualEntry } from "../../api/api";
+import { useAppSettingsStore } from "../../stores/useSettingsStore";
 
 function AdminApproverUploadDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Responsive breakpoint (md < 768px)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mql = window.matchMedia("(max-width: 767.98px)");
+    const handler = (e) => setIsMobile(!!e.matches);
+    handler(mql); // initialize
+    if (typeof mql.addEventListener === "function") {
+      mql.addEventListener("change", handler);
+      return () => mql.removeEventListener("change", handler);
+    } else if (typeof mql.addListener === "function") {
+      mql.addListener(handler);
+      return () => mql.removeListener(handler);
+    }
+  }, []);
+
+  // Prevent background scroll when mobile drawer is open
+  useEffect(() => {
+    if (!isMobile) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = sidebarOpen ? "hidden" : prev || "";
+    return () => {
+      document.body.style.overflow = prev || "";
+    };
+  }, [isMobile, sidebarOpen]);
+
+  // Close drawer on Escape (mobile only)
+  useEffect(() => {
+    if (!isMobile || !sidebarOpen) return;
+    const onKey = (e) => e.key === "Escape" && setSidebarOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isMobile, sidebarOpen]);
+
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
-  const { documents, fetchDocuments } = useDocumentStore();
-  const [filterStatus, setFilterStatus] = useState("declined");
-  const [search, setSearch] = useState("");
   const [showScanModal, setShowScanModal] = useState(false);
+
+  const { documents, fetchDocuments } = useDocumentStore();
+  const [filterStatus, setFilterStatus] = useState("declined"); // "all" | "approved" | "declined"
+  const [search, setSearch] = useState("");
+
+  const primaryColor =
+    useAppSettingsStore((s) => s.primary_color) || "#3b82f6"; // fallback blue-500
+
+  // Desktop offset: 17rem open / 5rem closed; Mobile: overlay (0 offset)
+  const sidebarOffset = useMemo(
+    () => (isMobile ? "0" : sidebarOpen ? "17rem" : "5rem"),
+    [isMobile, sidebarOpen]
+  );
 
   const handleUpload = async (formData) => {
     try {
       const file = formData.get("file");
       const title = formData.get("title");
       const notes = formData.get("notes");
-
       await useDocumentStore.getState().createDocument(file, title, notes);
       alert("Document uploaded successfully!");
       setShowUploadModal(false);
+      fetchDocuments(filterStatus === "all" ? "" : filterStatus);
     } catch (error) {
       alert("Upload failed: " + error.message);
     }
@@ -40,31 +86,31 @@ function AdminApproverUploadDocuments() {
       await submitManualEntry(formData);
       alert("Manual entry saved successfully!");
       setShowManualModal(false);
-      fetchDocuments(); // Refresh the document list
+      fetchDocuments(filterStatus === "all" ? "" : filterStatus);
     } catch (err) {
       alert("Failed to submit manual document: " + err.message);
     }
   };
 
-    const handleScanUpload = async (scannedDoc) => {
-  try {
-    await useDocumentStore.getState().createDocument(
-      scannedDoc.image,
-      scannedDoc.title_id,
-      scannedDoc.keywords
-    );
-    alert("Scanned document uploaded successfully!");
-    fetchDocuments(); // refresh the list
-  } catch (error) {
-    console.error(error);
-    alert("Failed to upload scanned document: " + error.message);
-  }
-};
+  const handleScanUpload = async (scannedDoc) => {
+    try {
+      await useDocumentStore.getState().createDocument(
+        scannedDoc.image,
+        scannedDoc.title_id,
+        scannedDoc.keywords
+      );
+      alert("Scanned document uploaded successfully!");
+      fetchDocuments(filterStatus === "all" ? "" : filterStatus);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to upload scanned document: " + error.message);
+    }
+  };
 
-  const filteredDocs = documents.filter((doc) => {
+  const filteredDocs = (documents || []).filter((doc) => {
     const matchesSearch =
-      doc.uploaded_by_name?.toLowerCase().includes(search.toLowerCase()) ||
-      doc.notes?.toLowerCase().includes(search.toLowerCase());
+      (doc.uploaded_by_name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (doc.notes || "").toLowerCase().includes(search.toLowerCase());
 
     const isNotPending = doc.status !== "pending-approval";
     if (filterStatus === "all") return matchesSearch && isNotPending;
@@ -74,74 +120,127 @@ function AdminApproverUploadDocuments() {
 
   useEffect(() => {
     fetchDocuments(filterStatus === "all" ? "" : filterStatus);
-  }, [filterStatus]);
+  }, [filterStatus, fetchDocuments]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
+      {/* Mobile backdrop (tap to close) */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar (mobile drawer / desktop collapsible) */}
       <div
-        className={`transition-all duration-300 h-screen fixed top-0 left-0 z-40 ${
-          sidebarOpen ? "w-64" : "w-16"
-        }`}
+        id="approver-sidebar"
+        className={[
+          "fixed top-0 left-0 h-screen z-50 transition-all duration-300",
+          isMobile
+            ? `w-64 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`
+            : `${sidebarOpen ? "w-64" : "w-16"}`,
+        ].join(" ")}
       >
-        <SidebarAdminApprover isOpen={sidebarOpen} setOpen={setSidebarOpen} />
+        <SidebarAdminApprover isOpen={sidebarOpen} setOpen={setSidebarOpen} isMobile={isMobile} />
       </div>
 
       {/* Main */}
       <main
-        className={`transition-all duration-300 p-8 overflow-y-auto bg-gray-100 ${
-          sidebarOpen ? "ml-64" : "ml-16"
-        } w-full`}
+        className="transition-all duration-300 p-6 overflow-y-auto bg-gray-50 w-full"
+        style={{ marginLeft: sidebarOffset }}
       >
-        <h1 className="text-3xl font-bold text-primary mb-6">Documents</h1>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          {/* Mobile: burger + title (same style as dashboard) */}
+          <div className="md:hidden flex items-center gap-3 w-full">
+            <Menu
+              onClick={() => setSidebarOpen(true)}
+              role="button"
+              tabIndex={0}
+              aria-label="Open menu"
+              className="h-6 w-6 cursor-pointer"
+              style={{ color: primaryColor }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") setSidebarOpen(true);
+              }}
+              aria-pressed={sidebarOpen}
+            />
+            <div className="flex-1 min-w-0">
+              <h1
+                className="text-2xl sm:text-3xl font-bold leading-tight truncate"
+                style={{ color: primaryColor }}
+              >
+                Documents
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-600">
+                Upload, scan, and manage documents for approval
+              </p>
+            </div>
+          </div>
 
-        {/* Cards */}
+          {/* Desktop title */}
+          <div className="hidden md:block">
+            <h1
+              className="text-3xl font-bold mb-2"
+              style={{ color: primaryColor }}
+            >
+              Documents
+            </h1>
+            <p className="text-gray-600">
+              Upload, scan, and manage documents for approval
+            </p>
+          </div>
+        </div>
+
+        {/* Action Cards — match Creator UI style/colors */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Upload */}
-          <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
-            <Upload className="text-primary w-12 h-12 mb-4" />
-            <h2 className="text-xl font-semibold text-primary mb-4">
-              Upload Documents
-            </h2>
+          <div className="!bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 flex flex-col items-center text-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+              <Upload className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="!text-gray-900 text-xl font-semibold">Upload Documents</h3>
+            <p className="!text-gray-600 text-sm max-w-xs">
+              Add files directly from your device.
+            </p>
             <button
-              className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition"
+              className="!bg-blue-600 hover:!bg-blue-700 !text-white px-5 py-2.5 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all"
               onClick={() => setShowUploadModal(true)}
             >
               Upload
             </button>
           </div>
 
-                {/* Scan Documents Card */}
-      <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
-        <ScanLine className="text-primary w-12 h-12 mb-4" />
-        <h2 className="text-xl font-semibold text-primary mb-4">
-          Scan Documents
-        </h2>
-        <button
-          onClick={() => setShowScanModal(true)}
-          className="!bg-primary text-white px-4 py-2 rounded"
-        >
-          Upload
-        </button>
-      </div>
-
-      {/* ModalScan */}
-      {showScanModal && (
-        <ModalScan
-          isOpen={showScanModal}
-          onClose={() => setShowScanModal(false)}
-          onUpload={handleScanUpload}
-        />
-      )}
+          {/* Scan */}
+          <div className="!bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 flex flex-col items-center text-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
+              <ScanLine className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="!text-gray-900 text-xl font-semibold">Scan Documents</h3>
+            <p className="!text-gray-600 text-sm max-w-xs">
+              Upload scans and convert them to files.
+            </p>
+            <button
+              onClick={() => setShowScanModal(true)}
+              className="!bg-emerald-600 hover:!bg-emerald-700 !text-white px-5 py-2.5 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all"
+            >
+              Upload
+            </button>
+          </div>
 
           {/* Manual Entry */}
-          <div className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
-            <Pencil className="text-primary w-12 h-12 mb-4" />
-            <h2 className="text-xl font-semibold text-primary mb-4">
-              Manual Entry
-            </h2>
+          <div className="!bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 flex flex-col items-center text-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-purple-600 to-fuchsia-600 rounded-xl shadow-lg">
+              <Pencil className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="!text-gray-900 text-xl font-semibold">Manual Entry</h3>
+            <p className="!text-gray-600 text-sm max-w-xs">
+              Create text-only documents right in the app.
+            </p>
             <button
-              className="!bg-primary text-white px-6 py-2 rounded hover:bg-primary transition"
+              className="!bg-fuchsia-600 hover:!bg-fuchsia-700 !text-white px-5 py-2.5 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all"
               onClick={() => setShowManualModal(true)}
             >
               Create
@@ -149,103 +248,168 @@ function AdminApproverUploadDocuments() {
           </div>
         </div>
 
-        {/* Search + Filter */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-          <input
-            type="text"
-            placeholder="Search by name or notes..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border border-gray-300 rounded px-4 py-2 w-full max-w-md text-black"
-          />
-          <div className="flex gap-2">
-            {["approved", "declined"].map((status) => (
+        {/* Search & Filter — colored buttons like All/Approved/Declined */}
+        <div className="!bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Search bar with primary border + icon */}
+            <div className="relative flex-1 max-w-md">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
+                style={{ color: primaryColor }}
+              />
+              <input
+                type="text"
+                placeholder="Search by name or notes..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none"
+                style={{
+                  border: `2px solid ${primaryColor}`,
+                  backgroundColor: "#fff",
+                }}
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="flex gap-2">
+              {/* All */}
               <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={`px-4 py-2 rounded-md font-semibold ${
-                  filterStatus === status
-                    ? "!bg-blue-700 text-white"
-                    : "!bg-primary text-white border"
-                }`}
+                onClick={() => setFilterStatus("all")}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
+                  ${
+                    filterStatus === "all"
+                      ? "!bg-gray-900 !text-white"
+                      : "!bg-gray-100 !text-gray-700 hover:!bg-gray-200 !border !border-gray-300"
+                  }`}
               >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                All
               </button>
-            ))}
+
+              {/* Approved */}
+              <button
+                onClick={() => setFilterStatus("approved")}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
+                  ${
+                    filterStatus === "approved"
+                      ? "!bg-green-600 !text-white"
+                      : "!bg-green-50 !text-green-700 hover:!bg-green-100 !border !border-green-200"
+                  }`}
+              >
+                Approved
+              </button>
+
+              {/* Declined */}
+              <button
+                onClick={() => setFilterStatus("declined")}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
+                  ${
+                    filterStatus === "declined"
+                      ? "!bg-red-600 !text-white"
+                      : "!bg-red-50 !text-red-700 hover:!bg-red-100 !border !border-red-200"
+                  }`}
+              >
+                Declined
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white shadow-md rounded-lg overflow-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-primary text-white">
-              <tr>
-                <th className="p-4 text-center">Department</th>
-                <th className="p-4 text-center">Type of Information</th>
-                <th className="p-4 text-center">File</th>
-                <th className="p-4 text-center">Timestamp</th>
-                <th className="p-4 text-center">Status</th>
-                {filterStatus === "declined" && (
-                  <th className="p-4 text-center">Actions</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDocs.length > 0 ? (
-                filteredDocs.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-gray-100">
-                    <td className="p-4 text-center text-black">
-                      {doc.department}
-                    </td>
-                    <td className="p-4 text-center text-black">{doc.title}</td>
-                    <td className="p-4 text-center text-black">
-                      <button
-                        onClick={async () => {
-                          try {
-                            const blob =
-                              await useDocumentStore
+        {/* Table — match Creator table styling */}
+        <div className="!bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 className="text-lg font-semibold text-gray-900">Documents</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              {filteredDocs.length} {filterStatus === "all" ? "" : filterStatus} document
+              {filteredDocs.length === 1 ? "" : "s"} found
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Department
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Type of Information
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    File
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Timestamp
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredDocs.length > 0 ? (
+                  filteredDocs.map((doc, idx) => (
+                    <tr
+                      key={doc.id}
+                      className={`hover:bg-gray-50 transition-colors duration-200 ${
+                        idx % 2 === 0 ? "bg-white" : "bg-gray-25"
+                      }`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {doc.department}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {doc.title}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const blob = await useDocumentStore
                                 .getState()
                                 .previewDocument(doc.id);
-                            const url = window.URL.createObjectURL(blob);
-                            const newTab = window.open(url);
-                            if (!newTab)
-                              alert(
-                                "Popup blocked! Please allow popups for this site."
-                              );
-                          } catch (err) {
-                            console.error("Failed to preview document:", err);
-                          }
-                        }}
-                        className="!bg-primary !text-white underline hover:text-blue-800"
-                      >
-                        View
-                      </button>
-                    </td>
-                    <td className="p-4 text-center text-black">
-                      {new Date(doc.upload_timestamp).toLocaleString()}
-                    </td>
-                    <td className="p-4 text-center">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                          doc.status === "approved"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {doc.status}
-                      </span>
+                              const url = window.URL.createObjectURL(blob);
+                              const newTab = window.open(url);
+                              if (!newTab) {
+                                alert("Popup blocked! Please allow popups for this site.");
+                              }
+                            } catch (err) {
+                              console.error("Failed to preview document:", err);
+                              alert("Failed to preview document.");
+                            }
+                          }}
+                          className="px-3 py-2 rounded-md text-sm font-medium !bg-blue-600 !text-white hover:!bg-blue-700 transition"
+                        >
+                          View
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {doc.upload_timestamp
+                          ? new Date(doc.upload_timestamp).toLocaleString()
+                          : "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+                            doc.status === "approved"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {doc.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center py-10 text-gray-500">
+                      No {filterStatus} documents found.
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center py-6 text-gray-500">
-                    No {filterStatus} documents found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </main>
 
@@ -260,6 +424,13 @@ function AdminApproverUploadDocuments() {
         onClose={() => setShowManualModal(false)}
         onSave={handleManualSave}
       />
+      {showScanModal && (
+        <ModalScan
+          isOpen={showScanModal}
+          onClose={() => setShowScanModal(false)}
+          onUpload={handleScanUpload}
+        />
+      )}
     </div>
   );
 }

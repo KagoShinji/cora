@@ -1,84 +1,194 @@
-import { useState } from "react";
+// src/pages/admincreator/AdminCreatorLogs.jsx
+import { useEffect, useMemo, useState } from "react";
+import { Menu } from "lucide-react";
 import SidebarAdminCreator from "../../components/SidebarAdminCreator";
+import { useAppSettingsStore } from "../../stores/useSettingsStore";
 
 function AdminCreatorLogs() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
 
+  // Theme color for headings/accents
+  const primaryColor = useAppSettingsStore((s) => s.primary_color) || "#3b82f6";
+
+  // Responsive breakpoint (md < 768px)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767.98px)");
+    const handler = (e) => setIsMobile(e.matches);
+    handler(mql);
+    mql.addEventListener?.("change", handler);
+    mql.addListener?.(handler); // Safari fallback
+    return () => {
+      mql.removeEventListener?.("change", handler);
+      mql.removeListener?.(handler);
+    };
+  }, []);
+
+  // Prevent background scroll when mobile drawer is open
+  useEffect(() => {
+    if (!isMobile) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = sidebarOpen ? "hidden" : prev || "";
+    return () => {
+      document.body.style.overflow = prev || "";
+    };
+  }, [isMobile, sidebarOpen]);
+
+  // Desktop offset: 17rem open / 5rem closed; Mobile: overlay (0 offset)
+  const sidebarOffset = useMemo(
+    () => (isMobile ? "0" : sidebarOpen ? "17rem" : "5rem"),
+    [isMobile, sidebarOpen]
+  );
+
+  // Logs (preserved content)
+  const logs = useMemo(
+    () => [
+      { description: "Approved new student document", timestamp: "July 15, 2025 09:10 AM" },
+      { description: "Reviewed and rejected outdated form", timestamp: "July 14, 2025 01:45 PM" },
+      { description: "Logged in to Admin Panel", timestamp: "July 14, 2025 08:00 AM" },
+      { description: "Checked logs activity", timestamp: "July 13, 2025 06:30 PM" },
+    ],
+    []
+  );
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return logs;
+    return logs.filter(
+      (row) =>
+        row.description.toLowerCase().includes(q) ||
+        row.timestamp.toLowerCase().includes(q)
+    );
+  }, [search, logs]);
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
+      {/* Mobile backdrop (tap to close) */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar (mobile = drawer; desktop = collapsible) */}
       <div
-        className={`transition-all duration-300 h-screen fixed top-0 left-0 z-40 ${
-          sidebarOpen ? "w-64" : "w-16"
-        }`}
+        className={[
+          "fixed top-0 left-0 h-screen z-50 transition-all duration-300",
+          isMobile
+            ? `w-64 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`
+            : `${sidebarOpen ? "w-64" : "w-16"}`
+        ].join(" ")}
       >
-        <SidebarAdminCreator isOpen={sidebarOpen} setOpen={setSidebarOpen} />
+        <SidebarAdminCreator isOpen={sidebarOpen} setOpen={setSidebarOpen} isMobile={isMobile} />
       </div>
 
-      {/* Main content */}
+      {/* Main content (shifts on desktop, overlay on mobile) */}
       <main
-        className={`transition-all duration-300 p-8 overflow-y-auto bg-gray-100 ${
-          sidebarOpen ? "ml-64" : "ml-16"
-        } w-full`}
+        className="transition-all duration-300 p-6 md:p-8 overflow-y-auto w-full"
+        style={{ marginLeft: sidebarOffset }}
       >
-        <h1 className="text-3xl font-bold text-primary mb-6">Logs</h1>
-
-        {/* Logs Table with Search */}
-        <div className="bg-white shadow-md rounded-lg overflow-auto">
-          <div className="p-4">
-            {/* Search Bar */}
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Search logs..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="border border-gray-300 rounded px-4 py-2 w-full max-w-sm text-black"
-              />
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 md:mb-8">
+          {/* Mobile: burger + large title */}
+          <div className="md:hidden flex items-center gap-3">
+            <Menu
+              onClick={() => setSidebarOpen(true)}
+              role="button"
+              tabIndex={0}
+              aria-label="Open menu"
+              className="h-6 w-6 cursor-pointer"
+              style={{ color: primaryColor }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") setSidebarOpen(true);
+              }}
+              aria-pressed={sidebarOpen}
+            />
+            <div className="flex-1">
+              <h1
+                className="text-2xl sm:text-3xl font-bold leading-tight"
+                style={{ color: primaryColor }}
+              >
+                Logs
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-600">
+                Recent Admin Creator activities
+              </p>
             </div>
+          </div>
 
-            {/* Table */}
-            <table className="min-w-full text-sm">
-              <thead className="bg-primary text-white">
+          {/* Desktop title */}
+          <div className="hidden md:block">
+            <h1
+              className="text-3xl font-bold mb-2"
+              style={{ color: primaryColor }}
+            >
+              Logs
+            </h1>
+            <p className="text-gray-600">
+              Recent Admin Creator activities
+            </p>
+          </div>
+        </div>
+
+        {/* Logs Table — modern UI */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* Header row with search */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {filtered.length} record{filtered.length !== 1 ? "s" : ""} found
+                </p>
+              </div>
+
+              <div className="w-full md:w-72">
+                <input
+                  type="text"
+                  placeholder="Search logs..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="p-4 text-center align-middle">Description</th>
-                  <th className="p-4 text-center align-middle">Timestamp</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Timestamp
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                <tr className="hover:bg-gray-100 border-t">
-                  <td className="p-4 text-black text-center align-middle">
-                    Approved new student document
-                  </td>
-                  <td className="p-4 text-black text-center align-middle">
-                    July 15, 2025 09:10 AM
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-100 border-t">
-                  <td className="p-4 text-black text-center align-middle">
-                    Reviewed and rejected outdated form
-                  </td>
-                  <td className="p-4 text-black text-center align-middle">
-                    July 14, 2025 01:45 PM
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-100 border-t">
-                  <td className="p-4 text-black text-center align-middle">
-                    Logged in to Admin Panel
-                  </td>
-                  <td className="p-4 text-black text-center align-middle">
-                    July 14, 2025 08:00 AM
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-100 border-t">
-                  <td className="p-4 text-black text-center align-middle">
-                    Checked logs activity
-                  </td>
-                  <td className="p-4 text-black text-center align-middle">
-                    July 13, 2025 06:30 PM
-                  </td>
-                </tr>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filtered.length > 0 ? (
+                  filtered.map((row, idx) => (
+                    <tr key={`${row.description}-${idx}`} className="hover:bg-gray-50 transition-colors duration-200">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {row.description}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {row.timestamp}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={2} className="px-6 py-8 text-center text-sm text-gray-500">
+                      No logs found{search ? " for your search." : "."}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

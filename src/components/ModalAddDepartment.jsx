@@ -1,73 +1,139 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { X, Building2, Info, Save } from "lucide-react";
 import { useAuthStore } from "../stores/userStores";
 
 export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
   const [newDepartment, setNewDepartment] = useState("");
 
-  const addDepartment = useAuthStore((state)=>state.addDepartment)
-  const getDepartment = useAuthStore((state) => state.getDepartment); 
+  const addDepartment = useAuthStore((state) => state.addDepartment);
+  const getDepartment = useAuthStore((state) => state.getDepartment);
 
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      await addDepartment({department_name: newDepartment})
-      await getDepartment();
-      alert("Department created succesfully")
-      onSave(newDepartment); 
-      setNewDepartment('')
-      onClose()
-    } catch (err) {
-      console.error("Failed to create department")
-      throw err
-    }
-    
-  };
+  // Escape key + lock body scroll
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow || "";
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl border">
-        <h2 className="text-2xl font-bold mb-4 text-primary text-center">
-          Add Department
-        </h2>
+  const handleBackdrop = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-primary">
-          <div>
-            <label className="block mb-1 font-medium">
-              Department Name <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              value={newDepartment}
-              onChange={(e) => setNewDepartment(e.target.value)}
-              placeholder="Enter department name"
-              required
-              className="w-full border border-primary rounded-md px-4 py-2 text-primary outline-none focus:ring-1 focus:ring-primary"
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await addDepartment({ department_name: newDepartment });
+      await getDepartment();
+      alert("Department created successfully");
+      onSave(newDepartment);
+      setNewDepartment("");
+      onClose();
+    } catch (err) {
+      console.error("Failed to create department");
+      throw err;
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-dept-title"
+      aria-describedby="add-dept-desc"
+      onMouseDown={handleBackdrop}
+    >
+      {/* Backdrop (consistent) */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+
+      {/* Modal Card */}
+      <div
+        className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-gray-200">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-200">
+              <Building2 className="h-5 w-5 text-gray-700" aria-hidden="true" />
+            </div>
+            <div className="flex-1">
+              <h2 id="add-dept-title" className="text-xl font-semibold text-gray-900">
+                Add Department
+              </h2>
+              <p
+                id="add-dept-desc"
+                className="mt-1 flex items-center gap-1 text-sm text-gray-600"
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+                Create a new department for assigning admins.
+              </p>
+            </div>
+            <X
+              onClick={onClose}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") onClose();
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Close dialog"
+              className="h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-700"
+              title="Close"
             />
           </div>
+        </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setNewDepartment("");
-                onClose();
-              }}
-              className="!px-4 !py-2 !bg-white !text-primary !border !border-primary !rounded-md hover:!bg-primary/10 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 !bg-primary text-white rounded-md hover:bg-primary/90 transition"
-            >
-              Save
-            </button>
-          </div>
-        </form>
+        {/* Body */}
+        <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)]">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label
+                htmlFor="dept-name"
+                className="block text-sm font-medium text-gray-800 mb-2"
+              >
+                Department Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="dept-name"
+                type="text"
+                value={newDepartment}
+                onChange={(e) => setNewDepartment(e.target.value)}
+                placeholder="Enter department name"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+              />
+            </div>
+
+            {/* Actions (Cancel red, Save green for consistency) */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setNewDepartment("");
+                  onClose();
+                }}
+                className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-white !bg-red-500 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+              >
+                <Save className="h-4 w-4" />
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

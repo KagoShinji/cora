@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { changePassword } from "../api/api";
+import { changePassword,requestPasswordOtp } from "../api/api";
 import { Save } from "lucide-react";
+
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();

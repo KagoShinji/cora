@@ -74,7 +74,7 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
             {isOpen && <span className="text-white">Themes</span>}
           </Link>
 
-          {/* Logs */}
+          {/* Logs 
           <Link
             to="/cosuperadmin/logs"
             className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
@@ -82,6 +82,7 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
             <ClipboardList size={18} className="text-white" />
             {isOpen && <span className="text-white">Logs</span>}
           </Link>
+          */}
         </nav>
 
         {/* Footer */}

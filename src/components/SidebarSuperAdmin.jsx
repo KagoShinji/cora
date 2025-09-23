@@ -52,14 +52,16 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
             <Users size={18} className="!text-white" />
             {isOpen && <span className="!text-white">Users</span>}
           </Link>
-          <Link
+          {/* <Link
             to="/superadmin/logs"
             className="flex items-center gap-2 p-2 rounded hover:bg-primary transition !text-white"
           >
             <ClipboardList size={18} className="!text-white" />
             {isOpen && <span className="!text-white">Logs</span>}
           </Link>
+          */}
         </nav>
+        
 
         {/* Footer */}
         {isOpen && (

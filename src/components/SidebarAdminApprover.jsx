@@ -72,7 +72,7 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
               </div>
             )}
           </div>
-
+            {/* 
           <Link
             to="/adminapprover/logs"
             className="flex items-center gap-2 p-2 rounded hover:bg-primary transition"
@@ -81,7 +81,9 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
             <ClipboardList size={18} />
             {isOpen && <span>Logs</span>}
           </Link>
+          */}
         </nav>
+        
 
         {/* Footer with Logout Trigger */}
         {isOpen && (

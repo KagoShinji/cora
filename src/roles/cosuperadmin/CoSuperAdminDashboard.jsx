@@ -6,6 +6,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Menu } from "lucide-react";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
+import { getUser,mostSearchData,fetchSatisfactionMetrics } from "../../api/api";
+import ModalEditDepartment from "../../components/ModalEditDepartment";
+import ModalConfirmDelete from "../../components/ModalConfirmDelete";
+import ModalAdminUsers from "../../components/ModalAdminUsers";
+import ModalDepartments from "../../components/ModalDepartments";
+import { fetchDocument } from "../../api/api";
+
 
 // Charts
 import {
@@ -21,11 +28,6 @@ import {
   CartesianGrid,
 } from "recharts";
 
-// Modals
-import ModalEditDepartment from "../../components/ModalEditDepartment";
-import ModalConfirmDelete from "../../components/ModalConfirmDelete";
-import ModalAdminUsers from "../../components/ModalAdminUsers";
-import ModalDepartments from "../../components/ModalDepartments";
 
 function CoSuperAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -56,6 +58,71 @@ function CoSuperAdminDashboard() {
   const [searchEndDate, setSearchEndDate] = useState(new Date());
   const [ratingStartDate, setRatingStartDate] = useState(null);
   const [ratingEndDate, setRatingEndDate] = useState(null);
+  const [users,setUsers] = useState([])
+  const [satisfactionChart, setSatisfactionChart] = useState([]);
+  const [searchedDataClassification, setSearchedDataClassification] = useState([]);
+  const [data, setData] = useState([]);
+
+useEffect(() => {
+    const loadDocuments = async () => {
+      try {
+        const docs = await fetchDocument();
+
+        // ✅ Only include docs that are neither approved nor denied
+        const filteredDocs = docs.filter((doc) => {
+          const status = doc.status?.toLowerCase() || "pending";
+          return status !== "approved" && status !== "declined";
+        });
+
+        // Group by department
+        const counts = {};
+        filteredDocs.forEach((doc) => {
+          const dept = doc.department || "Unknown";
+          counts[dept] = (counts[dept] || 0) + 1;
+        });
+
+        // Convert to recharts-friendly format
+        const chartData = Object.entries(counts).map(([name, value]) => ({
+          name,
+          value,
+        }));
+
+        setData(chartData);
+      } catch (err) {
+        console.error("Failed to load documents:", err);
+      }
+    };
+
+    loadDocuments();
+  }, []);
+  
+useEffect(() => {
+  const fetchMostSearch = async () => {
+    try {
+      if (!searchStartDate || !searchEndDate) return;
+
+      const data = await mostSearchData(searchStartDate, searchEndDate, 10);
+
+      const formatted = data.map((item) => ({
+        name: item.title,
+        count: item.count,
+      }));
+
+      setSearchedDataClassification(formatted);
+    } catch (err) {
+      console.error("Failed to load most searched data:", err);
+    }
+  };
+
+  fetchMostSearch();
+}, [searchStartDate, searchEndDate]);
+
+
+useEffect(()=>{
+
+})
+  
+
 
   const roleMap = {
     Creator: "admincreator",
@@ -72,6 +139,8 @@ function CoSuperAdminDashboard() {
     setShowDepartmentsModal(true);
   };
 
+
+  
   useEffect(() => {
     fetchDepartment();
   }, [fetchDepartment]);
@@ -105,36 +174,11 @@ function CoSuperAdminDashboard() {
     [isMobile, sidebarOpen]
   );
 
+  
+
   // Sample data
-  const searchedDataClassification = [
-    { name: "Scholarship", count: 45, category: "Academic" },
-    { name: "Student Services", count: 38, category: "Services" },
-    { name: "IT Support", count: 32, category: "Technical" },
-    { name: "Academic Records", count: 28, category: "Academic" },
-    { name: "Financial Aid", count: 24, category: "Financial" },
-    { name: "Campus Events", count: 19, category: "Social" },
-  ];
+  
 
-  const userExperienceRatings = [
-    { name: "Excellent", count: 42, rating: 5 },
-    { name: "Good", count: 35, rating: 4 },
-    { name: "Average", count: 18, rating: 3 },
-    { name: "Poor", count: 8, rating: 2 },
-    { name: "Very Poor", count: 3, rating: 1 },
-  ];
-
-  const adminData = [
-    { name: "Creator", value: 8 },
-    { name: "Approver", value: 5 },
-    { name: "Guest", value: 3 },
-  ];
-
-  const departmentData = [
-    { name: "IT", count: 10 },
-    { name: "HR", count: 7 },
-    { name: "Finance", count: 5 },
-    { name: "Marketing", count: 6 },
-  ];
 
   // Color schemes
   const COLORS = ["#E53E3E", "#3182CE", "#38A169"];
@@ -195,6 +239,78 @@ function CoSuperAdminDashboard() {
       setIsDeleting(false);
     }
   };
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getUser();
+        setUsers(data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const getMetrics = async () => {
+      try {
+       
+        const data = await fetchSatisfactionMetrics();
+        setSatisfactionChart(data);
+      } catch (error) {
+        console.error("Failed to load satisfaction metrics:", error);
+      } finally {
+        
+      }
+    };
+    getMetrics();
+  }, []);
+
+const userChart = users.reduce((acc, user) => {
+    const role = user.role || "Unknown";
+
+    // skip superadmin + co-superadmin
+    if (role === "superadmin" || role === "co-superadmin") return acc;
+
+    const found = acc.find((item) => item.name === role);
+    if (found) {
+      found.value += 1;
+    } else {
+      acc.push({ name: role, value: 1 });
+    }
+    return acc;
+  }, []);
+
+const deptChart = users.reduce((acc, user) => {
+  const department = user.department || "Unknown"
+   
+  if(department === "Unknown") return acc;
+  const found = acc.find((item) => item.name === department);
+  if (found) {
+    found.count += 1; 
+  } else {
+    acc.push({ name: department, count: 1 }); // add new
+  }
+  return acc;
+}, []);
+
+
+ useEffect(() => {
+    const loadMetrics = async () => {
+      try {
+        const data = await fetchSatisfactionMetrics();
+        setSatisfactionChart(data);
+      } catch (err) {
+        console.error("Failed to load satisfaction metrics:", err);
+      }
+    };
+    loadMetrics();
+  }, []);
+
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
@@ -341,21 +457,21 @@ function CoSuperAdminDashboard() {
                         tick={{ fill: "#64748b" }}
                       />
                       <YAxis tick={{ fill: "#64748b" }} />
-      <Tooltip
-        formatter={(value) => [`${value} searches`, "Count"]}
-        labelFormatter={(label) => `Category: ${label}`}
-        wrapperStyle={{ zIndex: 9999, pointerEvents: "none" }}
-        allowEscapeViewBox={{ x: true, y: true }}
-        contentStyle={{
-          backgroundColor: "#ffffff",
-          border: "1px solid #e2e8f0",
-          borderRadius: "12px",
-          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-          color: "#0f172a" // slate-900
-        }}
-        itemStyle={{ color: "#0f172a" }}
-        labelStyle={{ color: "#334155", fontWeight: 600 }} // slate-700
-      />
+                        <Tooltip
+                          formatter={(value) => [`${value} searches`, "Count"]}
+                          labelFormatter={(label) => `Category: ${label}`}
+                          wrapperStyle={{ zIndex: 9999, pointerEvents: "none" }}
+                          allowEscapeViewBox={{ x: true, y: true }}
+                          contentStyle={{
+                            backgroundColor: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "12px",
+                            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                            color: "#0f172a" // slate-900
+                          }}
+                          itemStyle={{ color: "#0f172a" }}
+                          labelStyle={{ color: "#334155", fontWeight: 600 }} // slate-700
+                        />
                       <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                         {searchedDataClassification.map((entry, index) => (
                           <Cell
@@ -410,149 +526,143 @@ function CoSuperAdminDashboard() {
 
           {/* User Experience Rating */}
           <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-emerald-200 hover:-translate-y-1 overflow-hidden">
-            <div className="relative z-10">
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg mr-3">
-                    <svg
-                      className="w-6 h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h2
-                      className="text-xl font-semibold mb-1"
-                      style={{ color: primaryColor }}
-                    >
-                      User Experience Rating
-                    </h2>
-                    <p className="text-sm text-gray-600">Satisfaction metrics</p>
-                  </div>
-                </div>
-
-                {/* Date Range Picker */}
-                <div className="flex items-center space-x-2">
-                  <DatePicker
-                    selected={ratingStartDate}
-                    onChange={(date) => setRatingStartDate(date)}
-                    selectsStart
-                    startDate={ratingStartDate}
-                    endDate={ratingEndDate}
-                    className="text-black border border-gray-300 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                  <span className="text-gray-400">to</span>
-                  <DatePicker
-                    selected={ratingEndDate}
-                    onChange={(date) => setRatingEndDate(date)}
-                    selectsEnd
-                    startDate={ratingStartDate}
-                    endDate={ratingEndDate}
-                    minDate={ratingStartDate}
-                    className="text-black border border-gray-300 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <p className="text-xs text-gray-500 text-center mb-6 bg-gray-50 rounded-lg py-2">
-                Period: {ratingStartDate?.toLocaleDateString()} –{" "}
-                {ratingEndDate?.toLocaleDateString()}
-              </p>
-
-              <div className="flex items-center gap-6">
-                {/* Bar Chart */}
-                <div className="w-2/3">
-                  <ResponsiveContainer width="100%" height={280}>
-                    <BarChart data={userExperienceRatings}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="name"
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                        fontSize={11}
-                        tick={{ fill: "#64748b" }}
-                      />
-                      <YAxis tick={{ fill: "#64748b" }} />
-      <Tooltip
-        formatter={(value) => [`${value} responses`, "Count"]}
-        labelFormatter={(label) => `Rating: ${label}`}
-        wrapperStyle={{ zIndex: 9999, pointerEvents: "none" }}
-        allowEscapeViewBox={{ x: true, y: true }}
-        contentStyle={{
-          backgroundColor: "#ffffff",
-          border: "1px solid #e2e8f0",
-          borderRadius: "12px",
-          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-          color: "#0f172a"
-        }}
-        itemStyle={{ color: "#0f172a" }}
-        labelStyle={{ color: "#334155", fontWeight: 600 }}
-      />
-                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                        {userExperienceRatings.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={RATING_COLORS[index % RATING_COLORS.length]}
-                            style={{
-                              filter:
-                                "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
-                            }}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Labels */}
-                <ul className="space-y-3 w-1/3">
-                  {userExperienceRatings.map((entry, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="w-4 h-4 rounded-full shadow-sm"
-                          style={{
-                            backgroundColor:
-                              RATING_COLORS[index % RATING_COLORS.length],
-                          }}
-                        ></span>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-sm text-gray-900">
-                            {entry.name}
-                          </span>
-                          <span className="text-yellow-400 text-xs">
-                            {"★".repeat(entry.rating)}
-                            {"☆".repeat(5 - entry.rating)}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-700 shadow-sm">
-                        {entry.count}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg mr-3">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-1" style={{ color: primaryColor }}>
+                User Experience Rating
+              </h2>
+              <p className="text-sm text-gray-600">Satisfaction metrics</p>
             </div>
           </div>
+
+          {/* Date Range Picker 
+          <div className="flex items-center space-x-2">
+            <DatePicker
+              selected={ratingStartDate}
+              onChange={(date) => setRatingStartDate(date)}
+              selectsStart
+              startDate={ratingStartDate}
+              endDate={ratingEndDate}
+              className="text-black border border-gray-300 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+            <span className="text-gray-400">to</span>
+            <DatePicker
+              selected={ratingEndDate}
+              onChange={(date) => setRatingEndDate(date)}
+              selectsEnd
+              startDate={ratingStartDate}
+              endDate={ratingEndDate}
+              minDate={ratingStartDate}
+              className="text-black border border-gray-300 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>*/}
+        </div>
+
+        {/* Period Display
+        <p className="text-xs text-gray-500 text-center mb-6 bg-gray-50 rounded-lg py-2">
+          Period: {ratingStartDate ? ratingStartDate.toLocaleDateString() : "-"} –{" "}
+          {ratingEndDate ? ratingEndDate.toLocaleDateString() : "-"}
+        </p>*/}
+
+        {/* Chart & Labels */}
+        <div className="flex flex-col md:flex-row items-start gap-6">
+          {/* Bar Chart */}
+          <div className="w-full md:w-2/3">
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={satisfactionChart}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="name"
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  fontSize={11}
+                  tick={{ fill: "#64748b" }}
+                />
+                <YAxis tick={{ fill: "#64748b" }} />
+                <Tooltip
+                  formatter={(value) => [`${value} responses`, "Count"]}
+                  labelFormatter={(label) => `Rating: ${label}`}
+                  wrapperStyle={{ zIndex: 9999, pointerEvents: "none" }}
+                  allowEscapeViewBox={{ x: true, y: true }}
+                  contentStyle={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                    color: "#0f172a",
+                  }}
+                  itemStyle={{ color: "#0f172a" }}
+                  labelStyle={{ color: "#334155", fontWeight: 600 }}
+                />
+                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                  {satisfactionChart.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={RATING_COLORS[index % RATING_COLORS.length]}
+                      style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Labels */}
+          <ul className="space-y-3 w-full md:w-1/3">
+            {satisfactionChart.map((entry, index) => {
+              const ratingValue = Math.min(Math.max(entry.rating, 0), 5);
+              return (
+                <li
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="w-4 h-4 rounded-full shadow-sm"
+                      style={{ backgroundColor: RATING_COLORS[index % RATING_COLORS.length] }}
+                    ></span>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm text-gray-900">{entry.name}</span>
+                      <span className="text-yellow-400 text-xs">
+                        {"★".repeat(ratingValue)}{"☆".repeat(5 - ratingValue)}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-700 shadow-sm">
+                    {entry.count}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+    </div>
         </div>
 
         {/* Analytics Cards Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* Admin Users Card */}
-          <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 hover:-translate-y-1 overflow-hidden">
+          <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-blue-200 hover:-translate-y-1 overflow-hidden cursor-pointer"onClick={() => handleAdminSliceClick("user")}>
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
@@ -567,7 +677,7 @@ function CoSuperAdminDashboard() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-blue-600">
-                    {adminData.reduce((sum, item) => sum + item.value, 0)}
+                    {userChart.reduce((sum, item) => sum + item.value, 0)}
                   </div>
                   <div className="text-xs text-gray-500 uppercase tracking-wide">Total</div>
                 </div>
@@ -586,7 +696,7 @@ function CoSuperAdminDashboard() {
                   <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
                       <Pie
-                        data={adminData}
+                        data={userChart}
                         dataKey="value"
                         nameKey="name"
                         cx="50%"
@@ -596,11 +706,10 @@ function CoSuperAdminDashboard() {
                         paddingAngle={3}
                         onClick={() => setShowAdminsModal(true)}
                       >
-                        {adminData.map((entry, index) => (
+                        {userChart.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={COLORS[index % COLORS.length]}
-                            onClick={() => handleAdminSliceClick(entry.name)}
                             style={{
                               cursor: "pointer",
                               filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
@@ -628,11 +737,10 @@ function CoSuperAdminDashboard() {
 
                 {/* Labels */}
                 <ul className="space-y-3 w-1/3">
-                  {adminData.map((entry, index) => (
+                  {userChart.map((entry, index) => (
                     <li
                       key={index}
                       className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                      onClick={() => handleAdminSliceClick(entry.name)}
                     >
                       <div className="flex items-center gap-3">
                         <span
@@ -667,7 +775,7 @@ function CoSuperAdminDashboard() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-emerald-600">
-                    {departmentData.reduce((sum, item) => sum + item.count, 0)}
+                    {deptChart.reduce((sum, item) => sum + item.count, 0)}
                   </div>
                   <div className="text-xs text-gray-500 uppercase tracking-wide">Total Users</div>
                 </div>
@@ -684,7 +792,7 @@ function CoSuperAdminDashboard() {
                 {/* Bar Chart */}
                 <div className="w-2/3">
                   <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={departmentData}>
+                    <BarChart data={deptChart}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                       <XAxis
                         dataKey="name"
@@ -717,7 +825,7 @@ function CoSuperAdminDashboard() {
                         onClick={handleDepartmentBarClick}
                         radius={[6, 6, 0, 0]}
                       >
-                        {departmentData.map((dept, index) => (
+                        {deptChart.map((dept, index) => (
                           <Cell
                             key={index}
                             fill={COLORS[index % COLORS.length]}
@@ -734,7 +842,7 @@ function CoSuperAdminDashboard() {
 
                 {/* Labels */}
                 <ul className="space-y-3 w-1/3">
-                  {departmentData.map((entry, index) => (
+                  {deptChart.map((entry, index) => (
                     <li
                       key={index}
                       className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
@@ -764,99 +872,105 @@ function CoSuperAdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* File Uploads Card */}
           <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-purple-200 hover:-translate-y-1 overflow-hidden">
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-purple-600">24</div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide">Total</div>
-                </div>
-              </div>
-
-              <h3 className="text-xl font-semibold mb-2" style={{ color: primaryColor }}>
-                File Uploads
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                Document uploads by department and category.
-              </p>
-
-              <div className="flex items-center gap-6">
-                {/* Pie Chart */}
-                <div className="w-2/3 relative">
-                  <ResponsiveContainer width="100%" height={220}>
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: "Scholarship", value: 12 },
-                          { name: "Student Life", value: 7 },
-                          { name: "IT", value: 5 },
-                        ]}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        innerRadius={45}
-                        paddingAngle={3}
-                      >
-                        {FILE_COLORS.map((color, index) => (
-                          <Cell
-                            key={index}
-                            fill={color}
-                            style={{
-                              filter:
-                                "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
-                            }}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value, name) => [`${value} files`, name]}
-                        contentStyle={{
-                          backgroundColor: "#fff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "12px",
-                          boxShadow:
-                            "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Labels */}
-                <ul className="space-y-3 w-1/3">
-                  {["Scholarship", "Student Life", "IT"].map((name, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="w-4 h-4 rounded-full shadow-sm"
-                          style={{ backgroundColor: FILE_COLORS[i] }}
-                        ></span>
-                        <span className="font-medium text-gray-700 text-sm">{name}</span>
-                      </div>
-                      <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-700 shadow-sm">
-                        {[12, 7, 5][i]}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-lg">
+            <svg
+              className="w-8 h-8 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-purple-600">
+              {data.reduce((sum, d) => sum + d.value, 0)}
+            </div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">
+              Total
             </div>
           </div>
+        </div>
 
-          {/* Manual Entries Card */}
+        <h3 className="text-xl font-semibold mb-2 text-purple-600">
+          File Uploads
+        </h3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-6">
+          Document uploads by department and category.
+        </p>
+
+        <div className="flex items-center gap-6">
+          {/* Pie Chart */}
+          <div className="w-2/3 relative">
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={data}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  innerRadius={45}
+                  paddingAngle={3}
+                >
+                  {data.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={FILE_COLORS[index % FILE_COLORS.length]}
+                      style={{
+                        filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
+                      }}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value, name) => [`${value} files`, name]}
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Labels */}
+          <ul className="space-y-3 w-1/3">
+            {data.map((entry, i) => (
+              <li
+                key={i}
+                className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className="w-4 h-4 rounded-full shadow-sm"
+                    style={{
+                      backgroundColor: FILE_COLORS[i % FILE_COLORS.length],
+                    }}
+                  ></span>
+                  <span className="font-medium text-gray-700 text-sm">
+                    {entry.name}
+                  </span>
+                </div>
+                <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-700 shadow-sm">
+                  {entry.value}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+          {/* Manual Entries Card
           <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-red-200 hover:-translate-y-1 overflow-hidden">
 
             <div className="relative z-10">
@@ -884,7 +998,7 @@ function CoSuperAdminDashboard() {
               </p>
 
               <div className="flex items-center gap-6">
-                {/* Bar Chart */}
+               
                 <div className="w-2/3">
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart
@@ -936,7 +1050,7 @@ function CoSuperAdminDashboard() {
                   </ResponsiveContainer>
                 </div>
 
-                {/* Labels */}
+               
                 <ul className="space-y-3 w-1/3">
                   {[
                     { name: "Form A", count: 15 },
@@ -964,7 +1078,7 @@ function CoSuperAdminDashboard() {
                 </ul>
               </div>
             </div>
-          </div>
+          </div>*/}
         </div>
       </main>
 

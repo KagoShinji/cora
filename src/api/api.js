@@ -613,20 +613,66 @@ export const addMessage = async (convId, payload) => {
   return await response.json();
 };
 
-export const mostSearchData = async () => {
+export const mostSearchData = async (startDate, endDate, limit = 10) => {
   const token = localStorage.getItem("access_token");
 
-  const response = await fetch(`${API_BASE_URL}/top-titles`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/top-titles?limit=${limit}&start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch most searched data");
   }
 
+  return response.json();
+};
+
+
+export const submitSatisfactionReview = async (rating) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      throw new Error("Authentication required. Please log in.");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/submit-review`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ rating })
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      throw new Error(responseData.detail || 'Failed to submit review');
+    }
+
+    return responseData;
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    throw error;
+  }
+};
+
+export const fetchSatisfactionMetrics = async () => {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch(`${API_BASE_URL}/satisfaction`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch satisfaction metrics");
+  }
   return response.json();
 };

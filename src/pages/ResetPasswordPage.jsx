@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { changePassword } from "../api/api";
-import { Info, Save } from "lucide-react"; // ✅ make sure to install/import
+import { Save } from "lucide-react";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get("token");
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showOtpModal, setShowOtpModal] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -19,10 +23,11 @@ export default function ResetPasswordPage() {
     }
   }, [token, navigate]);
 
-  const handleSubmit = async (e) => {
+  // Step 1: Password form
+  const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    setMessage("");
     setError("");
+    setMessage("");
 
     if (!password || !confirmPassword) {
       setError("Please fill in both fields.");
@@ -33,12 +38,28 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    // If valid, show OTP modal
+    setShowOtpModal(true);
+  };
+
+  // Step 2: OTP submission
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    if (!otp) {
+      setError("Please enter the OTP.");
+      return;
+    }
+
     try {
       setLoading(true);
-      const res = await changePassword({ token, password });
+      const res = await changePassword({ token, password, otp });
       setMessage(res.message);
+      setShowOtpModal(false);
+      setPassword("");
+      setConfirmPassword("");
+      setOtp("");
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(err.message || "Invalid OTP or token.");
     } finally {
       setLoading(false);
     }
@@ -55,38 +76,30 @@ export default function ResetPasswordPage() {
         {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
 
         {!message && (
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handlePasswordSubmit} className="space-y-5">
             <div>
-              <label
-                htmlFor="new-password"
-                className="block text-sm font-medium text-gray-800 mb-2"
-              >
+              <label className="block text-sm font-medium text-gray-800 mb-2">
                 New Password <span className="text-red-500">*</span>
               </label>
               <input
-                id="new-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 shadow-sm outline-none focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
                 placeholder="Enter new password"
                 required
               />
             </div>
 
             <div>
-              <label
-                htmlFor="confirm-password"
-                className="block text-sm font-medium text-gray-800 mb-2"
-              >
+              <label className="block text-sm font-medium text-gray-800 mb-2">
                 Confirm Password <span className="text-red-500">*</span>
               </label>
               <input
-                id="confirm-password"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 shadow-sm outline-none focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
                 placeholder="Confirm new password"
                 required
               />
@@ -95,16 +108,51 @@ export default function ResetPasswordPage() {
             <div className="flex justify-end pt-4 border-t border-gray-200">
               <button
                 type="submit"
-                disabled={loading}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-700"
               >
                 <Save className="h-4 w-4" />
-                {loading ? "Resetting..." : "Reset Password"}
+                Continue
               </button>
             </div>
           </form>
         )}
       </div>
+
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-lg">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              Enter OTP
+            </h3>
+            <form onSubmit={handleOtpSubmit} className="space-y-4">
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Enter 6-digit OTP"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowOtpModal(false)}
+                  className="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-60"
+                >
+                  {loading ? "Verifying..." : "Submit OTP"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
-import { fetchConversations } from "../api/api";
+import { fetchConversations,submitSatisfactionReview } from "../api/api";
 
 // ✅ Accept isMobile with a safe default (won't break older callers)
 function SidebarUser({
@@ -295,20 +295,28 @@ function SidebarUser({
           Skip
         </button>
         <button
-          onClick={() => {
+        onClick={async () => {
+          try {
+            if (rating === 0) return; // extra safety
+            await submitSatisfactionReview(rating);
             console.log("Rating submitted:", rating);
             setShowSatisfactionModal(false);
-          }}
-          type="button"
-          disabled={rating === 0}
-          className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed !text-white"
-          style={{
-            backgroundColor: "var(--pc)",
-            "--tw-ring-color": "var(--pc)",
-          }}
-        >
-          Submit
-        </button>
+          } catch (error) {
+            console.error("Failed to submit rating:", error);
+            // Optionally show a toast or alert
+            alert(error.message || "Failed to submit rating");
+          }
+        }}
+        type="button"
+        disabled={rating === 0}
+        className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed !text-white"
+        style={{
+          backgroundColor: "var(--pc)",
+          "--tw-ring-color": "var(--pc)",
+        }}
+      >
+        Submit
+      </button>
       </div>
     </div>
   </div>

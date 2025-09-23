@@ -62,38 +62,74 @@ function CoSuperAdminDashboard() {
   const [satisfactionChart, setSatisfactionChart] = useState([]);
   const [searchedDataClassification, setSearchedDataClassification] = useState([]);
   const [data, setData] = useState([]);
+  const [manualData, setManualData] = useState([]);
 
 useEffect(() => {
-    const loadDocuments = async () => {
+  const loadDocuments = async () => {
+    try {
+      const docs = await fetchDocument();
+
+      // ✅ Only include docs that are neither approved/declined
+      //    AND are not manual entries (filename is null/undefined)
+      const filteredDocs = docs.filter((doc) => {
+        const status = doc.status?.toLowerCase() || "pending";
+        return (
+          status !== "approved" &&
+          status !== "declined" &&
+          doc.filename // ✅ exclude manual entry (filename is null)
+        );
+      });
+
+      // Group by department
+      const counts = {};
+      filteredDocs.forEach((doc) => {
+        const title = doc.title_id || "Unknown";
+        counts[title] = (counts[title] || 0) + 1;
+      });
+
+      // Convert to recharts-friendly format
+      const chartData = Object.entries(counts).map(([name, value]) => ({
+        name,
+        value,
+      }));
+
+      setData(chartData);
+    } catch (err) {
+      console.error("Failed to load documents:", err);
+    }
+  };
+
+  loadDocuments();
+}, []);
+
+
+useEffect(() => {
+    const loadManualEntries = async () => {
       try {
         const docs = await fetchDocument();
 
-        // ✅ Only include docs that are neither approved nor denied
-        const filteredDocs = docs.filter((doc) => {
-          const status = doc.status?.toLowerCase() || "pending";
-          return status !== "approved" && status !== "declined";
-        });
+        // ✅ Only include manual entries (filename === null)
+        const manualDocs = docs.filter((doc) => !doc.filename);
 
-        // Group by department
+        // Group by form name (use title for example)
         const counts = {};
-        filteredDocs.forEach((doc) => {
-          const dept = doc.department || "Unknown";
-          counts[dept] = (counts[dept] || 0) + 1;
+        manualDocs.forEach((doc) => {
+          const form = doc.title || "Unknown";
+          counts[form] = (counts[form] || 0) + 1;
         });
 
-        // Convert to recharts-friendly format
-        const chartData = Object.entries(counts).map(([name, value]) => ({
+        const chartData = Object.entries(counts).map(([name, count]) => ({
           name,
-          value,
+          count,
         }));
 
-        setData(chartData);
+        setManualData(chartData);
       } catch (err) {
-        console.error("Failed to load documents:", err);
+        console.error("Failed to load manual entries:", err);
       }
     };
 
-    loadDocuments();
+    loadManualEntries();
   }, []);
   
 useEffect(() => {
@@ -256,19 +292,20 @@ useEffect(()=>{
   }, []);
 
   useEffect(() => {
-    const getMetrics = async () => {
-      try {
-       
-        const data = await fetchSatisfactionMetrics();
-        setSatisfactionChart(data);
-      } catch (error) {
-        console.error("Failed to load satisfaction metrics:", error);
-      } finally {
-        
-      }
-    };
-    getMetrics();
-  }, []);
+  const getMetrics = async () => {
+    try {
+      const start = ratingStartDate ? ratingStartDate.toISOString().split("T")[0] : undefined;
+      const end = ratingEndDate ? ratingEndDate.toISOString().split("T")[0] : undefined;
+
+      const data = await fetchSatisfactionMetrics({ start_date: start, end_date: end });
+      setSatisfactionChart(data);
+    } catch (error) {
+      console.error("Failed to load satisfaction metrics:", error);
+    }
+  };
+
+  getMetrics();
+}, [ratingStartDate, ratingEndDate]);
 
 const userChart = users.reduce((acc, user) => {
     const role = user.role || "Unknown";
@@ -553,7 +590,7 @@ const deptChart = users.reduce((acc, user) => {
             </div>
           </div>
 
-          {/* Date Range Picker 
+          {/* Date Range Picker */}
           <div className="flex items-center space-x-2">
             <DatePicker
               selected={ratingStartDate}
@@ -573,18 +610,17 @@ const deptChart = users.reduce((acc, user) => {
               minDate={ratingStartDate}
               className="text-black border border-gray-300 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             />
-          </div>*/}
+          </div>
         </div>
 
-        {/* Period Display
+        {/* Period Display */}
         <p className="text-xs text-gray-500 text-center mb-6 bg-gray-50 rounded-lg py-2">
           Period: {ratingStartDate ? ratingStartDate.toLocaleDateString() : "-"} –{" "}
           {ratingEndDate ? ratingEndDate.toLocaleDateString() : "-"}
-        </p>*/}
+        </p>
 
-        {/* Chart & Labels */}
+        {/* Chart */}
         <div className="flex flex-col md:flex-row items-start gap-6">
-          {/* Bar Chart */}
           <div className="w-full md:w-2/3">
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={satisfactionChart}>
@@ -625,35 +661,6 @@ const deptChart = users.reduce((acc, user) => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          {/* Labels */}
-          <ul className="space-y-3 w-full md:w-1/3">
-            {satisfactionChart.map((entry, index) => {
-              const ratingValue = Math.min(Math.max(entry.rating, 0), 5);
-              return (
-                <li
-                  key={index}
-                  className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="w-4 h-4 rounded-full shadow-sm"
-                      style={{ backgroundColor: RATING_COLORS[index % RATING_COLORS.length] }}
-                    ></span>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-sm text-gray-900">{entry.name}</span>
-                      <span className="text-yellow-400 text-xs">
-                        {"★".repeat(ratingValue)}{"☆".repeat(5 - ratingValue)}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-700 shadow-sm">
-                    {entry.count}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
         </div>
       </div>
     </div>
@@ -970,115 +977,75 @@ const deptChart = users.reduce((acc, user) => {
       </div>
     </div>
 
-          {/* Manual Entries Card
+          {/* Manual Entries Card*/}
           <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-red-200 hover:-translate-y-1 overflow-hidden">
-
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-red-600">30</div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide">Total</div>
-                </div>
-              </div>
-
-              <h3 className="text-xl font-semibold mb-2" style={{ color: primaryColor }}>
-                Manual Entries
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                Direct data entry forms and submissions.
-              </p>
-
-              <div className="flex items-center gap-6">
-               
-                <div className="w-2/3">
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart
-                      data={[
-                        { name: "Form A", count: 15 },
-                        { name: "Form B", count: 9 },
-                        { name: "Form C", count: 6 },
-                      ]}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="name"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 12, fill: "#64748b" }}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 12, fill: "#64748b" }}
-                      />
-            <Tooltip
-              formatter={(value) => [`${value} entries`, "Count"]}
-              wrapperStyle={{ zIndex: 9999, pointerEvents: "none" }}
-              allowEscapeViewBox={{ x: true, y: true }}
-              contentStyle={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #e2e8f0",
-                borderRadius: "12px",
-                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                color: "#0f172a",
-              }}
-              itemStyle={{ color: "#0f172a" }}
-              labelStyle={{ color: "#334155", fontWeight: 600 }}
-            />
-                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                        {MANUAL_COLORS.map((color, index) => (
-                          <Cell
-                            key={index}
-                            fill={color}
-                            style={{
-                              filter:
-                                "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
-                            }}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-               
-                <ul className="space-y-3 w-1/3">
-                  {[
-                    { name: "Form A", count: 15 },
-                    { name: "Form B", count: 9 },
-                    { name: "Form C", count: 6 },
-                  ].map((entry, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="w-4 h-4 rounded-lg shadow-sm"
-                          style={{ backgroundColor: MANUAL_COLORS[i] }}
-                        ></span>
-                        <span className="font-medium text-gray-700 text-sm">
-                          {entry.name}
-                        </span>
-                      </div>
-                      <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-700 shadow-sm">
-                        {entry.count}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl shadow-lg">
+            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-red-600">
+              {manualData.reduce((sum, d) => sum + d.count, 0)}
             </div>
-          </div>*/}
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Total</div>
+          </div>
+        </div>
+
+        <h3 className="text-xl font-semibold mb-2" style={{ color: "red" }}>
+          Manual Entries
+        </h3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-6">
+          Direct data entry forms and submissions.
+        </p>
+
+        <div className="flex items-center gap-6">
+          {/* Bar Chart */}
+          <div className="w-2/3">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={manualData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
+                <Tooltip
+                  formatter={(value) => [`${value} entries`, "Count"]}
+                  wrapperStyle={{ zIndex: 9999, pointerEvents: "none" }}
+                  contentStyle={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                    color: "#0f172a",
+                  }}
+                  itemStyle={{ color: "#0f172a" }}
+                  labelStyle={{ color: "#334155", fontWeight: 600 }}
+                />
+                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                  {manualData.map((entry, index) => (
+                    <Cell key={index} fill={MANUAL_COLORS[index % MANUAL_COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Labels */}
+          <ul className="space-y-3 w-1/3">
+            {manualData.map((entry, i) => (
+              <li key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="w-4 h-4 rounded-lg shadow-sm" style={{ backgroundColor: MANUAL_COLORS[i % MANUAL_COLORS.length] }}></span>
+                  <span className="font-medium text-gray-700 text-sm">{entry.name}</span>
+                </div>
+                <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-700 shadow-sm">{entry.count}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
         </div>
       </main>
 

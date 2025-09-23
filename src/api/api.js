@@ -502,12 +502,12 @@ export const fetchDocumentInfo = async (payload) => {
 }
 
 
-export const changePassword = async ({ token, password }) => {
+export const changePassword = async ({ token, password,otp }) => {
   try {
     const response = await fetch(`${API_BASE_URL}/change-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, password }), // only token + password
+      body: JSON.stringify({ token, password, otp }), // only token + password
     });
 
     if (!response.ok) {
@@ -544,6 +544,24 @@ export const resetPasswordRequest = async (email) => {
     throw error;
   }
 };
+
+export const requestPasswordOtp = async (token, password) => {
+  const response = await fetch(`${API_BASE_URL}/request-password-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Failed to send OTP");
+  }
+
+  return response.json(); // { message: "OTP sent to your email" }
+};
+
+
+
 
 export const fetchConversations = async () => {
   const token = localStorage.getItem("access_token");

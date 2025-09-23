@@ -24,23 +24,30 @@ export default function ResetPasswordPage() {
   }, [token, navigate]);
 
   // Step 1: Password form
-  const handlePasswordSubmit = (e) => {
-    e.preventDefault();
-    setError("");
-    setMessage("");
+  const handlePasswordSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setMessage("");
 
-    if (!password || !confirmPassword) {
-      setError("Please fill in both fields.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
+  if (!password || !confirmPassword) {
+    setError("Please fill in both fields.");
+    return;
+  }
+  if (password !== confirmPassword) {
+    setError("Passwords do not match.");
+    return;
+  }
 
-    // If valid, show OTP modal
+  try {
+    // 🔑 Call backend to send OTP to email
+    await requestPasswordOtp(token, password);
+
+    // Then show OTP modal
     setShowOtpModal(true);
-  };
+  } catch (err) {
+    setError(err.message || "Failed to send OTP.");
+  }
+};
 
   // Step 2: OTP submission
   const handleOtpSubmit = async (e) => {

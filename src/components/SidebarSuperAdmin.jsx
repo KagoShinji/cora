@@ -1,6 +1,6 @@
 import { Home, Users, ClipboardList, Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import LogoutModal from "./LogoutModal"; // ← use the shared modal

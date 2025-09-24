@@ -1,6 +1,6 @@
 import { Home, FileText, ClipboardList, ChevronDown, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import LogoutModal from "./LogoutModal";

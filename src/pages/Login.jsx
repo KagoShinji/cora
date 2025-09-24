@@ -21,7 +21,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-  
+  const [loading, setLoading] = useState(true);
   const logoPath = useAppSettingsStore((state) => state.logo_path);
   const appName = useAppSettingsStore((state) => state.name);
   const primaryColor = useAppSettingsStore((s) => s.primary_color);

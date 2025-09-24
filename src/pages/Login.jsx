@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/userStores';
 import { resetPasswordRequest } from "../api/api";
 import { X, Mail, Info, Send } from "lucide-react";
 
+const API_BASE_URL = process.env.API_BASE_URL;
 const credentialsMap = {
   'superadmin@gmail.com': { password: "super123", role: "superadmin", path: "/superadmin" },
   'cosuperadmin@gmail.com': { password: "co123", role: "co-superadmin", path: "/cosuperadmin" },
@@ -15,6 +16,7 @@ const credentialsMap = {
 
 
 function Login() {
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -192,7 +194,7 @@ function Login() {
           {/* School Logo / Branding */}
           <div className="mb-8 text-center">
             <img
-              src={logoPath ? `http://127.0.0.1:8000${logoPath}` : "/school-logo.png"}
+              src={logoPath ? `${API_BASE_URL}${logoPath}` : "/school-logo.png"}
               alt="School Logo"
               className="w-28 h-28 sm:w-32 sm:h-32 mx-auto object-contain rounded-full border shadow-sm"
               style={{ borderColor: primaryColor || '#e5e7eb' }}

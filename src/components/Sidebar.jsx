@@ -10,6 +10,7 @@ export default function Sidebar({
   isMobile = false, // optional, safe default
 }) {
   const primaryColor = useAppSettingsStore((state) => state.primary_color);
+  
 
   // Close on Escape (mobile drawer)
   useEffect(() => {

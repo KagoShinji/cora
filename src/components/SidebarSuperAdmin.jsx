@@ -9,6 +9,7 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
   const primaryColor = useAppSettingsStore((state) => state.primary_color);
   const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
 
@@ -18,6 +19,9 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
     await signout();
     navigate("/login");
   };
+  useEffect(() => {
+      getSettings(); 
+    }, [getSettings]);
 
   return (
     <>

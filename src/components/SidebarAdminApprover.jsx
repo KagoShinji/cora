@@ -14,12 +14,15 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
 
   const primaryColor = useAppSettingsStore((state) => state.primary_color) || "#1D4ED8";
   const secondaryColor = useAppSettingsStore((state) => state.secondary_color) || "#F3F4F6";
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
 
   const handleLogout = async () => {
     await signout();
     window.location.href = "/login"; // keep behavior as-is
   };
-
+  useEffect(() => {
+        getSettings(); 
+    }, [getSettings]);
   return (
     <>
       <aside

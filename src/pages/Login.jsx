@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import { useAuthStore } from '../stores/userStores';
@@ -12,17 +12,19 @@ const credentialsMap = {
   'adminapprover@gmail.com': { password: "admin123", role: "admin-approver", path: "/adminapprover" },
 };
 
+
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-
+  
   const logoPath = useAppSettingsStore((state) => state.logo_path);
   const appName = useAppSettingsStore((state) => state.name);
   const primaryColor = useAppSettingsStore((s) => s.primary_color);
   const secondaryColor = useAppSettingsStore((s) => s.secondary_color);
-
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
   const navigate = useNavigate();
   const signin = useAuthStore((state) => state.signin);
 
@@ -66,6 +68,9 @@ function Login() {
     }
   };
 
+  useEffect(() => {
+    getSettings(); 
+  }, [getSettings]);
   const handleForgotSubmit = async () => {
     if (!forgotEmail) {
       alert("Please enter your email.");

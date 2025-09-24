@@ -15,9 +15,11 @@ export const useAppSettingsStore = create((set) => ({
         logo_path: data.logo_path,
         primary_color: data.primary_color,
         secondary_color: data.secondary_color,
+        isLoaded: true,   // ✅ mark as loaded
       })
     } catch (error) {
       console.error("Failed to fetch settings:", error)
+      set({ isLoaded: true })
     }
   },
 

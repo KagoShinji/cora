@@ -11,13 +11,16 @@ function SidebarAdminCreator({ isOpen, setOpen }) {
   const user = useAuthStore((state) => state.user);
   const primaryColor = useAppSettingsStore((state) => state.primary_color);
   const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
-
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
   const signout = useAuthStore((state) => state.signout);
 
   const handleLogout = async () => {
     await signout();
     navigate("/login");
   };
+  useEffect(() => {
+      getSettings(); 
+  }, [getSettings]);
 
   return (
     <>

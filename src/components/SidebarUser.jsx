@@ -23,14 +23,19 @@ function SidebarUser({
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
 
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const signout = useAuthStore((state) => state.signout);
 
-  const primaryColor = useAppSettingsStore((state) => state.primary_color);
-  const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
+  const primaryColor = useAppSettingsStore((s) => s.primary_color);
 
+
+  useEffect(() => {
+    getSettings(); 
+  }, [getSettings]);
+  
   useEffect(() => {
     const getConversations = async () => {
       try {
@@ -65,9 +70,10 @@ function SidebarUser({
     onSelectChat(id);
     if (isMobile) setOpen(false);
   };
-
+const bgColor = primaryColor ?? "transparent";
   return (
     <>
+    
       {/* Mobile backdrop (tap to close) */}
       {isMobile && isOpen && (
         <div
@@ -79,7 +85,7 @@ function SidebarUser({
 
       {/* Sidebar */}
       <aside
-        style={{ backgroundColor: primaryColor || "#B91C1C" }}
+        style={{backgroundColor:bgColor}}
         className={[
           "fixed top-0 left-0 h-screen z-50 transition-all duration-300 ease-in-out flex flex-col",
           isMobile

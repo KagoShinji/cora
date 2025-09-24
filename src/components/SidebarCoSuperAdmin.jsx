@@ -1,6 +1,6 @@
 import { Home, Landmark, Palette, ClipboardList, Menu, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import LogoutModal from "./LogoutModal"; // ← use the shared modal
@@ -11,6 +11,7 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
   const user = useAuthStore((state) => state.user);
   const primaryColor = useAppSettingsStore((state) => state.primary_color);
   const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
 
   const signout = useAuthStore((state) => state.signout);
 
@@ -18,6 +19,9 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
     await signout();
     navigate("/login");
   };
+  useEffect(() => {
+      getSettings(); 
+  }, [getSettings]);
 
   return (
     <>

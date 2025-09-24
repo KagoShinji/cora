@@ -2,7 +2,7 @@ const API_BASE_URL = process.env.API_BASE_URL;
 
 
 export const fetchSettings = async() =>{
-    const response = await fetch(`${API_BASE_URL}/settings/get-settings`)
+    const response = await fetch(`${API_BASE_URL}settings/get-settings`)
 
     if(!response.ok) throw new Error("Failed to fetch settings")
 
@@ -14,7 +14,7 @@ export const uploadLogo = async (file) => {
   const formData = new FormData();
   formData.append("file", file); // ✅ MUST MATCH FastAPI param name
 
-  const response = await fetch(`${API_BASE_URL}/settings/upload-logo`, {
+  const response = await fetch(`${API_BASE_URL}settings/upload-logo`, {
     method: "POST",
     body: formData,
   });
@@ -27,7 +27,7 @@ export const uploadLogo = async (file) => {
 };
 
 export const changeNameAPI = async (newName) => {
-  const response = await fetch(`${API_BASE_URL}/settings/change-name`, {
+  const response = await fetch(`${API_BASE_URL}settings/change-name`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -44,7 +44,7 @@ export const changeNameAPI = async (newName) => {
 
 
 export const changeColorAPI = async (primaryColor, secondaryColor) => {
-  const response = await fetch(`${API_BASE_URL}/settings/change-color`, {
+  const response = await fetch(`${API_BASE_URL}settings/change-color`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

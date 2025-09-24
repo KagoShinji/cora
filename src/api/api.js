@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.API_BASE_URL;
 export const createUsers = async (userData) => {
     try {
         console.log("🔍 Sending userData:", userData);
-        const response = await fetch(`${API_BASE_URL}/users/sign-up`, { 
+        const response = await fetch(`${API_BASE_URL}users/sign-up`, { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ export const createUsers = async (userData) => {
 };
 
 export const getUser = async () => {
-    const response = await fetch(`${API_BASE_URL}/users/users`)
+    const response = await fetch(`${API_BASE_URL}users/users`)
     if(!response.ok){
         throw new Error("Failed to fetch users");
     }
@@ -37,7 +37,7 @@ export const getUser = async () => {
 
 export const loginUser = async (userData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/users/login`,{
+        const response = await fetch(`${API_BASE_URL}users/login`,{
             method:'POST',
             headers:{
                 'Content-Type':'application/json'
@@ -59,7 +59,7 @@ export const loginUser = async (userData) => {
 export const userUpdate = async (users_id, updatedData) => {
   
   try {
-    const response = await fetch(`${API_BASE_URL}/users/update-users/${users_id}`, {
+    const response = await fetch(`${API_BASE_URL}users/update-users/${users_id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ export const userUpdate = async (users_id, updatedData) => {
 
 export const userDelete = async(users_id) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/users/delete-users/${users_id}`,{
+        const response = await fetch(`${API_BASE_URL}users/delete-users/${users_id}`,{
             method:"DELETE",
             headers:{
                 'Content-Type':'application/json'
@@ -100,7 +100,7 @@ export const userDelete = async(users_id) => {
 //department
 export const createDepartment = async (departmentData) =>{
     try{
-        const response = await fetch(`${API_BASE_URL}/users/add-department`,{
+        const response = await fetch(`${API_BASE_URL}users/add-department`,{
             method:"POST",
             headers:{
                 'Content-Type':'application/json'
@@ -122,7 +122,7 @@ export const createDepartment = async (departmentData) =>{
 }
 
 export const fetchDepartment = async () => {
-    const response = await fetch(`${API_BASE_URL}/users/department`)
+    const response = await fetch(`${API_BASE_URL}users/department`)
     if(!response.ok){
         throw new Error("Failed to fetch departments");
     }
@@ -135,7 +135,7 @@ export const deleteDepartment = async (department_id) => {
             console.error("Department ID is required to delete department")
             throw Error
         }
-        const response = await fetch(`${API_BASE_URL}/users/delete-department/${department_id}`,{
+        const response = await fetch(`${API_BASE_URL}users/delete-department/${department_id}`,{
             method:"DELETE",
             headers:{
                 'Content-Type':'application/json'
@@ -159,7 +159,7 @@ export const updateDepartment = async (department_id, department_name) => {
             throw new Error("Both department ID and name are required");
         }
 
-        const response = await fetch(`${API_BASE_URL}/users/update-department/${department_id}`, {
+        const response = await fetch(`${API_BASE_URL}users/update-department/${department_id}`, {
             method: "PUT",
             headers: {
                 'Content-Type': 'application/json'
@@ -187,7 +187,7 @@ export const updateDepartment = async (department_id, department_name) => {
 export const uploadDocument = async (formData) => {
   try {
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/users/upload`, {
+    const response = await fetch(`${API_BASE_URL}users/upload`, {
       method: "POST",
       headers:{
         Authorization: `Bearer ${token}`
@@ -212,7 +212,7 @@ export const submitManualEntry = async (payload) => {
   try {
     const token = localStorage.getItem("access_token");
 
-    const response = await fetch(`${API_BASE_URL}/users/manual-entry`, {
+    const response = await fetch(`${API_BASE_URL}users/manual-entry`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -236,7 +236,7 @@ export const submitManualEntry = async (payload) => {
 export const fetchDocument = async () => {
   try {
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/users/documents`, {
+    const response = await fetch(`${API_BASE_URL}users/documents`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -260,7 +260,7 @@ export const fetchDocumentsByTitle = async (titleName) => {
     const token = localStorage.getItem("access_token");
 
     const response = await fetch(
-      `${API_BASE_URL}/users/documents/by-title/${titleName}`,
+      `${API_BASE_URL}users/documents/by-title/${titleName}`,
       {
         method: "GET",
         headers: {
@@ -285,7 +285,7 @@ export const fetchDocumentsByTitle = async (titleName) => {
 export const viewDocument = async (docId) => {
   try {
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/users/documents/${docId}/view`, { 
+    const response = await fetch(`${API_BASE_URL}users/documents/${docId}/view`, { 
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -305,7 +305,7 @@ export const approveDocument = async (doc_id, status) => {
   try {
     const token = localStorage.getItem("access_token"); 
 
-    const response = await fetch(`${API_BASE_URL}/users/approve_document/${doc_id}`, {
+    const response = await fetch(`${API_BASE_URL}users/approve_document/${doc_id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -337,7 +337,7 @@ export const declineDocument = async (doc_id, status, remarks) => {
 
     console.log("Sending payload:", payload);
 
-    const response = await fetch(`${API_BASE_URL}/users/decline_document/${doc_id}`, {
+    const response = await fetch(`${API_BASE_URL}users/decline_document/${doc_id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -368,7 +368,7 @@ export const updateDocument = async (doc_id, updatedData, file = null) => {
 
   if (file) formData.append("file", file);
 
-  const res = await fetch(`${API_BASE_URL}/users/edit-document/${doc_id}`, {
+  const res = await fetch(`${API_BASE_URL}users/edit-document/${doc_id}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -446,7 +446,7 @@ export const generateAnswer = async (
   }
 
   // --- Fetch ---
-  const res = await fetch(`${API_BASE_URL}/users/generate`, {
+  const res = await fetch(`${API_BASE_URL}users/generate`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -474,7 +474,7 @@ export const generateAnswer = async (
 
 export const createDocumentInfo = async(payload) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/add-documentInfo`,{
+    const response = await fetch(`${API_BASE_URL}users/add-documentInfo`,{
       method:"POST",
       headers:{
         'Content-Type':'application/json'
@@ -494,7 +494,7 @@ export const createDocumentInfo = async(payload) => {
 }
 
 export const fetchDocumentInfo = async (payload) => {
-  const response = await fetch(`${API_BASE_URL}/users/documentInfo`)
+  const response = await fetch(`${API_BASE_URL}users/documentInfo`)
 
   if(!response.ok){
     throw new Error("Error fetching document Info")
@@ -505,7 +505,7 @@ export const fetchDocumentInfo = async (payload) => {
 
 export const changePassword = async ({ token, password,otp }) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/change-password`, {
+    const response = await fetch(`${API_BASE_URL}users/change-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, password, otp }), // only token + password
@@ -524,7 +524,7 @@ export const changePassword = async ({ token, password,otp }) => {
 };
 export const resetPasswordRequest = async (email) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/request-password-reset`, {
+    const response = await fetch(`${API_BASE_URL}users/request-password-reset`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -547,7 +547,7 @@ export const resetPasswordRequest = async (email) => {
 };
 
 export const requestPasswordOtp = async (token, password) => {
-  const response = await fetch(`${API_BASE_URL}/users/request-password-otp`, {
+  const response = await fetch(`${API_BASE_URL}users/request-password-otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, password }),
@@ -566,7 +566,7 @@ export const requestPasswordOtp = async (token, password) => {
 
 export const fetchConversations = async () => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/users/conversations`, {
+  const response = await fetch(`${API_BASE_URL}users/conversations`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -583,7 +583,7 @@ export const fetchConversations = async () => {
 
 export const fetchConversationById = async (convId) => {
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/users/conversations/${convId}`, {
+    const response = await fetch(`${API_BASE_URL}users/conversations/${convId}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -600,7 +600,7 @@ export const fetchConversationById = async (convId) => {
 // ✅ Example: create conversation
 export const createConversation = async (title) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/users/conversations`, {
+  const response = await fetch(`${API_BASE_URL}users/conversations`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -619,7 +619,7 @@ export const createConversation = async (title) => {
 
 export const addMessage = async (convId, payload) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/users/conversations/${convId}/messages`, {
+  const response = await fetch(`${API_BASE_URL}users/conversations/${convId}/messages`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -661,7 +661,7 @@ export const submitSatisfactionReview = async (rating) => {
       throw new Error("Authentication required. Please log in.");
     }
 
-    const response = await fetch(`${API_BASE_URL}/users/submit-review`, {
+    const response = await fetch(`${API_BASE_URL}users/submit-review`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -685,7 +685,7 @@ export const submitSatisfactionReview = async (rating) => {
 
 export const fetchSatisfactionMetrics = async () => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/users/satisfaction`, {
+  const response = await fetch(`${API_BASE_URL}users/satisfaction`, {
     headers: {
       'Authorization': `Bearer ${token}`
     }

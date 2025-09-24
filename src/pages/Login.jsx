@@ -88,7 +88,13 @@ function Login() {
       alert(error.message || "Failed to send password reset email");
     }
   };
-
+if (loading) {
+  return (
+    <div className="flex items-center justify-center h-screen w-screen bg-white text-gray-900">
+    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+    </div>
+  );
+}
   return (
     <div className="relative h-screen w-screen overflow-hidden">
       {/* Background image + subtle glass overlay */}

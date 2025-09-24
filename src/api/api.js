@@ -636,7 +636,7 @@ export const mostSearchData = async (startDate, endDate, limit = 10) => {
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    `${API_BASE_URL}/top-titles?limit=${limit}&start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`,
+    `${API_BASE_URL}/users/top-titles?limit=${limit}&start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`,
     {
       method: "GET",
       headers: {

@@ -4,7 +4,7 @@ import { useAppSettingsStore } from "../../stores/useSettingsStore";
 import ChangeNameModal from "../../components/ChangeNameModal";
 import { ImageUp, Type, Palette, Save, RotateCcw, Menu } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
 function CoSuperAdminThemes() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   

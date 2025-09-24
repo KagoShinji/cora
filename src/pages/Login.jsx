@@ -5,7 +5,7 @@ import { useAuthStore } from '../stores/userStores';
 import { resetPasswordRequest } from "../api/api";
 import { X, Mail, Info, Send } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const credentialsMap = {
   'superadmin@gmail.com': { password: "super123", role: "superadmin", path: "/superadmin" },
   'cosuperadmin@gmail.com': { password: "co123", role: "co-superadmin", path: "/cosuperadmin" },

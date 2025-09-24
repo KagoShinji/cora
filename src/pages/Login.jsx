@@ -88,6 +88,19 @@ function Login() {
       alert(error.message || "Failed to send password reset email");
     }
   };
+ useEffect(() => {
+  const fetchSettings = async () => {
+    try {
+      await getSettings();
+    } catch (err) {
+      console.error("Failed to fetch settings:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchSettings();
+}, []);  
 if (loading) {
   return (
     <div className="flex items-center justify-center h-screen w-screen bg-white text-gray-900">

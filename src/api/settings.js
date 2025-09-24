@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://127.0.0.1:8000/settings";
+const API_BASE_URL = "https://veybeng-cora-test.hf.space/settings";
 
 
 export const fetchSettings = async() =>{

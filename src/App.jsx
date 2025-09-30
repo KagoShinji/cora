@@ -18,6 +18,7 @@ import AdminApproverUploadDocuments from "./roles/adminapprover/AdminApproverUpl
 import AdminApproverLogs from "./roles/adminapprover/AdminApproverLogs";
 import UserChat from "./pages/user/UserChat";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ProtectedRoute from "./utils/ProtectedRoute";
 
 function App() {
   return (

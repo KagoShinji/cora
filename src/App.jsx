@@ -25,9 +25,13 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/superadmin" element={<SuperAdminDashboard />} />
-        <Route path="/superadmin/users" element={<SuperAdminUsers />} />
-        <Route path="/superadmin/logs" element={<SuperAdminLogs />} />
+        
+        <Route element={<ProtectedRoute />}>
+          <Route path="/superadmin" element={<SuperAdminDashboard />} />
+          <Route path="/superadmin/users" element={<SuperAdminUsers />} />
+          <Route path="/superadmin/logs" element={<SuperAdminLogs />} />
+        </Route>
+        
         <Route path="/cosuperadmin" element={<CoSuperAdminDashboard />} />
         <Route path="/cosuperadmin/admins" element={<CoSuperAdminAdmins />} />
         <Route path="/cosuperadmin/departments" element={<CoSuperAdminDepartments />} />

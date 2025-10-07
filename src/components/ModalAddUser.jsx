@@ -262,7 +262,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
                 </div>
               </div>
 
-              {/* School (only when co-superadmin) */}
+              {/* School (only when co-superadmin) 
               {role === "co-superadmin" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-2">
@@ -278,6 +278,7 @@ export default function ModalAddUser({ isOpen, onClose, onSave, isLoading, error
                   />
                 </div>
               )}
+              */}
 
               {/* Errors */}
               {(localError || error) && (

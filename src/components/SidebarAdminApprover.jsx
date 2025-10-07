@@ -1,6 +1,6 @@
 import { Home, FileText, ClipboardList, ChevronDown, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import LogoutModal from "./LogoutModal";
@@ -14,12 +14,15 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
 
   const primaryColor = useAppSettingsStore((state) => state.primary_color) || "#1D4ED8";
   const secondaryColor = useAppSettingsStore((state) => state.secondary_color) || "#F3F4F6";
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
 
   const handleLogout = async () => {
     await signout();
     window.location.href = "/login"; // keep behavior as-is
   };
-
+  useEffect(() => {
+        getSettings(); 
+    }, [getSettings]);
   return (
     <>
       <aside
@@ -72,7 +75,7 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
               </div>
             )}
           </div>
-
+            {/* 
           <Link
             to="/adminapprover/logs"
             className="flex items-center gap-2 p-2 rounded hover:bg-primary transition"
@@ -81,7 +84,9 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
             <ClipboardList size={18} />
             {isOpen && <span>Logs</span>}
           </Link>
+          */}
         </nav>
+        
 
         {/* Footer with Logout Trigger */}
         {isOpen && (

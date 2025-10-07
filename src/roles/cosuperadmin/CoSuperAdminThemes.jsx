@@ -4,8 +4,10 @@ import { useAppSettingsStore } from "../../stores/useSettingsStore";
 import ChangeNameModal from "../../components/ChangeNameModal";
 import { ImageUp, Type, Palette, Save, RotateCcw, Menu } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 function CoSuperAdminThemes() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
 
   // Settings store
   const changeLogo = useAppSettingsStore((s) => s.changeLogo);
@@ -183,7 +185,7 @@ function CoSuperAdminThemes() {
                 </div>
                 <div className="px-6 py-6 flex flex-col items-center gap-5">
                   <img
-                    src={logoPath ? `http://127.0.0.1:8000${logoPath}` : "/school-logo.png"}
+                    src={logoPath ? `${API_BASE_URL}${logoPath}` : "/school-logo.png"}
                     alt="Brand Logo"
                     className="w-24 h-24 object-contain rounded-xl ring-1 ring-gray-200 bg-white"
                   />

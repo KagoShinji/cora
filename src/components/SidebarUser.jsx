@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
-import { fetchConversations } from "../api/api";
+import { fetchConversations,submitSatisfactionReview } from "../api/api";
 
 // ✅ Accept isMobile with a safe default (won't break older callers)
 function SidebarUser({
@@ -23,14 +23,19 @@ function SidebarUser({
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
 
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const signout = useAuthStore((state) => state.signout);
 
-  const primaryColor = useAppSettingsStore((state) => state.primary_color);
-  const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
+  const primaryColor = useAppSettingsStore((s) => s.primary_color);
 
+
+  useEffect(() => {
+    getSettings(); 
+  }, [getSettings]);
+  
   useEffect(() => {
     const getConversations = async () => {
       try {
@@ -65,9 +70,10 @@ function SidebarUser({
     onSelectChat(id);
     if (isMobile) setOpen(false);
   };
-
+const bgColor = primaryColor ?? "transparent";
   return (
     <>
+    
       {/* Mobile backdrop (tap to close) */}
       {isMobile && isOpen && (
         <div
@@ -79,7 +85,7 @@ function SidebarUser({
 
       {/* Sidebar */}
       <aside
-        style={{ backgroundColor: primaryColor || "#B91C1C" }}
+        style={{backgroundColor:bgColor}}
         className={[
           "fixed top-0 left-0 h-screen z-50 transition-all duration-300 ease-in-out flex flex-col",
           isMobile
@@ -295,20 +301,28 @@ function SidebarUser({
           Skip
         </button>
         <button
-          onClick={() => {
+        onClick={async () => {
+          try {
+            if (rating === 0) return; // extra safety
+            await submitSatisfactionReview(rating);
             console.log("Rating submitted:", rating);
             setShowSatisfactionModal(false);
-          }}
-          type="button"
-          disabled={rating === 0}
-          className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed !text-white"
-          style={{
-            backgroundColor: "var(--pc)",
-            "--tw-ring-color": "var(--pc)",
-          }}
-        >
-          Submit
-        </button>
+          } catch (error) {
+            console.error("Failed to submit rating:", error);
+            // Optionally show a toast or alert
+            alert(error.message || "Failed to submit rating");
+          }
+        }}
+        type="button"
+        disabled={rating === 0}
+        className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed !text-white"
+        style={{
+          backgroundColor: "var(--pc)",
+          "--tw-ring-color": "var(--pc)",
+        }}
+      >
+        Submit
+      </button>
       </div>
     </div>
   </div>

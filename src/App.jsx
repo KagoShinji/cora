@@ -18,6 +18,8 @@ import AdminApproverUploadDocuments from "./roles/adminapprover/AdminApproverUpl
 import AdminApproverLogs from "./roles/adminapprover/AdminApproverLogs";
 import UserChat from "./pages/user/UserChat";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ProtectedRoute from "./utils/ProtectedRoute";
+import UserProtectedRoute from "./utils/UserProtectedRoute";
 
 function App() {
   return (
@@ -25,22 +27,28 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/superadmin" element={<SuperAdminDashboard />} />
-        <Route path="/superadmin/users" element={<SuperAdminUsers />} />
-        <Route path="/superadmin/logs" element={<SuperAdminLogs />} />
-        <Route path="/cosuperadmin" element={<CoSuperAdminDashboard />} />
-        <Route path="/cosuperadmin/admins" element={<CoSuperAdminAdmins />} />
-        <Route path="/cosuperadmin/departments" element={<CoSuperAdminDepartments />} />
-        <Route path="/cosuperadmin/themes" element={<CoSuperAdminThemes />} />
-        <Route path="/cosuperadmin/logs" element={<CoSuperAdminLogs />} />
-        <Route path="/admincreator" element={<AdminCreatorDashboard />} />
-        <Route path="/admincreator/logs" element={<AdminCreatorLogs />} />
-        <Route path="/admincreator/documents" element={<AdminCreatorDocuments />} />
-        <Route path="/adminapprover" element={<AdminApproverDashboard />} />
-        <Route path="/adminapprover/documents" element={<AdminApproverDocuments />} />
-        <Route path="/adminapprover/uploaddocuments" element={<AdminApproverUploadDocuments />} />
-        <Route path="/adminapprover/logs" element={<AdminApproverLogs />} />
-        <Route path="/user/chat" element={<UserChat />} />
+        
+        <Route element={<ProtectedRoute />}>
+          <Route path="/superadmin" element={<SuperAdminDashboard />} />
+          <Route path="/superadmin/users" element={<SuperAdminUsers />} />
+          <Route path="/superadmin/logs" element={<SuperAdminLogs />} />
+          <Route path="/cosuperadmin" element={<CoSuperAdminDashboard />} />
+          <Route path="/cosuperadmin/admins" element={<CoSuperAdminAdmins />} />
+          <Route path="/cosuperadmin/departments" element={<CoSuperAdminDepartments />} />
+          <Route path="/cosuperadmin/themes" element={<CoSuperAdminThemes />} />
+          <Route path="/cosuperadmin/logs" element={<CoSuperAdminLogs />} />
+          <Route path="/admincreator" element={<AdminCreatorDashboard />} />
+          <Route path="/admincreator/logs" element={<AdminCreatorLogs />} />
+          <Route path="/admincreator/documents" element={<AdminCreatorDocuments />} />
+          <Route path="/adminapprover" element={<AdminApproverDashboard />} />
+          <Route path="/adminapprover/documents" element={<AdminApproverDocuments />} />
+          <Route path="/adminapprover/uploaddocuments" element={<AdminApproverUploadDocuments />} />
+          <Route path="/adminapprover/logs" element={<AdminApproverLogs />} />
+        </Route>
+        
+        <Route element={<UserProtectedRoute />}>
+          <Route path="/user/chat" element={<UserChat />} />
+        </Route>
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/chat/:convId" element={<UserChat />} />
         <Route path="/chat" element={<UserChat />} /> 

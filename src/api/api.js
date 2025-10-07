@@ -1,9 +1,12 @@
-const API_BASE_URL = "http://127.0.0.1:8000/users";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+//const API_BASE_URL = "http://127.0.0.1:8000"
+
 
 export const createUsers = async (userData) => {
     try {
         console.log("🔍 Sending userData:", userData);
-        const response = await fetch(`${API_BASE_URL}/sign-up`, { 
+        const response = await fetch(`${API_BASE_URL}/users/sign-up`, { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -26,7 +29,7 @@ export const createUsers = async (userData) => {
 };
 
 export const getUser = async () => {
-    const response = await fetch(`${API_BASE_URL}/users`)
+    const response = await fetch(`${API_BASE_URL}/users/users`)
     if(!response.ok){
         throw new Error("Failed to fetch users");
     }
@@ -36,7 +39,7 @@ export const getUser = async () => {
 
 export const loginUser = async (userData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/login`,{
+        const response = await fetch(`${API_BASE_URL}/users/login`,{
             method:'POST',
             headers:{
                 'Content-Type':'application/json'
@@ -58,7 +61,7 @@ export const loginUser = async (userData) => {
 export const userUpdate = async (users_id, updatedData) => {
   
   try {
-    const response = await fetch(`${API_BASE_URL}/update-users/${users_id}`, {
+    const response = await fetch(`${API_BASE_URL}/users/update-users/${users_id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -85,7 +88,7 @@ export const userUpdate = async (users_id, updatedData) => {
 
 export const userDelete = async(users_id) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/delete-users/${users_id}`,{
+        const response = await fetch(`${API_BASE_URL}/users/delete-users/${users_id}`,{
             method:"DELETE",
             headers:{
                 'Content-Type':'application/json'
@@ -99,7 +102,7 @@ export const userDelete = async(users_id) => {
 //department
 export const createDepartment = async (departmentData) =>{
     try{
-        const response = await fetch(`${API_BASE_URL}/add-department`,{
+        const response = await fetch(`${API_BASE_URL}/users/add-department`,{
             method:"POST",
             headers:{
                 'Content-Type':'application/json'
@@ -121,7 +124,7 @@ export const createDepartment = async (departmentData) =>{
 }
 
 export const fetchDepartment = async () => {
-    const response = await fetch(`${API_BASE_URL}/department`)
+    const response = await fetch(`${API_BASE_URL}/users/department`)
     if(!response.ok){
         throw new Error("Failed to fetch departments");
     }
@@ -134,7 +137,7 @@ export const deleteDepartment = async (department_id) => {
             console.error("Department ID is required to delete department")
             throw Error
         }
-        const response = await fetch(`${API_BASE_URL}/delete-department/${department_id}`,{
+        const response = await fetch(`${API_BASE_URL}/users/delete-department/${department_id}`,{
             method:"DELETE",
             headers:{
                 'Content-Type':'application/json'
@@ -158,7 +161,7 @@ export const updateDepartment = async (department_id, department_name) => {
             throw new Error("Both department ID and name are required");
         }
 
-        const response = await fetch(`${API_BASE_URL}/update-department/${department_id}`, {
+        const response = await fetch(`${API_BASE_URL}/users/update-department/${department_id}`, {
             method: "PUT",
             headers: {
                 'Content-Type': 'application/json'
@@ -186,7 +189,7 @@ export const updateDepartment = async (department_id, department_name) => {
 export const uploadDocument = async (formData) => {
   try {
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/upload`, {
+    const response = await fetch(`${API_BASE_URL}/users/upload`, {
       method: "POST",
       headers:{
         Authorization: `Bearer ${token}`
@@ -211,7 +214,7 @@ export const submitManualEntry = async (payload) => {
   try {
     const token = localStorage.getItem("access_token");
 
-    const response = await fetch(`${API_BASE_URL}/manual-entry`, {
+    const response = await fetch(`${API_BASE_URL}/users/manual-entry`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -235,7 +238,7 @@ export const submitManualEntry = async (payload) => {
 export const fetchDocument = async () => {
   try {
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/documents`, {
+    const response = await fetch(`${API_BASE_URL}/users/documents`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -259,7 +262,7 @@ export const fetchDocumentsByTitle = async (titleName) => {
     const token = localStorage.getItem("access_token");
 
     const response = await fetch(
-      `${API_BASE_URL}/documents/by-title/${titleName}`,
+      `${API_BASE_URL}/users/documents/by-title/${titleName}`,
       {
         method: "GET",
         headers: {
@@ -284,7 +287,7 @@ export const fetchDocumentsByTitle = async (titleName) => {
 export const viewDocument = async (docId) => {
   try {
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/documents/${docId}/view`, { 
+    const response = await fetch(`${API_BASE_URL}/users/documents/${docId}/view`, { 
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -304,7 +307,7 @@ export const approveDocument = async (doc_id, status) => {
   try {
     const token = localStorage.getItem("access_token"); 
 
-    const response = await fetch(`${API_BASE_URL}/approve_document/${doc_id}`, {
+    const response = await fetch(`${API_BASE_URL}/users/approve_document/${doc_id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -336,7 +339,7 @@ export const declineDocument = async (doc_id, status, remarks) => {
 
     console.log("Sending payload:", payload);
 
-    const response = await fetch(`${API_BASE_URL}/decline_document/${doc_id}`, {
+    const response = await fetch(`${API_BASE_URL}/users/decline_document/${doc_id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -367,7 +370,7 @@ export const updateDocument = async (doc_id, updatedData, file = null) => {
 
   if (file) formData.append("file", file);
 
-  const res = await fetch(`${API_BASE_URL}/edit-document/${doc_id}`, {
+  const res = await fetch(`${API_BASE_URL}/users/edit-document/${doc_id}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -383,19 +386,72 @@ export const updateDocument = async (doc_id, updatedData, file = null) => {
   return await res.json();
 };
 
-export const generateAnswer = async (query, accessToken, onToken, selectedFiles = []) => {
+export const generateAnswer = async (
+  query,
+  accessToken,
+  onToken,
+  selectedFiles = []
+) => {
   const formData = new FormData();
   formData.append("query", query);
 
+  // --- Attach files ---
   selectedFiles.forEach((file) => {
-    formData.append("file", file); // append each selected file
+    formData.append("files", file);
   });
 
-  const res = await fetch(`${API_BASE_URL}/generate`, {
+  // --- Attach device info ---
+
+  // Local time (12-hour format with GMT offset)
+  const now = new Date();
+  const formattedTime = now.toLocaleString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  });
+  formData.append("device_time", formattedTime);
+
+  // Timezone name
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  formData.append("timezone", tz);
+
+  // Battery
+  if (navigator.getBattery) {
+    const batteryObj = await navigator.getBattery();
+    formData.append("battery", Math.round(batteryObj.level * 100));
+  }
+
+  // --- Conditional geolocation for weather ---
+  const lowerQuery = query.toLowerCase();
+  if (
+    lowerQuery.includes("weather") ||
+    lowerQuery.includes("temperature") ||
+    lowerQuery.includes("forecast")
+  ) {
+    if (navigator.geolocation) {
+      await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            formData.append("lat", pos.coords.latitude);
+            formData.append("lon", pos.coords.longitude);
+            resolve();
+          },
+          () => resolve() // fallback if blocked
+        );
+      });
+    }
+  }
+
+  // --- Fetch ---
+  const res = await fetch(`${API_BASE_URL}/users/generate`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      // DO NOT set Content-Type manually! The browser sets it automatically for FormData
     },
     body: formData,
   });
@@ -405,6 +461,7 @@ export const generateAnswer = async (query, accessToken, onToken, selectedFiles 
     throw new Error(errorText || "Failed to generate answer");
   }
 
+  // --- Streaming ---
   const reader = res.body.getReader();
   const decoder = new TextDecoder("utf-8");
 
@@ -413,13 +470,13 @@ export const generateAnswer = async (query, accessToken, onToken, selectedFiles 
     if (done) break;
 
     const chunk = decoder.decode(value, { stream: true });
-    if (onToken) onToken(chunk); // stream chunks to UI
+    if (onToken) onToken(chunk);
   }
 };
 
 export const createDocumentInfo = async(payload) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/add-documentInfo`,{
+    const response = await fetch(`${API_BASE_URL}/users/add-documentInfo`,{
       method:"POST",
       headers:{
         'Content-Type':'application/json'
@@ -439,7 +496,7 @@ export const createDocumentInfo = async(payload) => {
 }
 
 export const fetchDocumentInfo = async (payload) => {
-  const response = await fetch(`${API_BASE_URL}/documentInfo`)
+  const response = await fetch(`${API_BASE_URL}/users/documentInfo`)
 
   if(!response.ok){
     throw new Error("Error fetching document Info")
@@ -448,12 +505,12 @@ export const fetchDocumentInfo = async (payload) => {
 }
 
 
-export const changePassword = async ({ token, password }) => {
+export const changePassword = async ({ token, password,otp }) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/change-password`, {
+    const response = await fetch(`${API_BASE_URL}/users/change-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, password }), // only token + password
+      body: JSON.stringify({ token, password, otp }), // only token + password
     });
 
     if (!response.ok) {
@@ -469,7 +526,7 @@ export const changePassword = async ({ token, password }) => {
 };
 export const resetPasswordRequest = async (email) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/request-password-reset`, {
+    const response = await fetch(`${API_BASE_URL}/users/request-password-reset`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -491,9 +548,27 @@ export const resetPasswordRequest = async (email) => {
   }
 };
 
+export const requestPasswordOtp = async (token, password) => {
+  const response = await fetch(`${API_BASE_URL}/users/request-password-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Failed to send OTP");
+  }
+
+  return response.json(); // { message: "OTP sent to your email" }
+};
+
+
+
+
 export const fetchConversations = async () => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/conversations`, {
+  const response = await fetch(`${API_BASE_URL}/users/conversations`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -510,7 +585,7 @@ export const fetchConversations = async () => {
 
 export const fetchConversationById = async (convId) => {
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/conversations/${convId}`, {
+    const response = await fetch(`${API_BASE_URL}/users/conversations/${convId}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -527,7 +602,7 @@ export const fetchConversationById = async (convId) => {
 // ✅ Example: create conversation
 export const createConversation = async (title) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/conversations`, {
+  const response = await fetch(`${API_BASE_URL}/users/conversations`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -546,7 +621,7 @@ export const createConversation = async (title) => {
 
 export const addMessage = async (convId, payload) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/conversations/${convId}/messages`, {
+  const response = await fetch(`${API_BASE_URL}/users/conversations/${convId}/messages`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -557,4 +632,68 @@ export const addMessage = async (convId, payload) => {
 
   if (!response.ok) throw new Error("Error adding message");
   return await response.json();
+};
+
+export const mostSearchData = async (startDate, endDate, limit = 10) => {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_BASE_URL}/users/top-titles?limit=${limit}&start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch most searched data");
+  }
+
+  return response.json();
+};
+
+
+export const submitSatisfactionReview = async (rating) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      throw new Error("Authentication required. Please log in.");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/users/submit-review`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ rating })
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      throw new Error(responseData.detail || 'Failed to submit review');
+    }
+
+    return responseData;
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    throw error;
+  }
+};
+
+export const fetchSatisfactionMetrics = async () => {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch(`${API_BASE_URL}/users/satisfaction`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch satisfaction metrics");
+  }
+  return response.json();
 };

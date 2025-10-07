@@ -1,6 +1,6 @@
 import { Home, FileText, ClipboardList, Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import LogoutModal from "./LogoutModal"; // ← reusable modal
@@ -11,13 +11,16 @@ function SidebarAdminCreator({ isOpen, setOpen }) {
   const user = useAuthStore((state) => state.user);
   const primaryColor = useAppSettingsStore((state) => state.primary_color);
   const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
-
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
   const signout = useAuthStore((state) => state.signout);
 
   const handleLogout = async () => {
     await signout();
     navigate("/login");
   };
+  useEffect(() => {
+      getSettings(); 
+  }, [getSettings]);
 
   return (
     <>
@@ -48,6 +51,7 @@ function SidebarAdminCreator({ isOpen, setOpen }) {
             <FileText size={18} className="text-white" />
             {isOpen && <span className="text-white">Documents</span>}
           </Link>
+          {/* 
           <Link
             to="/admincreator/logs"
             className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
@@ -55,6 +59,7 @@ function SidebarAdminCreator({ isOpen, setOpen }) {
             <ClipboardList size={18} className="text-white" />
             {isOpen && <span className="text-white">Logs</span>}
           </Link>
+          */}
         </nav>
 
         {/* Footer with Logout Trigger */}

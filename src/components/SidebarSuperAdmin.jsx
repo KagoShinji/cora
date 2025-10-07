@@ -1,6 +1,6 @@
 import { Home, Users, ClipboardList, Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import LogoutModal from "./LogoutModal"; // ← use the shared modal
@@ -9,6 +9,7 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
   const primaryColor = useAppSettingsStore((state) => state.primary_color);
   const secondaryColor = useAppSettingsStore((state) => state.secondary_color);
 
@@ -18,6 +19,9 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
     await signout();
     navigate("/login");
   };
+  useEffect(() => {
+      getSettings(); 
+    }, [getSettings]);
 
   return (
     <>
@@ -52,14 +56,16 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
             <Users size={18} className="!text-white" />
             {isOpen && <span className="!text-white">Users</span>}
           </Link>
-          <Link
+          {/* <Link
             to="/superadmin/logs"
             className="flex items-center gap-2 p-2 rounded hover:bg-primary transition !text-white"
           >
             <ClipboardList size={18} className="!text-white" />
             {isOpen && <span className="!text-white">Logs</span>}
           </Link>
+          */}
         </nav>
+        
 
         {/* Footer */}
         {isOpen && (

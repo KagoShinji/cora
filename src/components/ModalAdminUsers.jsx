@@ -16,7 +16,7 @@ function ModalAdminUsers({ isOpen, onClose }) {
   // Theme primary color
   const primaryColor = useAppSettingsStore((s) => s.primary_color) || "#3b82f6";
 
-  const allowedRoles = ["admincreator", "adminapprover"];
+  const allowedRoles = ["admincreator", "adminapprover","user"];
 
   useEffect(() => {
     if (isOpen) {
@@ -48,11 +48,8 @@ function ModalAdminUsers({ isOpen, onClose }) {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Admin Users Management
+                  Users
                 </h2>
-                <p className="text-gray-500 text-sm mt-1">
-                  Manage administrative users and permissions
-                </p>
               </div>
             </div>
 
@@ -109,6 +106,7 @@ function ModalAdminUsers({ isOpen, onClose }) {
                   <option value="">All Roles</option>
                   <option value="admincreator">Admin Creator</option>
                   <option value="adminapprover">Admin Approver</option>
+                  <option value="user">Student/Guest</option>
                 </select>
                 <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,7 +121,7 @@ function ModalAdminUsers({ isOpen, onClose }) {
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm text-gray-600 font-medium">
-                  {filtered.length} admin user{filtered.length !== 1 ? 's' : ''} found
+                  {filtered.length}Users{filtered.length !== 1 ? 's' : ''} found
                 </span>
               </div>
               {(search || roleFilter) && (
@@ -188,9 +186,6 @@ function ModalAdminUsers({ isOpen, onClose }) {
                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Role
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Department
-                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -232,11 +227,6 @@ function ModalAdminUsers({ isOpen, onClose }) {
                             >
                               {user.role}
                             </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {user.department || "-"}
-                            </div>
                           </td>
                         </tr>
                       ))}

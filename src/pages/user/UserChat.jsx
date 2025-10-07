@@ -21,6 +21,7 @@ export default function UserChat() {
   const [isTyping, setIsTyping] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [listening, setListening] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
 
@@ -72,10 +73,7 @@ export default function UserChat() {
 
   // --- Text to Speech (TTS) ---
   const speak = (text) => {
-    if (!window.speechSynthesis) {
-      console.warn("Speech Synthesis not supported in this browser.");
-      return;
-    }
+    if (!window.speechSynthesis) return;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
     utterance.rate = 1;
@@ -83,7 +81,7 @@ export default function UserChat() {
     window.speechSynthesis.speak(utterance);
   };
 
-  // --- Web Speech API (STT) ---
+  // --- Web Speech API ---
   useEffect(() => {
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       const SpeechRecognition =
@@ -94,8 +92,10 @@ export default function UserChat() {
       recognition.continuous = false;
 
       recognition.onstart = () => setListening(true);
-      recognition.onend = () => setListening(false);
-
+      recognition.onend = () => {
+        setListening(false);
+        if (query.trim()) handleSubmit(new Event("submit"));
+      };
       recognition.onresult = (event) => {
         let transcript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -105,41 +105,40 @@ export default function UserChat() {
       };
 
       recognitionRef.current = recognition;
-    } else {
-      console.warn("Speech Recognition not supported in this browser.");
     }
-  }, []);
+  }, [query]);
 
   const handleMicClick = () => {
     if (!recognitionRef.current) return;
-    if (listening) recognitionRef.current.stop();
-    else recognitionRef.current.start();
+    if (listening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+      setVoiceMode(true);
+    }
   };
 
   // --- Paste Handler ---
   const handlePaste = (e) => {
     const items = e.clipboardData.items;
     const files = [];
-
     for (let item of items) {
       if (item.type.startsWith("image/")) {
         const file = item.getAsFile();
         if (file) files.push(file);
       }
     }
-
     if (files.length > 0) {
       setSelectedImages((prev) => [...prev, ...files]);
     }
   };
 
-  // --- Handlers ---
+  // --- Submit ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmed = query.trim();
     if ((!trimmed && selectedImages.length === 0) || isTyping) return;
 
-    // Check for an existing conversation or create a new one
     let convId = currentConversationId;
     if (!convId) {
       try {
@@ -166,7 +165,6 @@ export default function UserChat() {
     const accessToken = useAuthStore.getState().access_token;
     let streamedAnswer = "";
 
-    // Add user message to backend
     await addMessage(convId, { role: "user", content: trimmed });
 
     try {
@@ -188,12 +186,11 @@ export default function UserChat() {
         selectedImages
       );
 
-      // Add assistant message to backend after stream is complete
       await addMessage(convId, { role: "assistant", content: streamedAnswer });
 
-      // 🔊 Speak the assistant's reply after it's fully generated
-      if (streamedAnswer.trim()) {
+      if (voiceMode && streamedAnswer.trim()) {
         speak(streamedAnswer);
+        setVoiceMode(false);
       }
     } catch (err) {
       setChatHistory((prev) => [
@@ -209,6 +206,7 @@ export default function UserChat() {
     }
   };
 
+  // --- Helpers ---
   const appendMessage = (msg) => setChatHistory((prev) => [...prev, msg]);
 
   const handleNewChat = async () => {
@@ -243,10 +241,7 @@ export default function UserChat() {
     } catch (error) {
       console.error("Failed to load conversation:", error);
       setChatHistory([
-        {
-          role: "assistant",
-          text: "Sorry, failed to load this conversation.",
-        },
+        { role: "assistant", text: "Sorry, failed to load this conversation." },
       ]);
     }
   };

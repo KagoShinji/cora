@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import { useAuthStore } from '../stores/userStores';
 import { resetPasswordRequest } from "../api/api";
 import { X, Mail, Info, Send } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const credentialsMap = {
   'superadmin@gmail.com': { password: "super123", role: "superadmin", path: "/superadmin" },
   'cosuperadmin@gmail.com': { password: "co123", role: "co-superadmin", path: "/cosuperadmin" },
@@ -12,17 +13,20 @@ const credentialsMap = {
   'adminapprover@gmail.com': { password: "admin123", role: "admin-approver", path: "/adminapprover" },
 };
 
+
+
 function Login() {
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-
+  const [loading, setLoading] = useState(true);
   const logoPath = useAppSettingsStore((state) => state.logo_path);
   const appName = useAppSettingsStore((state) => state.name);
   const primaryColor = useAppSettingsStore((s) => s.primary_color);
   const secondaryColor = useAppSettingsStore((s) => s.secondary_color);
-
+  const getSettings = useAppSettingsStore((s) => s.getSettings);
   const navigate = useNavigate();
   const signin = useAuthStore((state) => state.signin);
 
@@ -66,6 +70,9 @@ function Login() {
     }
   };
 
+  useEffect(() => {
+    getSettings(); 
+  }, [getSettings]);
   const handleForgotSubmit = async () => {
     if (!forgotEmail) {
       alert("Please enter your email.");
@@ -81,7 +88,26 @@ function Login() {
       alert(error.message || "Failed to send password reset email");
     }
   };
+ useEffect(() => {
+  const fetchSettings = async () => {
+    try {
+      await getSettings();
+    } catch (err) {
+      console.error("Failed to fetch settings:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  fetchSettings();
+}, []);  
+if (loading) {
+  return (
+    <div className="flex items-center justify-center h-screen w-screen bg-white text-gray-900">
+    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+    </div>
+  );
+}
   return (
     <div className="relative h-screen w-screen overflow-hidden">
       {/* Background image + subtle glass overlay */}
@@ -187,7 +213,7 @@ function Login() {
           {/* School Logo / Branding */}
           <div className="mb-8 text-center">
             <img
-              src={logoPath ? `http://127.0.0.1:8000${logoPath}` : "/school-logo.png"}
+              src={logoPath ? `${API_BASE_URL}${logoPath}` : "/school-logo.png"}
               alt="School Logo"
               className="w-28 h-28 sm:w-32 sm:h-32 mx-auto object-contain rounded-full border shadow-sm"
               style={{ borderColor: primaryColor || '#e5e7eb' }}

@@ -412,7 +412,7 @@ function SuperAdminDashboard() {
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <button
-                    className="px-3 py-2 rounded-md text-white !bg-green-500 text-sm font-medium"
+                    className="px-3 py-2 rounded-md text-white !bg-blue-600 text-sm font-medium"
                     onClick={() => handleEditClick(user)}
                   >
                     Edit

@@ -1,5 +1,6 @@
-// src/components/DocumentModal.jsx
+import { useState } from "react";
 import { X, FileText } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function DocumentModal({
   document,
@@ -9,6 +10,9 @@ export default function DocumentModal({
   remarks,
   setRemarks,
 }) {
+  const [isApproving, setIsApproving] = useState(false);
+  const [isDisapproving, setIsDisapproving] = useState(false);
+
   if (!document) return null;
 
   const statusBadge =
@@ -23,6 +27,37 @@ export default function DocumentModal({
       ? "Approved"
       : document.status?.charAt(0).toUpperCase() + document.status?.slice(1);
 
+  const handleApprove = async () => {
+    try {
+      setIsApproving(true);
+      await onConfirm(document.id);
+      toast.success("✅ Document approved successfully!");
+    } catch (err) {
+      console.error("Approval failed:", err);
+      toast.error("❌ Failed to approve the document.");
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleDisapprove = async () => {
+    if (!remarks.trim()) {
+      toast.error("❌ Please provide remarks before disapproving.");
+      return;
+    }
+
+    try {
+      setIsDisapproving(true);
+      await onDelete(document.id, remarks);
+      toast.success("🚫 Document disapproved successfully.");
+    } catch (err) {
+      console.error("Disapproval failed:", err);
+      toast.error("❌ Failed to disapprove the document.");
+    } finally {
+      setIsDisapproving(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-md z-[9999] p-4"
@@ -31,7 +66,7 @@ export default function DocumentModal({
       aria-labelledby="doc-modal-title"
     >
       <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-3xl max-h-[90vh] flex flex-col relative overflow-hidden">
-        {/* Header (matches ModalAdminUsers style) */}
+        {/* Header */}
         <div className="bg-white px-8 py-6 relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -48,7 +83,7 @@ export default function DocumentModal({
               </div>
             </div>
 
-            {/* Clickable X icon (no button wrapper) */}
+            {/* Close icon */}
             <X
               onClick={onClose}
               onKeyDown={(e) => {
@@ -64,7 +99,7 @@ export default function DocumentModal({
             />
           </div>
 
-          {/* Decorative background glows (non-interactive) */}
+          {/* Background glows */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 rounded-full blur-2xl pointer-events-none"></div>
         </div>
@@ -128,26 +163,78 @@ export default function DocumentModal({
                   placeholder="Add notes for the requester before disapproving…"
                   className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-gray-700 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm mb-4"
                   rows={3}
+                  disabled={isApproving || isDisapproving}
                 />
 
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={onClose}
-                    className="px-4 py-2 rounded-xl border border-gray-200 !bg-white !text-gray-700 hover:!bg-gray-50 transition"
+                    disabled={isApproving || isDisapproving}
+                    className="px-4 py-2 rounded-xl border border-gray-200 !bg-white !text-gray-700 hover:!bg-gray-50 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     Close
                   </button>
+
+                  {/* Disapprove */}
                   <button
-                    onClick={() => onDelete(document.id, remarks)}
-                    className="px-4 py-2 rounded-xl !bg-rose-600 !text-white hover:!bg-rose-700 transition shadow-sm"
+                    onClick={handleDisapprove}
+                    disabled={isDisapproving || isApproving}
+                    className="px-4 py-2 rounded-xl !bg-rose-600 !text-white hover:!bg-rose-700 transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
                   >
-                    Disapprove
+                    {isDisapproving ? (
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                    ) : null}
+                    {isDisapproving ? "Processing..." : "Disapprove"}
                   </button>
+
+                  {/* Approve */}
                   <button
-                    onClick={() => onConfirm(document.id)}
-                    className="px-4 py-2 rounded-xl !bg-emerald-600 !text-white hover:!bg-emerald-700 transition shadow-sm"
+                    onClick={handleApprove}
+                    disabled={isApproving || isDisapproving}
+                    className="px-4 py-2 rounded-xl !bg-emerald-600 !text-white hover:!bg-emerald-700 transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
                   >
-                    Approve
+                    {isApproving ? (
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                    ) : null}
+                    {isApproving ? "Processing..." : "Approve"}
                   </button>
                 </div>
               </>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Building2, Info, Save } from "lucide-react";
+import { X, Building2, Info, Save, Loader2 } from "lucide-react"; // ✅ added Loader2 icon
 
 /**
  * Props:
@@ -82,7 +82,7 @@ export default function ModalEditDepartment({
         className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        {/* Header (no gradient) */}
+        {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-gray-200">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-200">
@@ -101,7 +101,7 @@ export default function ModalEditDepartment({
               </p>
             </div>
 
-            {/* Close icon (no button wrapper) */}
+            {/* Close icon */}
             <X
               onClick={onClose}
               onKeyDown={(e) => {
@@ -159,8 +159,17 @@ export default function ModalEditDepartment({
                 disabled={isSaving}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Save className="h-4 w-4" />
-                {isSaving ? "Saving..." : "Save Changes"}
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> {/* ✅ Spinner */}
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
               </button>
             </div>
           </form>

@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { XIcon } from "lucide-react";
+import { XIcon, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function LogoutModal({
   open,
@@ -17,6 +18,7 @@ export default function LogoutModal({
 }) {
   const confirmRef = useRef(null);
   const lastActive = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -44,6 +46,20 @@ export default function LogoutModal({
   }, [open, onClose, closeOnEsc]);
 
   if (!open) return null;
+
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true);
+      await onConfirm();
+      toast.success("✅ Logged out successfully!");
+      onClose();
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("❌ Failed to log out. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return createPortal(
     <div
@@ -78,29 +94,51 @@ export default function LogoutModal({
         />
 
         <div className="space-y-4 sm:space-y-5">
-          <h2 id="logout-title" className="text-xl sm:text-2xl font-semibold" style={{ color: "var(--pc)" }}>
+          <h2
+            id="logout-title"
+            className="text-xl sm:text-2xl font-semibold"
+            style={{ color: "var(--pc)" }}
+          >
             {title}
           </h2>
-          <p id="logout-desc" className="text-neutral-700">{description}</p>
+          <p id="logout-desc" className="text-neutral-700">
+            {description}
+          </p>
 
           <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
             <button
               onClick={onClose}
+              disabled={isLoading}
               type="button"
-              className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 border !bg-white text-sm font-medium transition hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
-              style={{ borderColor: "var(--pc)", color: "var(--pc)", "--tw-ring-color": "var(--pc)" }}
+              className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 border !bg-white text-sm font-medium transition hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{
+                borderColor: "var(--pc)",
+                color: "var(--pc)",
+                "--tw-ring-color": "var(--pc)",
+              }}
             >
               {cancelLabel}
             </button>
 
             <button
               ref={confirmRef}
-              onClick={onConfirm}
+              onClick={handleConfirm}
               type="button"
-              className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 text-white"
-              style={{ backgroundColor: "var(--pc)", "--tw-ring-color": "var(--pc)" }}
+              disabled={isLoading}
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 text-white disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: "var(--pc)",
+                "--tw-ring-color": "var(--pc)",
+              }}
             >
-              {confirmLabel}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Logging out…
+                </>
+              ) : (
+                confirmLabel
+              )}
             </button>
           </div>
         </div>

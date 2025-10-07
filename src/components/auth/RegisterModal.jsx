@@ -1,7 +1,8 @@
 // src/components/auth/RegisterModal.jsx
 import Modal from "../Modal";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
+import toast from "react-hot-toast"; // ✅ Global toast
 
 export function RegisterModal({
   isOpen,
@@ -23,11 +24,13 @@ export function RegisterModal({
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (
       !firstName.trim() ||
       !lastName.trim() ||
@@ -35,19 +38,25 @@ export function RegisterModal({
       !password.trim() ||
       !confirmPassword.trim()
     ) {
-      alert("Please fill in all required fields.");
+      toast.error("Please fill in all required fields.");
       return;
     }
+
     if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
-    onSubmit(e);
+
+    try {
+      setIsLoading(true);
+      await onSubmit(e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Modal
-      // Use <span> to avoid nesting <h2> in Modal (prevents hydration error)
       title={
         <span className="text-2xl font-bold" style={{ color: primaryColor }}>
           Create an account
@@ -55,7 +64,7 @@ export function RegisterModal({
       }
       onClose={onClose}
     >
-      {/* Local X close icon (pure icon, no button semantics) */}
+      {/* Local X close icon */}
       <span
         onClick={onClose}
         className="select-none absolute right-4 top-4 text-neutral-500 hover:text-neutral-800 text-xl leading-none cursor-pointer"
@@ -65,7 +74,7 @@ export function RegisterModal({
       </span>
 
       <form onSubmit={handleSubmit} className="px-1 pt-8 space-y-6">
-        {/* Grid wrapper: 2 columns on md+, 1 column on mobile */}
+        {/* Grid layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           {/* First Name */}
           <div className="space-y-2">
@@ -80,7 +89,10 @@ export function RegisterModal({
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               autoComplete="given-name"
-              style={{ "--tw-ring-color": `${primaryColor}40`, "--tw-ring-opacity": "0.4" }}
+              style={{
+                "--tw-ring-color": `${primaryColor}40`,
+                "--tw-ring-opacity": "0.4",
+              }}
             />
           </div>
 
@@ -97,7 +109,10 @@ export function RegisterModal({
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               autoComplete="family-name"
-              style={{ "--tw-ring-color": `${primaryColor}40`, "--tw-ring-opacity": "0.4" }}
+              style={{
+                "--tw-ring-color": `${primaryColor}40`,
+                "--tw-ring-opacity": "0.4",
+              }}
             />
           </div>
 
@@ -115,7 +130,10 @@ export function RegisterModal({
               onChange={(e) => setMiddleInitial(e.target.value)}
               maxLength={1}
               autoComplete="additional-name"
-              style={{ "--tw-ring-color": `${primaryColor}40`, "--tw-ring-opacity": "0.4" }}
+              style={{
+                "--tw-ring-color": `${primaryColor}40`,
+                "--tw-ring-opacity": "0.4",
+              }}
             />
           </div>
 
@@ -136,7 +154,10 @@ export function RegisterModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                style={{ "--tw-ring-color": `${primaryColor}40`, "--tw-ring-opacity": "0.4" }}
+                style={{
+                  "--tw-ring-color": `${primaryColor}40`,
+                  "--tw-ring-opacity": "0.4",
+                }}
               />
             </div>
           </div>
@@ -158,9 +179,11 @@ export function RegisterModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
-                style={{ "--tw-ring-color": `${primaryColor}40`, "--tw-ring-opacity": "0.4" }}
+                style={{
+                  "--tw-ring-color": `${primaryColor}40`,
+                  "--tw-ring-opacity": "0.4",
+                }}
               />
-              {/* Eye icon (span, not a button) */}
               <span
                 onClick={() => setShowPassword((v) => !v)}
                 role="switch"
@@ -194,9 +217,11 @@ export function RegisterModal({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
-                style={{ "--tw-ring-color": `${primaryColor}40`, "--tw-ring-opacity": "0.4" }}
+                style={{
+                  "--tw-ring-color": `${primaryColor}40`,
+                  "--tw-ring-opacity": "0.4",
+                }}
               />
-              {/* Eye icon (span, not a button) */}
               <span
                 onClick={() => setShowConfirm((v) => !v)}
                 role="switch"
@@ -214,14 +239,24 @@ export function RegisterModal({
           </div>
         </div>
 
-        {/* Submit Button */}
+        {/* Submit Button with Spinner */}
         <button
           type="submit"
-          className="w-full relative overflow-hidden rounded-xl px-6 py-3.5 text-white font-semibold shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:-translate-y-0.5"
-          style={{ backgroundColor: primaryColor, "--tw-ring-color": `${primaryColor}40` }}
+          disabled={isLoading}
+          className="w-full relative overflow-hidden rounded-xl px-6 py-3.5 text-white font-semibold shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          style={{
+            backgroundColor: primaryColor,
+            "--tw-ring-color": `${primaryColor}40`,
+          }}
         >
-          <span className="relative z-10">Register</span>
-          {/* Shimmer (works without group wrapper) */}
+          {isLoading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Registering...</span>
+            </>
+          ) : (
+            <span className="relative z-10">Register</span>
+          )}
           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000" />
         </button>
       </form>

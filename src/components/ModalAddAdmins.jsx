@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { X, Eye, EyeOff, Save, UserPlus } from "lucide-react";
+import { X, Eye, EyeOff, Save, UserPlus, Loader2 } from "lucide-react";
 import ModalAddDepartment from "./ModalAddDepartment";
 import { useAuthStore } from "../stores/userStores";
+import toast from "react-hot-toast";
 
 export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
   const [firstName, setFirstName] = useState("");
@@ -16,6 +17,7 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
   const [localError, setLocalError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const departments = useAuthStore((state) => state.departments);
   const getDepartment = useAuthStore((state) => state.getDepartment);
@@ -49,11 +51,13 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
       !department
     ) {
       setLocalError("Please fill in all required fields.");
+      toast.error("❌ Please fill in all required fields.");
       return;
     }
 
     if (password !== confirmPassword) {
       setLocalError("Passwords do not match.");
+      toast.error("❌ Passwords do not match.");
       return;
     }
 
@@ -66,7 +70,9 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
     };
 
     try {
+      setIsSaving(true);
       await onSave(userData);
+
       setFirstName("");
       setLastName("");
       setMiddleInitial("");
@@ -80,6 +86,8 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
     } catch (err) {
       console.error("Form submission failed in ModalAddAdmins:", err);
       setLocalError("Failed to save user. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -113,7 +121,7 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
           className="relative bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
           onMouseDown={(e) => e.stopPropagation()}
         >
-          {/* Header (updated icon) */}
+          {/* Header */}
           <div className="px-6 pt-6 pb-4 border-b border-gray-200 flex items-start gap-3">
             <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-200">
               <UserPlus className="h-5 w-5 text-gray-700" aria-hidden="true" />
@@ -240,7 +248,11 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </span>
                   </div>
                 </div>
@@ -295,6 +307,7 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
                 </div>
               </div>
 
+              {/* Error message */}
               {localError && (
                 <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
                   {localError}
@@ -306,16 +319,27 @@ export default function ModalAddAdmins({ isOpen, onClose, onSave }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl border border-gray-300 !bg-red-500 text-sm font-medium text-white shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                  disabled={isSaving}
+                  className="px-5 py-2.5 rounded-xl border border-gray-300 !bg-red-500 text-sm font-medium text-white shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:opacity-60"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Save className="h-4 w-4" />
-                  Save Admin
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Save Admin
+                    </>
+                  )}
                 </button>
               </div>
             </form>

@@ -1,7 +1,21 @@
-import { X, AlertTriangle, Info, Save } from "lucide-react";
+import { X, AlertTriangle, Info, Save, Loader2 } from "lucide-react"; // ✅ added Loader2
+import { useState } from "react";
 
 function ApproveModal({ open, onClose, onConfirm, document }) {
+  const [isLoading, setIsLoading] = useState(false); // ✅ spinner state
+
   if (!open || !document) return null;
+
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true);
+      await onConfirm(); // ✅ call parent-provided confirm handler
+    } catch (err) {
+      console.error("Approval error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div
@@ -11,12 +25,12 @@ function ApproveModal({ open, onClose, onConfirm, document }) {
       aria-labelledby="approve-title"
       aria-describedby="approve-desc"
     >
-      {/* Backdrop (ArchiveModal style) */}
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
 
-      {/* Modal card (ArchiveModal style) */}
+      {/* Modal Card */}
       <div className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden">
-        {/* Header (badge + title + subtext + X) */}
+        {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-gray-200">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-200">
@@ -45,24 +59,36 @@ function ApproveModal({ open, onClose, onConfirm, document }) {
           </div>
         </div>
 
-        {/* Body (left-aligned, small text like ArchiveModal) */}
+        {/* Body */}
         <div className="p-6">
           <p className="text-sm text-gray-700">
-            Are you sure you want to <strong className="font-semibold">approve</strong>{" "}
+            Are you sure you want to{" "}
+            <strong className="font-semibold text-green-700">approve</strong>{" "}
             the document <span className="font-semibold">"{document.title}"</span>?
           </p>
         </div>
 
-        {/* Footer (green Confirm first, red Cancel second — ArchiveModal classes) */}
+        {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
           <button
             type="button"
-            onClick={onConfirm}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+            disabled={isLoading}
+            onClick={handleConfirm}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
           >
-            <Save className="h-4 w-4" />
-            Confirm
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Approving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Confirm
+              </>
+            )}
           </button>
+
           <button
             type="button"
             onClick={onClose}

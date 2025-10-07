@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, User, Info, Save } from "lucide-react";
+import { X, User, Info, Save, Loader2 } from "lucide-react"; // ✅ Added Loader2
 import ModalAddDepartment from "./ModalAddDepartment";
 import { useAuthStore } from "../stores/userStores";
 
@@ -11,12 +11,12 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
 
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [localError, setLocalError] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // ✅ Used for loading
 
   const departments = useAuthStore((state) => state.departments);
   const getDepartment = useAuthStore((state) => state.getDepartment);
 
-  // Initialize form when opened
+  // Initialize form
   useEffect(() => {
     if (!isOpen || !user) return;
     setUsername(user.name || "");
@@ -26,22 +26,22 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
     setLocalError("");
   }, [isOpen, user]);
 
-  // Fetch departments when modal opens
+  // Fetch departments
   useEffect(() => {
     if (!isOpen) return;
     getDepartment();
   }, [isOpen, getDepartment]);
 
-  // Escape key + lock body scroll
+  // Escape key + scroll lock
   useEffect(() => {
     if (!isOpen) return;
     const onKeyDown = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKeyDown);
-    const prevOverflow = document.body.style.overflow;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prevOverflow || "";
+      document.body.style.overflow = prev || "";
     };
   }, [isOpen, onClose]);
 
@@ -101,7 +101,7 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
         {/* Backdrop */}
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
 
-        {/* Modal Card */}
+        {/* Modal */}
         <div
           className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
           onMouseDown={(e) => e.stopPropagation()}
@@ -156,7 +156,8 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter name"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                  disabled={isSaving}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200 disabled:bg-gray-100"
                 />
               </div>
 
@@ -175,7 +176,8 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter email"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                  disabled={isSaving}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200 disabled:bg-gray-100"
                 />
               </div>
 
@@ -192,7 +194,8 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 bg-white shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                  disabled={isSaving}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 bg-white shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200 disabled:bg-gray-100"
                 >
                   <option value="">Select Role</option>
                   <option value="admincreator">Creator</option>
@@ -213,7 +216,8 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
                     id="department"
                     value={departmentId}
                     onChange={(e) => setDepartmentId(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 bg-white shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                    disabled={isSaving}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 bg-white shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200 disabled:bg-gray-100"
                   >
                     <option value="">Select Department</option>
                     {(departments || []).map((dept) => (
@@ -222,16 +226,19 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
                       </option>
                     ))}
                   </select>
-
-                  {/* + button pasted to match your other modal */}
                   <div
-                    onClick={() => setIsDeptModalOpen(true)}
+                    onClick={() => !isSaving && setIsDeptModalOpen(true)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") setIsDeptModalOpen(true);
+                      if ((e.key === "Enter" || e.key === " ") && !isSaving)
+                        setIsDeptModalOpen(true);
                     }}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-xl text-gray-800 bg-white shadow-sm hover:bg-gray-50 cursor-pointer"
+                    className={`px-3 py-2 text-sm border border-gray-300 rounded-xl text-gray-800 bg-white shadow-sm ${
+                      isSaving
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:bg-gray-50 cursor-pointer"
+                    }`}
                     title="Add Department"
                   >
                     +
@@ -239,29 +246,39 @@ export default function ModalEditAdmins({ isOpen, onClose, onSave, user }) {
                 </div>
               </div>
 
-              {/* Error */}
+              {/* Error Message */}
               {localError && (
                 <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
                   {localError}
                 </div>
               )}
 
-              {/* Actions */}
+              {/* Footer Buttons */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-white !bg-red-500 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                  disabled={isSaving}
+                  className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-white !bg-red-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:opacity-60"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60"
                 >
-                  <Save className="h-4 w-4" />
-                  {isSaving ? "Saving..." : "Save Changes"}
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
                 </button>
               </div>
             </form>

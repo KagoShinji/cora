@@ -1,28 +1,37 @@
 // src/components/auth/UserForgotPasswordModal.jsx
 import Modal from "./Modal"; // adjust path if needed
 import { useState, useCallback } from "react";
-import { Mail } from "lucide-react";
+import { Mail, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 import { resetPasswordRequest } from "../api/api";
 
 export default function UserForgotPasswordModal({ onClose, primaryColor = "#2563eb" }) {
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      alert("Please enter your email.");
-      return;
-    }
-    try {
-      await resetPasswordRequest(email);
-      alert(`Password reset instructions sent to: ${email}`);
-      setEmail("");
-      onClose?.();
-    } catch (error) {
-      console.error(error);
-      alert(error?.message || "Failed to send password reset email");
-    }
-  }, [email, onClose]);
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!email.trim()) {
+        toast.error("Please enter your email.");
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+        await resetPasswordRequest(email);
+        toast.success(`Password reset instructions sent to: ${email}`);
+        setEmail("");
+        onClose?.();
+      } catch (error) {
+        console.error(error);
+        toast.error(error?.message || "Failed to send password reset email");
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [email, onClose]
+  );
 
   return (
     <Modal
@@ -48,7 +57,7 @@ export default function UserForgotPasswordModal({ onClose, primaryColor = "#2563
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email Field (mirrors LoginModal) */}
+          {/* Email Field */}
           <div className="space-y-2">
             <label htmlFor="forgot-email" className="block text-sm font-semibold text-neutral-800">
               Email address
@@ -91,14 +100,24 @@ export default function UserForgotPasswordModal({ onClose, primaryColor = "#2563
 
             <button
               type="submit"
-              className="relative overflow-hidden rounded-xl px-6 py-3.5 text-white font-semibold shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:-translate-y-0.5"
+              disabled={isSubmitting}
+              className="relative overflow-hidden rounded-xl px-6 py-3.5 text-white font-semibold shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:-translate-y-0.5 flex items-center justify-center"
               style={{
                 backgroundColor: primaryColor,
                 "--tw-ring-color": `${primaryColor}40`,
               }}
             >
-              <span className="relative z-10">Send reset link</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <span className="relative z-10">Send reset link</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -12,6 +12,7 @@ import {
 import ModalDocumentViewer from "../../components/ModalDocumentViewer";
 import ArchiveModal from "../../components/ArchiveModal";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
+import toast from "react-hot-toast";
 
 import {
   Search,
@@ -90,64 +91,57 @@ function AdminApproverDocuments() {
     [isMobile, sidebarOpen]
   );
 
-  const handleApprove = async (docId) => {
-    try {
-      await approveDocument(docId, "approved");
-      await fetchDocuments();
-      setSelectedDoc(null);
-      setShowApproveModal(false);
-      alert("Approved Successfully");
-    } catch (error) {
-      console.error("Approval failed:", error);
-    }
-  };
-
   const handleDecline = async (docId, r) => {
-    try {
-      await declineDocument(docId, "declined", r);
-      await fetchDocuments();
-      setSelectedDoc(null);
-      setShowDeclineModal(false);
-      alert("Declined successfully");
-    } catch (error) {
-      console.error("Decline failed:", error);
-    }
-  };
+  try {
+    await declineDocument(docId, "declined", r);
+    await fetchDocuments();
+    setSelectedDoc(null);
+    setShowDeclineModal(false);
+    toast.error("❌ Document declined!");
+  } catch (error) {
+    console.error("Decline failed:", error);
+    toast.error("❌ Failed to decline document.");
+  }
+};
 
-  const handleArchive = async (doc) => {
-    try {
-      alert(`${doc.archived ? "Unarchived" : "Archived"} document: ${doc.title}`);
-      await fetchDocuments();
-      setShowArchiveModal(false);
-      setSelectedDoc(null);
-    } catch (err) {
-      console.error("Failed to toggle archive:", err);
-    }
-  };
+const handleArchive = async (doc) => {
+  try {
+    await fetchDocuments();
+    setShowArchiveModal(false);
+    setSelectedDoc(null);
 
-  const handleViewPdf = async (docId) => {
-    try {
-      const blob = await viewDocument(docId);
-      const blobUrl = URL.createObjectURL(blob);
-      setPdfPreview({ id: docId, url: blobUrl });
-      setHighlightedDocId(docId);
-    } catch (error) {
-      console.error("Error viewing PDF:", error);
-      alert("Failed to load PDF.");
-    }
-  };
+    toast.success(
+      `${doc.archived ? "🗂️ Unarchived" : "📦 Archived"} document: ${doc.title}`
+    );
+  } catch (err) {
+    console.error("Failed to toggle archive:", err);
+    toast.error("❌ Failed to update archive state.");
+  }
+};
 
-  const handleSaveEdit = async (id, content) => {
-    try {
-      if (!id) return;
-      await updateDocument(id, { content });
-      alert("Saved successfully");
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save entry");
-    }
-  };
+const handleViewPdf = async (docId) => {
+  try {
+    const blob = await viewDocument(docId);
+    const blobUrl = URL.createObjectURL(blob);
+    setPdfPreview({ id: docId, url: blobUrl });
+    setHighlightedDocId(docId);
+  } catch (error) {
+    console.error("Error viewing PDF:", error);
+    toast.error("❌ Failed to load PDF.");
+  }
+};
+
+const handleSaveEdit = async (id, content) => {
+  try {
+    if (!id) return;
+    await updateDocument(id, { content });
+    toast.success("💾 Document saved successfully!");
+    window.location.reload();
+  } catch (err) {
+    console.error(err);
+    toast.error("❌ Failed to save entry");
+  }
+};
 
   const handlePreview = (doc) => {
     try {

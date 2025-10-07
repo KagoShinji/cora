@@ -1,26 +1,57 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Info, X, FilePlus, Loader2 } from "lucide-react";
 import { createDocumentInfo } from "../api/api";
-import { Info, X, FilePlus } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function ModalManageDocumentType({ isOpen, onClose }) {
   const [newType, setNewType] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, onClose]);
 
   const handleAddType = async () => {
-    if (!newType.trim()) return;
+    const trimmed = newType.trim();
+    if (!trimmed) {
+      toast.error("Please enter a type name.", { position: "bottom-right" });
+      return;
+    }
+
     try {
-      const payload = { name: newType };
+      setIsSaving(true);
+      const payload = { name: trimmed };
       const response = await createDocumentInfo(payload);
+
       if (response) {
-        alert("Created successfully");
+        toast.success("✅ Document type created successfully!", { position: "bottom-right" });
+        setNewType("");
         onClose();
       }
     } catch (error) {
       console.error("Error adding document type:", error);
-      alert(error.message);
+      toast.error(error?.message || "❌ Failed to create document type.", {
+        position: "bottom-right",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   if (!isOpen) return null;
+
+  const handleBackdrop = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
 
   return (
     <div
@@ -28,9 +59,7 @@ export default function ModalManageDocumentType({ isOpen, onClose }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="manage-doc-title"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onMouseDown={handleBackdrop}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
@@ -82,10 +111,15 @@ export default function ModalManageDocumentType({ isOpen, onClose }) {
             />
             <button
               onClick={handleAddType}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+              disabled={isSaving}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <FilePlus className="h-4 w-4" />
-              Add
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FilePlus className="h-4 w-4" />
+              )}
+              {isSaving ? "Adding..." : "Add"}
             </button>
           </div>
 
@@ -93,6 +127,7 @@ export default function ModalManageDocumentType({ isOpen, onClose }) {
           <div className="text-right pt-4 border-t border-gray-200">
             <button
               onClick={onClose}
+              disabled={isSaving}
               className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-white !bg-red-500 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
             >
               Close

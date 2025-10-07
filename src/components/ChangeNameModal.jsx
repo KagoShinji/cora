@@ -1,9 +1,9 @@
-// src/components/ChangeNameModal.jsx
 import { useEffect, useState } from "react";
 import { X, Info, Save } from "lucide-react";
 
 function ChangeNameModal({ isOpen, onClose, onSave }) {
   const [newName, setNewName] = useState("");
+  const [isSaving, setIsSaving] = useState(false); // 🌀 Spinner state
 
   // Reset input when opening
   useEffect(() => {
@@ -16,11 +16,18 @@ function ChangeNameModal({ isOpen, onClose, onSave }) {
     if (e.target === e.currentTarget) onClose();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const trimmed = newName.trim();
-    if (trimmed) {
-      onSave(trimmed);
-      setNewName(""); // keep original behavior (do not auto-close)
+    if (!trimmed) return;
+
+    try {
+      setIsSaving(true);
+      await onSave(trimmed);
+      setNewName(""); // keep original behavior
+    } catch (err) {
+      console.error("Failed to save name:", err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -33,10 +40,10 @@ function ChangeNameModal({ isOpen, onClose, onSave }) {
       aria-describedby="change-name-desc"
       onMouseDown={handleBackdrop}
     >
-      {/* Backdrop (same style as your other modal) */}
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
 
-      {/* Modal Card (consistent shell) */}
+      {/* Modal */}
       <div
         className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
@@ -85,7 +92,7 @@ function ChangeNameModal({ isOpen, onClose, onSave }) {
               />
             </div>
 
-            {/* Actions — red Cancel / green Save (consistent with your other modal) */}
+            {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
@@ -94,16 +101,41 @@ function ChangeNameModal({ isOpen, onClose, onSave }) {
                   onClose();
                 }}
                 className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-white !bg-red-500 shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
+                disabled={isSaving}
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSave}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Save className="h-4 w-4" />
-                Save
+                {isSaving ? (
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
           </div>

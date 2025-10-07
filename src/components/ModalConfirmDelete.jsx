@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import { X, AlertTriangle, Info, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 /**
  * Props:
  * - isOpen: boolean
  * - onClose: () => void
- * - onConfirm: () => void
+ * - onConfirm: () => Promise<void> | void
  * - isLoading: boolean
  * - error: string
  */
@@ -35,6 +36,16 @@ export default function ModalConfirmDelete({
     if (e.target === e.currentTarget) onClose();
   };
 
+  const handleConfirm = async () => {
+    try {
+      await onConfirm();
+      onClose();
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast.error("❌ Failed to delete item.", { position: "bottom-right" });
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -59,16 +70,10 @@ export default function ModalConfirmDelete({
               <AlertTriangle className="h-5 w-5 text-red-600" aria-hidden="true" />
             </div>
             <div className="flex-1">
-              <h2
-                id="confirm-delete-title"
-                className="text-xl font-semibold text-gray-900"
-              >
+              <h2 id="confirm-delete-title" className="text-xl font-semibold text-gray-900">
                 Confirm Deletion
               </h2>
-              <p
-                id="confirm-delete-desc"
-                className="mt-1 flex items-center gap-1 text-sm text-gray-600"
-              >
+              <p id="confirm-delete-desc" className="mt-1 flex items-center gap-1 text-sm text-gray-600">
                 <Info className="h-4 w-4 text-gray-400" aria-hidden="true" />
                 This <strong>cannot</strong> be undone.
               </p>
@@ -90,11 +95,10 @@ export default function ModalConfirmDelete({
         {/* Body */}
         <div className="p-6">
           <p className="text-sm text-gray-700 mb-4">
-            Are you sure you want to permanently delete this item? This action
-            is irreversible.
+            Are you sure you want to permanently delete this item? This action is irreversible.
           </p>
 
-          {/* Error */}
+          {/* Error display (still supported) */}
           {error && (
             <div
               role="alert"
@@ -108,10 +112,10 @@ export default function ModalConfirmDelete({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-          {/* Delete first as primary danger */}
+          {/* Delete button (red) */}
           <button
             type="button"
-            onClick={onConfirm}
+            onClick={handleConfirm}
             disabled={isLoading}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-red-600 text-white text-sm font-semibold shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
@@ -122,7 +126,8 @@ export default function ModalConfirmDelete({
             )}
             {isLoading ? "Deleting..." : "Delete"}
           </button>
-          {/* Cancel */}
+
+          {/* Cancel button (green) */}
           <button
             type="button"
             onClick={onClose}

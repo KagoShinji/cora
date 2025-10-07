@@ -1,7 +1,8 @@
 // src/components/auth/LoginModal.jsx
 import Modal from "../Modal";
 import { useState } from "react";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import toast from "react-hot-toast"; // ✅ For global toasts
 
 export default function LoginModal({
   isOpen,
@@ -15,32 +16,34 @@ export default function LoginModal({
   primaryColor,
 }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      alert("Please enter both email and password.");
+      toast.error("Please enter both email and password.");
       return;
     }
-    onSubmit(e);
+
+    try {
+      setIsLoading(true);
+      await onSubmit(e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Modal
-      // ❗ Use <span> so we don’t nest <h2> inside Modal’s own <h2>
       title={
-        <span
-          className="text-2xl font-bold"
-          style={{ color: primaryColor }}
-        >
+        <span className="text-2xl font-bold" style={{ color: primaryColor }}>
           Welcome back
         </span>
       }
       onClose={onClose}
     >
-      {/* Local X close icon (pure icon, no button semantics) */}
       <span
         onClick={onClose}
         className="select-none absolute right-4 top-4 text-neutral-500 hover:text-neutral-800 text-xl leading-none cursor-pointer"
@@ -65,7 +68,10 @@ export default function LoginModal({
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Mail size={18} className="text-neutral-400 group-focus-within:text-neutral-600 transition-colors" />
+                <Mail
+                  size={18}
+                  className="text-neutral-400 group-focus-within:text-neutral-600 transition-colors"
+                />
               </div>
               <input
                 id="login-email"
@@ -94,7 +100,10 @@ export default function LoginModal({
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Lock size={18} className="text-neutral-400 group-focus-within:text-neutral-600 transition-colors" />
+                <Lock
+                  size={18}
+                  className="text-neutral-400 group-focus-within:text-neutral-600 transition-colors"
+                />
               </div>
               <input
                 id="login-password"
@@ -110,7 +119,6 @@ export default function LoginModal({
                   "--tw-ring-opacity": "0.4",
                 }}
               />
-              {/* Eye icon as a clickable span (not a <button>) */}
               <span
                 onClick={() => setShowPassword((v) => !v)}
                 role="switch"
@@ -127,7 +135,7 @@ export default function LoginModal({
             </div>
           </div>
 
-          {/* Forgot Password clickable text (not a <button>) */}
+          {/* Forgot Password */}
           <div className="flex justify-end">
             <span
               onClick={onForgotPassword}
@@ -143,19 +151,25 @@ export default function LoginModal({
             </span>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit Button with Spinner */}
           <button
             type="submit"
-            className="w-full relative overflow-hidden rounded-xl px-6 py-3.5 text-white font-semibold shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:-translate-y-0.5"
+            disabled={isLoading}
+            className="w-full relative overflow-hidden rounded-xl px-6 py-3.5 text-white font-semibold shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
             style={{
               backgroundColor: primaryColor,
               "--tw-ring-color": `${primaryColor}40`,
             }}
           >
-            <span className="relative z-10">Sign in</span>
-            <div
-              className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"
-            />
+            {isLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <span className="relative z-10">Sign in</span>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000" />
           </button>
         </form>
       </div>

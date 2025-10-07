@@ -1,7 +1,9 @@
-import { useEffect } from "react";
-import { X, AlertTriangle, Info, Save } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, AlertTriangle, Info, Save, Loader2 } from "lucide-react"; // ✅ Added Loader2 for spinner
 
 export default function ArchiveModal({ open, onClose, onConfirm, document: doc }) {
+  const [isLoading, setIsLoading] = useState(false); // ✅ spinner state
+
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
@@ -21,6 +23,17 @@ export default function ArchiveModal({ open, onClose, onConfirm, document: doc }
 
   const handleBackdrop = (e) => {
     if (e.target === e.currentTarget) onClose();
+  };
+
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true);
+      await onConfirm();
+    } catch (err) {
+      console.error(`${actionText} failed:`, err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -86,12 +99,23 @@ export default function ArchiveModal({ open, onClose, onConfirm, document: doc }
           {/* Confirm (green, first) */}
           <button
             type="button"
-            onClick={onConfirm}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+            disabled={isLoading}
+            onClick={handleConfirm}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
           >
-            <Save className="h-4 w-4" />
-            Confirm
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {doc.archived ? "Unarchiving..." : "Archiving..."}
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Confirm
+              </>
+            )}
           </button>
+
           {/* Cancel (red, second) */}
           <button
             type="button"

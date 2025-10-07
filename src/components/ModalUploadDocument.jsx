@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
 import { fetchDocumentInfo } from "../api/api";
-import { FileUp, Info, Tag, X } from "lucide-react";
+import { FileUp, Info, Tag, X, Loader2 } from "lucide-react";
 
 export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
   const [typeOfInfo, setTypeOfInfo] = useState("");
@@ -11,14 +11,13 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [documentTypes, setDocumentTypes] = useState([]);
   const [showError, setShowError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Spinner state
 
   const inputRef = useRef(null);
 
   const addPdfFiles = (fileList) => {
     if (!fileList) return;
-    const arr = Array.from(fileList).filter(
-      (f) => f.type === "application/pdf"
-    );
+    const arr = Array.from(fileList).filter((f) => f.type === "application/pdf");
     if (arr.length === 0) return;
     setFiles((prev) => [...prev, ...arr]);
   };
@@ -43,29 +42,35 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-// inside handleSubmit
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!typeOfInfo || files.length === 0 || keywords.length === 0) {
-    setShowError(true);
-    return;
-  }
+    if (!typeOfInfo || files.length === 0 || keywords.length === 0) {
+      setShowError(true);
+      return;
+    }
 
-  const formData = new FormData();
-  formData.append("title_id", typeOfInfo);
-  formData.append("keywords", keywords.join(","));
-  formData.append("file", files[0]);
+    const formData = new FormData();
+    formData.append("title_id", typeOfInfo);
+    formData.append("keywords", keywords.join(","));
+    formData.append("file", files[0]);
 
-  await onUpload(formData);
-  onClose();
+    try {
+      setIsSubmitting(true);
+      await onUpload(formData);
+      onClose();
 
-  // reset
-  setTypeOfInfo("");
-  setKeywords([]);
-  setFiles([]);
-  setShowError(false);
-};
+      // reset
+      setTypeOfInfo("");
+      setKeywords([]);
+      setFiles([]);
+      setShowError(false);
+    } catch (err) {
+      console.error("Upload failed:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -111,7 +116,10 @@ const handleSubmit = async (e) => {
                 <FileUp className="h-5 w-5 text-gray-700" aria-hidden="true" />
               </div>
               <div className="flex-1">
-                <h2 id="upload-title" className="text-xl font-semibold text-gray-900">
+                <h2
+                  id="upload-title"
+                  className="text-xl font-semibold text-gray-900"
+                >
                   Upload PDF Document
                 </h2>
                 <p
@@ -122,8 +130,6 @@ const handleSubmit = async (e) => {
                   Only PDF files are supported.
                 </p>
               </div>
-
-              {/* Clickable X icon (no button wrapper) */}
               <X
                 onClick={onClose}
                 onKeyDown={(e) => {
@@ -161,7 +167,6 @@ const handleSubmit = async (e) => {
                     ))}
                   </select>
 
-                  {/* Manage Types button (dark-mode safe with ! overrides) */}
                   <button
                     type="button"
                     onClick={() => setShowTypeModal(true)}
@@ -172,75 +177,74 @@ const handleSubmit = async (e) => {
                 </div>
               </div>
 
-{/* Keywords */}
-<div>
-  <label className="block text-sm font-medium text-gray-800 mb-2">
-    Keywords <span className="text-red-500">*</span>
-  </label>
-  <div className="relative">
-    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-    <input
-      id="keywords"
-      type="text"
-      className={`w-full pl-9 pr-3 py-3 border rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition ${
-        showError && keywords.length === 0
-          ? "border-red-500 focus:ring-red-200"
-          : "border-gray-300 focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
-      }`}
-      value={keywordInput}
-      onChange={(e) => setKeywordInput(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && keywordInput.trim()) {
-          e.preventDefault();
-          const val = keywordInput.trim();
-          if (!keywords.includes(val)) {
-            setKeywords([...keywords, val]);
-          }
-          setKeywordInput("");
-          setShowError(false); // clear error once keyword is added
-        }
-      }}
-      placeholder="Press Enter to add keyword"
-    />
-  </div>
+              {/* Keywords */}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  Keywords <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    id="keywords"
+                    type="text"
+                    className={`w-full pl-9 pr-3 py-3 border rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition ${
+                      showError && keywords.length === 0
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                    }`}
+                    value={keywordInput}
+                    onChange={(e) => setKeywordInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && keywordInput.trim()) {
+                        e.preventDefault();
+                        const val = keywordInput.trim();
+                        if (!keywords.includes(val)) {
+                          setKeywords([...keywords, val]);
+                        }
+                        setKeywordInput("");
+                        setShowError(false);
+                      }
+                    }}
+                    placeholder="Press Enter to add keyword"
+                  />
+                </div>
 
-  {/* Inline error */}
-  {showError && keywords.length === 0 && (
-    <p className="mt-1 text-sm text-red-500">
-      Please add at least one keyword.
-    </p>
-  )}
+                {showError && keywords.length === 0 && (
+                  <p className="mt-1 text-sm text-red-500">
+                    Please add at least one keyword.
+                  </p>
+                )}
 
-  {/* Tags list */}
-  {keywords.length > 0 && (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {keywords.map((tag, idx) => (
-        <span
-          key={`${tag}-${idx}`}
-          className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200"
-        >
-          {tag}
-          <span
-            onClick={() => setKeywords(keywords.filter((_, i) => i !== idx))}
-            role="button"
-            tabIndex={0}
-            className="text-gray-500 hover:text-red-500 cursor-pointer select-none"
-          >
-            ×
-          </span>
-        </span>
-      ))}
-    </div>
-  )}
-</div>
+                {keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {keywords.map((tag, idx) => (
+                      <span
+                        key={`${tag}-${idx}`}
+                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200"
+                      >
+                        {tag}
+                        <span
+                          onClick={() =>
+                            setKeywords(keywords.filter((_, i) => i !== idx))
+                          }
+                          role="button"
+                          tabIndex={0}
+                          className="text-gray-500 hover:text-red-500 cursor-pointer select-none"
+                        >
+                          ×
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              {/* File Upload: Clickable + Drag & Drop */}
+              {/* File Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-800 mb-2">
                   Choose PDF File <span className="text-red-500">*</span>
                 </label>
 
-                {/* Hidden input */}
                 <input
                   ref={inputRef}
                   type="file"
@@ -249,7 +253,6 @@ const handleSubmit = async (e) => {
                   onChange={handleFileInputChange}
                 />
 
-                {/* Dropzone / Click area */}
                 <div
                   onClick={() => inputRef.current?.click()}
                   onDrop={handleDrop}
@@ -262,8 +265,6 @@ const handleSubmit = async (e) => {
                     }
                   }}
                   className="w-full rounded-2xl border-2 border-dashed border-gray-300 bg-white hover:bg-gray-50 transition p-6 text-center cursor-pointer"
-                  aria-label="Click or drag a PDF file here to upload"
-                  title="Click or drag a PDF file here to upload"
                 >
                   <div className="flex flex-col items-center justify-center gap-2">
                     <FileUp className="w-8 h-8 text-gray-500" />
@@ -298,11 +299,6 @@ const handleSubmit = async (e) => {
                         aria-label={`Remove ${file.name}`}
                         title="Remove"
                         className="h-4 w-4 text-gray-500 cursor-pointer hover:text-red-600"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            handleRemoveFile(index);
-                          }
-                        }}
                       />
                     </li>
                   ))}
@@ -320,9 +316,16 @@ const handleSubmit = async (e) => {
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-70"
                 >
-                  Proceed
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Uploading...
+                    </>
+                  ) : (
+                    "Proceed"
+                  )}
                 </button>
               </div>
             </form>

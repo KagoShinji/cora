@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
 import { fetchDocumentInfo } from "../api/api";
-import { FileUp, Info, Tag, X } from "lucide-react";
+import { FileUp, Info, Tag, X, Loader2 } from "lucide-react"; // ✅ Added Loader2
 
 export default function ModalManualEntry({ isOpen, onClose, onSave }) {
   const [content, setContent] = useState("");
@@ -10,6 +10,8 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
   const [typeOfInfo, setTypeOfInfo] = useState("");
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [documentTypes, setDocumentTypes] = useState([]);
+  const [showError, setShowError] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // ✅ Spinner state
 
   const handleKeywordKeyDown = (e) => {
     if (e.key === "Enter" && keywordInput.trim()) {
@@ -22,32 +24,33 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
     }
   };
 
-const [showError, setShowError] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+    if (!content.trim() || !typeOfInfo.trim() || keywords.length === 0) {
+      setShowError(true);
+      return;
+    }
 
-  if (!content.trim() || !typeOfInfo.trim() || keywords.length === 0) {
-    setShowError(true);
-    return;
-  }
+    const payload = { title_id: typeOfInfo, keywords, content };
 
-  const payload = { title_id: typeOfInfo, keywords, content };
+    try {
+      setIsSaving(true);
+      await onSave(payload);
+      onClose();
 
-  try {
-    await onSave(payload);
-    onClose();
-
-    // Reset
-    setTypeOfInfo("");
-    setContent("");
-    setKeywords([]);
-    setKeywordInput("");
-    setShowError(false);
-  } catch (err) {
-    console.error("Failed to save document:", err);
-  }
-};
+      // Reset
+      setTypeOfInfo("");
+      setContent("");
+      setKeywords([]);
+      setKeywordInput("");
+      setShowError(false);
+    } catch (err) {
+      console.error("Failed to save document:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -105,7 +108,7 @@ const handleSubmit = async (e) => {
                 </p>
               </div>
 
-              {/* Clickable X icon (no button wrapper) */}
+              {/* Clickable X icon */}
               <X
                 onClick={onClose}
                 onKeyDown={(e) => {
@@ -143,7 +146,7 @@ const handleSubmit = async (e) => {
                     ))}
                   </select>
 
-                  {/* Manage Types button (dark-mode safe with ! overrides) */}
+                  {/* Manage Types */}
                   <button
                     type="button"
                     onClick={() => setShowTypeModal(true)}
@@ -169,52 +172,56 @@ const handleSubmit = async (e) => {
                 />
               </div>
 
-{/* Keywords */}
-<div>
-  <label className="block text-sm font-medium text-gray-800 mb-2">
-    Keywords <span className="text-red-500">*</span>
-  </label>
-  <div className="relative">
-    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-    <input
-      type="text"
-      value={keywordInput}
-      onChange={(e) => setKeywordInput(e.target.value)}
-      onKeyDown={handleKeywordKeyDown}
-      placeholder="Press Enter to add keyword"
-      className={`w-full pl-9 pr-3 py-3 border rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition ${
-        keywords.length === 0 && showError
-          ? "border-red-500 focus:ring-red-200"
-          : "border-gray-300 focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
-      }`}
-    />
-  </div>
+              {/* Keywords */}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  Keywords <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={keywordInput}
+                    onChange={(e) => setKeywordInput(e.target.value)}
+                    onKeyDown={handleKeywordKeyDown}
+                    placeholder="Press Enter to add keyword"
+                    className={`w-full pl-9 pr-3 py-3 border rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition ${
+                      keywords.length === 0 && showError
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                    }`}
+                  />
+                </div>
 
-  {showError && keywords.length === 0 && (
-    <p className="mt-1 text-sm text-red-500">Please add at least one keyword.</p>
-  )}
+                {showError && keywords.length === 0 && (
+                  <p className="mt-1 text-sm text-red-500">
+                    Please add at least one keyword.
+                  </p>
+                )}
 
-  {keywords.length > 0 && (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {keywords.map((tag, idx) => (
-        <span
-          key={`${tag}-${idx}`}
-          className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200"
-        >
-          {tag}
-          <span
-            onClick={() => setKeywords(keywords.filter((_, i) => i !== idx))}
-            role="button"
-            tabIndex={0}
-            className="text-gray-500 hover:text-red-500 cursor-pointer select-none"
-          >
-            ×
-          </span>
-        </span>
-      ))}
-    </div>
-  )}
-</div>
+                {keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {keywords.map((tag, idx) => (
+                      <span
+                        key={`${tag}-${idx}`}
+                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200"
+                      >
+                        {tag}
+                        <span
+                          onClick={() =>
+                            setKeywords(keywords.filter((_, i) => i !== idx))
+                          }
+                          role="button"
+                          tabIndex={0}
+                          className="text-gray-500 hover:text-red-500 cursor-pointer select-none"
+                        >
+                          ×
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -227,9 +234,17 @@ const handleSubmit = async (e) => {
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-70"
                 >
-                  Proceed
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Proceed"
+                  )}
                 </button>
               </div>
             </form>

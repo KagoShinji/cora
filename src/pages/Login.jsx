@@ -1,27 +1,44 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
-import { useAuthStore } from '../stores/userStores';
+import { useAuthStore } from "../stores/userStores";
 import { resetPasswordRequest } from "../api/api";
-import { X, Mail, Info, Send } from "lucide-react";
+import { X, Mail, Info, Send, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const credentialsMap = {
-  'superadmin@gmail.com': { password: "super123", role: "superadmin", path: "/superadmin" },
-  'cosuperadmin@gmail.com': { password: "co123", role: "co-superadmin", path: "/cosuperadmin" },
-  'admincreator@gmail.com': { password: "creator123", role: "admin-creator", path: "/admincreator" },
-  'adminapprover@gmail.com': { password: "admin123", role: "admin-approver", path: "/adminapprover" },
+  "superadmin@gmail.com": {
+    password: "super123",
+    role: "superadmin",
+    path: "/superadmin",
+  },
+  "cosuperadmin@gmail.com": {
+    password: "co123",
+    role: "co-superadmin",
+    path: "/cosuperadmin",
+  },
+  "admincreator@gmail.com": {
+    password: "creator123",
+    role: "admin-creator",
+    path: "/admincreator",
+  },
+  "adminapprover@gmail.com": {
+    password: "admin123",
+    role: "admin-approver",
+    path: "/adminapprover",
+  },
 };
 
-
-
 function Login() {
-  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const logoPath = useAppSettingsStore((state) => state.logo_path);
   const appName = useAppSettingsStore((state) => state.name);
   const primaryColor = useAppSettingsStore((s) => s.primary_color);
@@ -30,87 +47,99 @@ function Login() {
   const navigate = useNavigate();
   const signin = useAuthStore((state) => state.signin);
 
+  // Handle Login
   const handleLogin = async (e) => {
     e.preventDefault();
-    const users = credentialsMap[email];
 
-    if (users && users.password === password) {
-      navigate(users.path);
-      return;
-    }
+    setIsSubmitting(true);
+    try {
+      const users = credentialsMap[email];
+      if (users && users.password === password) {
+        toast.success("Login successful!");
+        navigate(users.path);
+        return;
+      }
 
-    const userData = { email, password };
-    const login = await signin(userData);
+      const userData = { email, password };
+      const login = await signin(userData);
 
-    if (!login) {
-      alert("Invalid credentials");
-      return;
-    } else {
-      alert("Login successfully");
-    }
+      if (!login) {
+        toast.error("Invalid credentials");
+        return;
+      }
 
-    switch (login.user.role) {
-      case 'superadmin':
-        navigate('/superadmin');
-        break;
-      case 'co-superadmin':
-        navigate('/cosuperadmin');
-        break;
-      case 'admincreator':
-        navigate('/admincreator');
-        break;
-      case 'adminapprover':
-        navigate('/adminapprover');
-        break;
-      case 'user':
-        navigate('/users');
-        break;
-      default:
-        alert('Unauthorized role or unknown user.');
+      toast.success("Login successful!");
+
+      switch (login.user.role) {
+        case "superadmin":
+          navigate("/superadmin");
+          break;
+        case "co-superadmin":
+          navigate("/cosuperadmin");
+          break;
+        case "admincreator":
+          navigate("/admincreator");
+          break;
+        case "adminapprover":
+          navigate("/adminapprover");
+          break;
+        case "user":
+          navigate("/users");
+          break;
+        default:
+          toast.error("Unauthorized role or unknown user.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.message || "Login failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  useEffect(() => {
-    getSettings(); 
-  }, [getSettings]);
+  // Forgot password submit
   const handleForgotSubmit = async () => {
     if (!forgotEmail) {
-      alert("Please enter your email.");
+      toast.error("Please enter your email.");
       return;
     }
+
     try {
       await resetPasswordRequest(forgotEmail);
-      alert(`Password reset instructions sent to: ${forgotEmail}`);
+      toast.success(`Password reset instructions sent to ${forgotEmail}`);
       setForgotEmail("");
       setShowForgotModal(false);
     } catch (error) {
       console.error(error);
-      alert(error.message || "Failed to send password reset email");
-    }
-  };
- useEffect(() => {
-  const fetchSettings = async () => {
-    try {
-      await getSettings();
-    } catch (err) {
-      console.error("Failed to fetch settings:", err);
-    } finally {
-      setLoading(false);
+      toast.error(error?.message || "Failed to send password reset email.");
     }
   };
 
-  fetchSettings();
-}, []);  
-if (loading) {
-  return (
-    <div className="flex items-center justify-center h-screen w-screen bg-white text-gray-900">
-    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-    </div>
-  );
-}
+  // Load app settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        await getSettings();
+      } catch (err) {
+        console.error("Failed to fetch settings:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettings();
+  }, [getSettings]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-white text-gray-900">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-screen w-screen overflow-hidden">
-      {/* Background image + subtle glass overlay */}
+      {/* Background */}
       <div className="absolute inset-0">
         <img
           src="/bg-image.jpg"
@@ -129,11 +158,8 @@ if (loading) {
           aria-labelledby="forgot-title"
           aria-describedby="forgot-desc"
         >
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
-
-          {/* Modal card */}
-          <div className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden">
+          <div className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
             {/* Header */}
             <div className="px-6 pt-6 pb-4 border-b border-gray-200">
               <div className="flex items-start gap-3">
@@ -141,7 +167,10 @@ if (loading) {
                   <Mail className="h-5 w-5 text-gray-700" aria-hidden="true" />
                 </div>
                 <div className="flex-1">
-                  <h2 id="forgot-title" className="text-xl font-semibold text-gray-900">
+                  <h2
+                    id="forgot-title"
+                    className="text-xl font-semibold text-gray-900"
+                  >
                     Forgot Password
                   </h2>
                   <p
@@ -185,7 +214,6 @@ if (loading) {
 
             {/* Footer */}
             <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-              {/* Send (primary) */}
               <button
                 type="button"
                 onClick={handleForgotSubmit}
@@ -194,7 +222,6 @@ if (loading) {
                 <Send className="h-4 w-4" />
                 Send
               </button>
-              {/* Cancel (danger) */}
               <button
                 type="button"
                 onClick={() => setShowForgotModal(false)}
@@ -207,16 +234,16 @@ if (loading) {
         </div>
       )}
 
-      {/* Centered login card */}
+      {/* Login Card */}
       <div className="relative z-10 flex items-center justify-center h-full px-4">
         <div className="bg-white/90 backdrop-blur-lg p-8 sm:p-10 rounded-2xl shadow-2xl max-w-md w-full text-black ring-1 ring-white/40">
-          {/* School Logo / Branding */}
+          {/* Branding */}
           <div className="mb-8 text-center">
             <img
               src={logoPath ? `${API_BASE_URL}${logoPath}` : "/school-logo.png"}
               alt="School Logo"
               className="w-28 h-28 sm:w-32 sm:h-32 mx-auto object-contain rounded-full border shadow-sm"
-              style={{ borderColor: primaryColor || '#e5e7eb' }}
+              style={{ borderColor: primaryColor || "#e5e7eb" }}
             />
             <h2
               style={{ color: primaryColor }}
@@ -232,9 +259,8 @@ if (loading) {
             </p>
           </div>
 
-          {/* Login Form */}
+          {/* Form */}
           <form onSubmit={handleLogin} className="flex flex-col gap-5 text-left">
-            {/* Email */}
             <div>
               <label
                 style={{ color: secondaryColor }}
@@ -255,7 +281,6 @@ if (loading) {
               />
             </div>
 
-            {/* Password */}
             <div>
               <label
                 style={{ color: secondaryColor }}
@@ -285,13 +310,20 @@ if (loading) {
               </div>
             </div>
 
-            {/* Login Button */}
             <button
               type="submit"
+              disabled={isSubmitting}
               style={{ backgroundColor: primaryColor }}
-              className="w-full text-white py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition"
+              className="w-full text-white py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition flex items-center justify-center disabled:opacity-70"
             >
-              Login
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                "Login"
+              )}
             </button>
           </form>
         </div>

@@ -8,6 +8,7 @@ import { Upload, ScanLine, Pencil, Search, X, Menu } from "lucide-react";
 import { useDocumentStore } from "../../stores/useDocumentStore";
 import { submitManualEntry, updateDocument } from "../../api/api";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
+import toast from "react-hot-toast"; // ✅ Added toast
 
 /* Content preview modal */
 function ContentModal({ isOpen, onClose, title, content }) {
@@ -20,15 +21,11 @@ function ContentModal({ isOpen, onClose, title, content }) {
       aria-modal="true"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-
-      {/* Modal card */}
       <div
         className="relative w-full max-w-2xl mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-gray-200">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-200">
@@ -53,7 +50,6 @@ function ContentModal({ isOpen, onClose, title, content }) {
           </div>
         </div>
 
-        {/* Body */}
         <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)]">
           <div className="prose max-w-none whitespace-pre-wrap text-gray-900">
             {content || "No content"}
@@ -66,24 +62,16 @@ function ContentModal({ isOpen, onClose, title, content }) {
 
 function AdminCreatorDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  // Responsive breakpoint (md < 768px)
   const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
     const mql = window.matchMedia("(max-width: 767.98px)");
-    const handler = (e) => setIsMobile(!!e.matches);
+    const handler = (e) => setIsMobile(e.matches);
     handler(mql);
-    if (typeof mql.addEventListener === "function") {
-      mql.addEventListener("change", handler);
-      return () => mql.removeEventListener("change", handler);
-    } else if (typeof mql.addListener === "function") {
-      mql.addListener(handler);
-      return () => mql.removeListener(handler);
-    }
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
   }, []);
 
-  // Prevent background scroll when mobile drawer is open
   useEffect(() => {
     if (!isMobile) return;
     const prev = document.body.style.overflow;
@@ -93,49 +81,40 @@ function AdminCreatorDocuments() {
     };
   }, [isMobile, sidebarOpen]);
 
-  // Close drawer on Escape (mobile only)
-  useEffect(() => {
-    if (!isMobile || !sidebarOpen) return;
-    const onKey = (e) => e.key === "Escape" && setSidebarOpen(false);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isMobile, sidebarOpen]);
-
+  // Modals
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingDoc, setEditingDoc] = useState(null);
+  const [showContentModal, setShowContentModal] = useState(false);
+  const [contentModalData, setContentModalData] = useState({ title: "", content: "" });
 
   const [filterStatus, setFilterStatus] = useState("declined");
   const [search, setSearch] = useState("");
 
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingDoc, setEditingDoc] = useState(null);
-
-  const [showContentModal, setShowContentModal] = useState(false);
-  const [contentModalData, setContentModalData] = useState({ title: "", content: "" });
-
   const { documents, fetchDocuments } = useDocumentStore();
-
   const primaryColor =
     useAppSettingsStore((s) => s.primary_color) || "#3b82f6";
 
-  // Desktop offset: 17rem open / 5rem closed; Mobile: overlay (0 offset)
   const sidebarOffset = useMemo(
     () => (isMobile ? "0" : sidebarOpen ? "17rem" : "5rem"),
     [isMobile, sidebarOpen]
   );
 
+  // ✅ Replace alerts with toasts (no color or style changes!)
   const handleUpload = async (formData) => {
     try {
       const file = formData.get("file");
       const title_id = formData.get("title_id");
       const keywords = formData.get("keywords");
+
       await useDocumentStore.getState().createDocument(file, title_id, keywords);
-      alert("Document uploaded successfully!");
+      toast.success("📄 Document uploaded successfully!");
       setShowUploadModal(false);
       fetchDocuments(filterStatus === "all" ? "" : filterStatus);
     } catch (error) {
-      alert("Upload failed: " + error.message);
+      toast.error("❌ Upload failed: " + error.message);
     }
   };
 
@@ -147,11 +126,11 @@ function AdminCreatorDocuments() {
         keywords: manualDoc.keywords || [],
       };
       await submitManualEntry(payload);
-      alert("Manual entry saved successfully!");
+      toast.success("📝 Manual entry saved successfully!");
       setShowManualModal(false);
       fetchDocuments(filterStatus === "all" ? "" : filterStatus);
     } catch (err) {
-      alert("Failed to submit manual document: " + err.message);
+      toast.error("❌ Failed to submit manual document: " + err.message);
     }
   };
 
@@ -163,13 +142,12 @@ function AdminCreatorDocuments() {
   const handleUpdate = async (updatedData) => {
     try {
       await updateDocument(updatedData.id, updatedData);
-      alert("Document updated successfully!");
+      toast.success("✅ Document updated successfully!");
       setShowEditModal(false);
       setEditingDoc(null);
       fetchDocuments(filterStatus === "all" ? "" : filterStatus);
     } catch (error) {
-      console.error("Update failed:", error);
-      alert("Failed to update document: " + error.message);
+      toast.error("❌ Failed to update document: " + error.message);
     }
   };
 
@@ -184,16 +162,15 @@ function AdminCreatorDocuments() {
       } else {
         const blob = await useDocumentStore.getState().previewDocument(doc.id);
         if (!blob) {
-          alert("No file found for this document.");
+          toast.error("⚠️ No file found for this document.");
           return;
         }
         const url = window.URL.createObjectURL(blob);
         const newTab = window.open(url);
-        if (!newTab) alert("Popup blocked! Please allow popups for this site.");
+        if (!newTab) toast("🔒 Popup blocked! Please allow popups for this site.");
       }
-    } catch (err) {
-      console.error("Failed to preview document:", err);
-      alert("Failed to preview document. Please check if the file exists.");
+    } catch {
+      toast.error("❌ Failed to preview document.");
     }
   };
 
@@ -204,11 +181,10 @@ function AdminCreatorDocuments() {
         scannedDoc.title_id,
         scannedDoc.keywords
       );
-      alert("Scanned document uploaded successfully!");
+      toast.success("📠 Scanned document uploaded successfully!");
       fetchDocuments(filterStatus === "all" ? "" : filterStatus);
     } catch (error) {
-      console.error(error);
-      alert("Failed to upload scanned document: " + error.message);
+      toast.error("❌ Failed to upload scanned document: " + error.message);
     }
   };
 
@@ -228,7 +204,6 @@ function AdminCreatorDocuments() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
-      {/* Mobile backdrop */}
       {isMobile && sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
@@ -257,7 +232,6 @@ function AdminCreatorDocuments() {
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          {/* Mobile: burger + title (like dashboard) */}
           <div className="md:hidden flex items-center gap-3 w-full">
             <Menu
               onClick={() => setSidebarOpen(true)}
@@ -266,10 +240,6 @@ function AdminCreatorDocuments() {
               aria-label="Open menu"
               className="h-6 w-6 cursor-pointer"
               style={{ color: primaryColor }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") setSidebarOpen(true);
-              }}
-              aria-pressed={sidebarOpen}
             />
             <div className="flex-1 min-w-0">
               <h1
@@ -284,7 +254,6 @@ function AdminCreatorDocuments() {
             </div>
           </div>
 
-          {/* Desktop title */}
           <div className="hidden md:block">
             <h1 className="text-3xl font-bold mb-2" style={{ color: primaryColor }}>
               Documents
@@ -341,49 +310,55 @@ function AdminCreatorDocuments() {
           </div>
         </div>
 
-        {/* Search & Filter */}
+        {/* Search + Filter */}
         <div className="!bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: primaryColor }} />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
+                style={{ color: primaryColor }}
+              />
               <input
                 type="text"
                 placeholder="Search by name or keywords..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none"
-                style={{ border: `2px solid ${primaryColor}`, backgroundColor: "#fff" }}
+                style={{
+                  border: `2px solid ${primaryColor}`,
+                  backgroundColor: "#fff",
+                }}
               />
             </div>
 
             <div className="flex gap-2">
               <button
                 onClick={() => setFilterStatus("all")}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
-                  ${filterStatus === "all"
-                    ? "!bg-gray-900 !text-white"
-                    : "!bg-gray-100 !text-gray-700 hover:!bg-gray-200 !border !border-gray-300"
-                  }`}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                  filterStatus === "all"
+                    ? "!bg-blue-600 !text-white"
+                    : "!bg-blue-100 !text-gray-700 hover:!bg-gray-200 !border !border-gray-300"
+                }`}
               >
                 All
               </button>
               <button
                 onClick={() => setFilterStatus("approved")}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
-                  ${filterStatus === "approved"
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                  filterStatus === "approved"
                     ? "!bg-green-600 !text-white"
                     : "!bg-green-50 !text-green-700 hover:!bg-green-100 !border !border-green-200"
-                  }`}
+                }`}
               >
                 Approved
               </button>
               <button
                 onClick={() => setFilterStatus("declined")}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
-                  ${filterStatus === "declined"
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                  filterStatus === "declined"
                     ? "!bg-red-600 !text-white"
                     : "!bg-red-50 !text-red-700 hover:!bg-red-100 !border !border-red-200"
-                  }`}
+                }`}
               >
                 Declined
               </button>
@@ -391,12 +366,14 @@ function AdminCreatorDocuments() {
           </div>
         </div>
 
-        {/* Documents Table */}
+        {/* Table */}
         <div className="!bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h3 className="text-lg font-semibold text-gray-900">Documents</h3>
             <p className="text-sm text-gray-600 mt-1">
-              {filteredDocs.length} {filterStatus === "all" ? "" : filterStatus} document{filteredDocs.length === 1 ? "" : "s"} found
+              {filteredDocs.length}{" "}
+              {filterStatus === "all" ? "" : filterStatus} document
+              {filteredDocs.length === 1 ? "" : "s"} found
             </p>
           </div>
 
@@ -404,13 +381,25 @@ function AdminCreatorDocuments() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Department</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type of Information</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">File</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Timestamp</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Department
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Type of Information
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    File
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Timestamp
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Status
+                  </th>
                   {filterStatus === "declined" && (
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
                   )}
                 </tr>
               </thead>
@@ -419,10 +408,16 @@ function AdminCreatorDocuments() {
                   filteredDocs.map((doc, idx) => (
                     <tr
                       key={doc.id}
-                      className={`hover:bg-gray-50 transition-colors duration-200 ${idx % 2 === 0 ? "bg-white" : "bg-gray-25"}`}
+                      className={`hover:bg-gray-50 transition-colors duration-200 ${
+                        idx % 2 === 0 ? "bg-white" : "bg-gray-25"
+                      }`}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{doc.department?.department_name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{doc.title}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {doc.department?.department_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {doc.title}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
                           onClick={() => handleView(doc)}
@@ -432,12 +427,16 @@ function AdminCreatorDocuments() {
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {doc.upload_timestamp ? new Date(doc.upload_timestamp).toLocaleString() : "-"}
+                        {doc.upload_timestamp
+                          ? new Date(doc.upload_timestamp).toLocaleString()
+                          : "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                            doc.status === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                            doc.status === "approved"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
                           }`}
                         >
                           {doc.status}
@@ -457,7 +456,10 @@ function AdminCreatorDocuments() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={filterStatus === "declined" ? 6 : 5} className="text-center py-10 text-gray-500">
+                    <td
+                      colSpan={filterStatus === "declined" ? 6 : 5}
+                      className="text-center py-10 text-gray-500"
+                    >
                       No {filterStatus} documents found.
                     </td>
                   </tr>

@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { X, FileText, Info, Save } from "lucide-react";
+import { X, FileText, Info, Save, Loader2 } from "lucide-react";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
+import toast from "react-hot-toast";
 
 export default function ModalDocumentViewer({ isOpen, onClose, doc, onSave }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const primaryColor = useAppSettingsStore((s) => s.primary_color) || "#1D4ED8";
 
@@ -17,13 +19,23 @@ export default function ModalDocumentViewer({ isOpen, onClose, doc, onSave }) {
 
   if (!isOpen || !doc) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!doc.id) {
-      console.error("Cannot save: doc.id is missing");
+      toast.error("Missing document ID.", { position: "bottom-right" });
       return;
     }
-    onSave?.(doc.id, editedContent);
-    setIsEditing(false);
+
+    try {
+      setIsSaving(true);
+      await onSave?.(doc.id, editedContent);
+      toast.success("✅ Document saved successfully!", { position: "bottom-right" });
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Save failed:", err);
+      toast.error("❌ Failed to save changes.", { position: "bottom-right" });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleBackdrop = (e) => {
@@ -122,6 +134,7 @@ export default function ModalDocumentViewer({ isOpen, onClose, doc, onSave }) {
                   setEditedContent(doc.content ?? "");
                 }}
                 className="px-5 py-2.5 rounded-xl text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 !bg-red-600 !text-white hover:!bg-red-700"
+                disabled={isSaving}
               >
                 Cancel
               </button>
@@ -130,10 +143,15 @@ export default function ModalDocumentViewer({ isOpen, onClose, doc, onSave }) {
               <button
                 type="button"
                 onClick={handleSave}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 !bg-green-600 !text-white hover:!bg-green-700"
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 !bg-green-600 !text-white hover:!bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Save className="h-4 w-4" />
-                Save
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {isSaving ? "Saving..." : "Save"}
               </button>
             </>
           ) : (

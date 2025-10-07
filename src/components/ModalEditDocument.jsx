@@ -1,6 +1,5 @@
-// src/components/ModalEditDocument.jsx
 import { useState, useEffect } from "react";
-import { X, FileText, Info, Save } from "lucide-react";
+import { X, FileText, Info, Save, Loader2 } from "lucide-react"; // ✅ Added Loader2
 import { fetchDocumentInfo } from "../api/api";
 
 const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
@@ -8,8 +7,8 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
   const [content, setContent] = useState("");
   const [file, setFile] = useState(null);
   const [documentTypes, setDocumentTypes] = useState([]);
+  const [isSaving, setIsSaving] = useState(false); // ✅ New loading state
 
-  // Sync fields when opening / when doc changes
   useEffect(() => {
     if (!isOpen) return;
     setTitleId(doc?.title_id ? String(doc.title_id) : "");
@@ -17,7 +16,6 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
     setFile(null);
   }, [doc, isOpen]);
 
-  // Fetch document types when modal opens
   useEffect(() => {
     if (!isOpen) return;
     const getTypes = async () => {
@@ -31,7 +29,6 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
     getTypes();
   }, [isOpen]);
 
-  // Escape to close + body scroll lock
   useEffect(() => {
     if (!isOpen) return;
     const onKeyDown = (e) => e.key === "Escape" && onClose?.();
@@ -50,9 +47,9 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
     if (e.target === e.currentTarget) onClose?.();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!doc?.id) return; // safety
+    if (!doc?.id) return;
 
     const payload = {
       id: doc.id,
@@ -65,7 +62,15 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
       payload.content = content;
     }
 
-    onUpdate(payload);
+    try {
+      setIsSaving(true); // ✅ Start spinner
+      await onUpdate(payload);
+      onClose?.();
+    } catch (error) {
+      console.error("Failed to update document:", error);
+    } finally {
+      setIsSaving(false); // ✅ Stop spinner
+    }
   };
 
   return (
@@ -77,15 +82,15 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
       aria-describedby="edit-doc-desc"
       onMouseDown={handleBackdrop}
     >
-      {/* Backdrop (same as department modal) */}
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
 
-      {/* Card (same layout & styles as department modal) */}
+      {/* Modal */}
       <div
         className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        {/* Header (neutral style, no brand color) */}
+        {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-gray-200">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-200">
@@ -95,16 +100,12 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
               <h2 id="edit-doc-title" className="text-xl font-semibold text-gray-900">
                 Edit Document
               </h2>
-              <p
-                id="edit-doc-desc"
-                className="mt-1 flex items-center gap-1 text-sm text-gray-600"
-              >
+              <p id="edit-doc-desc" className="mt-1 flex items-center gap-1 text-sm text-gray-600">
                 <Info className="h-4 w-4" aria-hidden="true" />
                 Update the document information and save your changes.
               </p>
             </div>
 
-            {/* Close icon (no button wrapper) */}
             <X
               onClick={onClose}
               onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClose?.()}
@@ -119,7 +120,6 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
 
         {/* Body */}
         <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)]">
-          {/* Remarks (same alert style as your pattern) */}
           {doc?.remarks && (
             <div
               className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 text-sm"
@@ -131,12 +131,9 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Type of Information (select styling matches dept modal inputs) */}
+            {/* Type of Information */}
             <div>
-              <label
-                htmlFor="titleId"
-                className="block text-sm font-medium text-gray-800 mb-2"
-              >
+              <label htmlFor="titleId" className="block text-sm font-medium text-gray-800 mb-2">
                 Type of Information <span className="text-red-500">*</span>
               </label>
               <select
@@ -155,13 +152,10 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
               </select>
             </div>
 
-            {/* File vs Content (same neutral inputs) */}
+            {/* File / Content Fields */}
             {doc?.filename ? (
               <div>
-                <label
-                  htmlFor="fileUpload"
-                  className="block text-sm font-medium text-gray-800 mb-2"
-                >
+                <label htmlFor="fileUpload" className="block text-sm font-medium text-gray-800 mb-2">
                   Change File (Optional)
                 </label>
                 <input
@@ -176,10 +170,7 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
               </div>
             ) : doc?.content !== undefined ? (
               <div>
-                <label
-                  htmlFor="content"
-                  className="block text-sm font-medium text-gray-800 mb-2"
-                >
+                <label htmlFor="content" className="block text-sm font-medium text-gray-800 mb-2">
                   Content <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -194,7 +185,7 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
               </div>
             ) : null}
 
-            {/* Actions (red Cancel, green Save — same as dept modal style) */}
+            {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
@@ -205,10 +196,20 @@ const ModalEditDocument = ({ isOpen, onClose, document: doc, onUpdate }) => {
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Save className="h-4 w-4" />
-                Save Changes
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
               </button>
             </div>
           </form>

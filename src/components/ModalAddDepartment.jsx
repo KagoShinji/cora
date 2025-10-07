@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { X, Building2, Info, Save } from "lucide-react";
+import { X, Building2, Info, Save, Loader2 } from "lucide-react";
 import { useAuthStore } from "../stores/userStores";
+import toast from "react-hot-toast";
 
 export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
   const [newDepartment, setNewDepartment] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const addDepartment = useAuthStore((state) => state.addDepartment);
   const getDepartment = useAuthStore((state) => state.getDepartment);
@@ -29,16 +31,23 @@ export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!newDepartment.trim()) {
+      toast.error("❌ Department name is required.");
+      return;
+    }
+
     try {
+      setIsSaving(true);
       await addDepartment({ department_name: newDepartment });
       await getDepartment();
-      alert("Department created successfully");
       onSave(newDepartment);
       setNewDepartment("");
       onClose();
     } catch (err) {
-      console.error("Failed to create department");
-      throw err;
+      console.error("Failed to create department:", err);
+      toast.error("❌ Failed to create department. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -51,7 +60,7 @@ export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
       aria-describedby="add-dept-desc"
       onMouseDown={handleBackdrop}
     >
-      {/* Backdrop (consistent) */}
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
 
       {/* Modal Card */}
@@ -108,11 +117,12 @@ export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
                 onChange={(e) => setNewDepartment(e.target.value)}
                 placeholder="Enter department name"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200"
+                disabled={isSaving}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-gray-400 focus:ring-4 focus:ring-gray-200 disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
 
-            {/* Actions (Cancel red, Save green for consistency) */}
+            {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
@@ -120,16 +130,27 @@ export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
                   setNewDepartment("");
                   onClose();
                 }}
-                className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-white !bg-red-500 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                disabled={isSaving}
+                className="px-5 py-2.5 rounded-xl border border-gray-300 !bg-red-500 text-sm font-medium text-white shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:opacity-60"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl !bg-green-500 text-white text-sm font-semibold shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Save className="h-4 w-4" />
-                Save
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Save
+                  </>
+                )}
               </button>
             </div>
           </form>

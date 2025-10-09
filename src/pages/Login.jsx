@@ -8,28 +8,7 @@ import toast from "react-hot-toast";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const credentialsMap = {
-  "superadmin@gmail.com": {
-    password: "super123",
-    role: "superadmin",
-    path: "/superadmin",
-  },
-  "cosuperadmin@gmail.com": {
-    password: "co123",
-    role: "co-superadmin",
-    path: "/cosuperadmin",
-  },
-  "admincreator@gmail.com": {
-    password: "creator123",
-    role: "admin-creator",
-    path: "/admincreator",
-  },
-  "adminapprover@gmail.com": {
-    password: "admin123",
-    role: "admin-approver",
-    path: "/adminapprover",
-  },
-};
+
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -53,12 +32,7 @@ function Login() {
 
     setIsSubmitting(true);
     try {
-      const users = credentialsMap[email];
-      if (users && users.password === password) {
-        toast.success("Login successful!");
-        navigate(users.path);
-        return;
-      }
+     
 
       const userData = { email, password };
       const login = await signin(userData);

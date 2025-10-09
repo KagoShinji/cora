@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { Info, X, FilePlus, Loader2 } from "lucide-react";
 import { createDocumentInfo } from "../api/api";
 import toast from "react-hot-toast";
+import { useDocumentStore } from "../stores/useDocumentStore";
 
 export default function ModalManageDocumentType({ isOpen, onClose }) {
   const [newType, setNewType] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const { refreshDocumentInfo } = useDocumentStore();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -34,6 +36,7 @@ export default function ModalManageDocumentType({ isOpen, onClose }) {
 
       if (response) {
         toast.success("✅ Document type created successfully!", { position: "bottom-right" });
+        refreshDocumentInfo(); 
         setNewType("");
         onClose();
       }

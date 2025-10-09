@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
 import { fetchDocumentInfo } from "../api/api";
 import { FileUp, Info, Tag, X, Loader2 } from "lucide-react"; // ✅ Added Loader2
+import { useDocumentStore } from "../stores/useDocumentStore";
 
 export default function ModalManualEntry({ isOpen, onClose, onSave }) {
   const [content, setContent] = useState("");
@@ -12,7 +13,7 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
   const [documentTypes, setDocumentTypes] = useState([]);
   const [showError, setShowError] = useState(false);
   const [isSaving, setIsSaving] = useState(false); // ✅ Spinner state
-
+  const { refreshTrigger} = useDocumentStore();
   const handleKeywordKeyDown = (e) => {
     if (e.key === "Enter" && keywordInput.trim()) {
       e.preventDefault();
@@ -63,7 +64,7 @@ export default function ModalManualEntry({ isOpen, onClose, onSave }) {
         }
       })();
     }
-  }, [isOpen]);
+  }, [isOpen,refreshTrigger]);
 
   if (!isOpen) return null;
 

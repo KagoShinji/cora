@@ -193,7 +193,7 @@ function AdminApproverDashboard() {
             </div>
           </Link>
 
-          {/* Logs Card */}
+          {/* Logs Card 
           <Link to="/adminapprover/logs" className="group">
             <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border border-gray-100 hover:border-emerald-200 hover:-translate-y-1 overflow-hidden">
               <div className="absolute top-6 right-4 w-20 h-20 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full opacity-40 group-hover:opacity-60 transition-opacity"></div>
@@ -228,6 +228,7 @@ function AdminApproverDashboard() {
               </div>
             </div>
           </Link>
+          */}
         </div>
 
         {/* Documents Table */}

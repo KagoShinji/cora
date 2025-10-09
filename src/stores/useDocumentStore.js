@@ -10,6 +10,8 @@ export const useDocumentStore = create(
       loading: false,
       error: null,
       titleDocuments: [],
+      refreshTrigger: 0,
+      refreshDocumentInfo: () => set({ refreshTrigger: Date.now() }),
 
 
        createDocument: async (file, titleId, keywords) => {

@@ -691,10 +691,10 @@ const deptChart = users.reduce((acc, user) => {
               </div>
 
               <h3 className="text-xl font-semibold mb-2" style={{ color: primaryColor }}>
-                Admin Users
+                Users
               </h3>
               <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                System administrators by role and access level.
+               All users and their role.
               </p>
 
               <div className="flex items-center gap-6">

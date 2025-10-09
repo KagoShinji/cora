@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
 import { fetchDocumentInfo } from "../api/api";
 import { FileUp, Info, Tag, X, Loader2 } from "lucide-react";
+import { useDocumentStore } from "../stores/useDocumentStore";
 
 export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
   const [typeOfInfo, setTypeOfInfo] = useState("");
@@ -14,6 +15,8 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
   const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Spinner state
 
   const inputRef = useRef(null);
+  const { refreshTrigger} = useDocumentStore();
+  
 
   const addPdfFiles = (fileList) => {
     if (!fileList) return;
@@ -83,7 +86,7 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
         }
       })();
     }
-  }, [isOpen]);
+  }, [isOpen,refreshTrigger]);
 
   if (!isOpen) return null;
 

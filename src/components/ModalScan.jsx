@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
 import { fetchDocumentInfo } from "../api/api";
 import { Info, X, Camera, FileImage, Tag, Loader2 } from "lucide-react";
+import { useDocumentStore } from "../stores/useDocumentStore";
 
 export default function ModalScan({ onClose, onUpload, isOpen }) {
   const [image, setImage] = useState(null);
@@ -19,6 +20,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
   const fileInputRef = useRef(null);
   const [documentTypes, setDocumentTypes] = useState([]);
   const [showError, setShowError] = useState(false);
+  const { refreshTrigger} = useDocumentStore();
 
   useEffect(() => {
     if (!image) {
@@ -169,7 +171,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
         }
       })();
     }
-  }, [isOpen]);
+  }, [isOpen,refreshTrigger]);
 
   useEffect(() => {
     return () => {

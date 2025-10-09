@@ -103,7 +103,15 @@ function AdminApproverDocuments() {
     toast.error("❌ Failed to decline document.");
   }
 };
-
+const handleApprove = async (documentId) => {
+  try {
+    await approveDocument(selectedDoc.id, "approved");
+    fetchDocuments(); // refresh list
+    setShowApproveModal(false);
+  } catch (error) {
+    console.error("Error approving document:", error);
+  }
+};
 const handleArchive = async (doc) => {
   try {
     await fetchDocuments();

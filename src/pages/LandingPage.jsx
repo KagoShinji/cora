@@ -34,8 +34,9 @@ export default function LandingPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [listening, setListening] = useState(false);
   const [voiceMode, setVoiceMode] = useState(false);
-
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const closeModal = () => setModal(null);
+  const [activeMessageId, setActiveMessageId] = useState(null);
 
   const signup = useAuthStore((state) => state.signup);
   const signin = useAuthStore((state) => state.signin);
@@ -51,6 +52,7 @@ export default function LandingPage() {
 
   const navigate = useNavigate();
 
+  const messageId = Date.now();
   // === Responsive: track mobile breakpoint ===
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -103,14 +105,31 @@ export default function LandingPage() {
     [isMobile, sidebarOpen]
   );
 
-  const speak = (text) => {
-    if (!window.speechSynthesis) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
+  const speak = (text, messageId) => {
+  if (!window.speechSynthesis) return;
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  setIsSpeaking(true);
+  setActiveMessageId(messageId);
+
+  utterance.onend = () => {
+    setIsSpeaking(false);
+    setActiveMessageId(null);
   };
+
+  utterance.onerror = () => {
+    setIsSpeaking(false);
+    setActiveMessageId(null);
+  };
+
+  window.speechSynthesis.speak(utterance);
+};
 
   const tint20 = useMemo(
     () => (primaryColor?.startsWith?.("#") ? `${primaryColor}20` : primaryColor),
@@ -127,10 +146,16 @@ export default function LandingPage() {
     if ((!trimmed && selectedImages.length === 0) || isTyping) return;
 
     appendMessage({
+      id: messageId,
       role: "user",
       text: trimmed,
       images: selectedImages.map((file) => URL.createObjectURL(file)),
     });
+
+    setChatHistory((prev) => [
+      ...prev,
+      { id: messageId + 1, role: "assistant", text: "" },
+    ]);
 
     setQuery("");
     setSelectedImages([]);
@@ -141,7 +166,6 @@ export default function LandingPage() {
 
     try {
       setIsTyping(true);
-      setChatHistory((prev) => [...prev, { role: "assistant", text: "" }]);
 
       await generateAnswer(
         trimmed,
@@ -159,7 +183,13 @@ export default function LandingPage() {
       );
 
       if (voiceMode && streamedAnswer.trim()) {
-        speak(streamedAnswer);
+      const assistantId = Date.now();
+        setChatHistory((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1].id = assistantId;
+          return updated;
+        });
+        speak(streamedAnswer, assistantId);
         setVoiceMode(false);
       }
     } catch (err) {
@@ -314,13 +344,14 @@ const handleRegister = async (e) => {
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} onNewChat={handleNewChat} isMobile={isMobile} />
 
       {/* Header */}
+      
       <div
         className="hidden md:block fixed top-4 z-50 font-bold text-xl select-none transition-all duration-300"
         style={{ left: sidebarOffset, color: primaryColor }}
       >
         {name.toUpperCase()}
       </div>
-
+      
       <div className="flex-1 relative flex flex-col" style={{ marginLeft: sidebarOffset, transition: "margin-left 300ms ease" }}>
         {/* Top bar */}
         <header className="flex items-center justify-between px-6 py-4">
@@ -385,8 +416,31 @@ const handleRegister = async (e) => {
                     <div className="whitespace-pre-wrap break-words">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {chat.text?.trim() || "Cora is generating"}
+                        
                       </ReactMarkdown>
                     </div>
+                    {!isUser && isSpeaking && activeMessageId === chat.id && (
+                    <div className="mt-2 flex justify-start">
+                      <button
+                        onClick={() => {
+                          window.speechSynthesis.cancel();
+                          setIsSpeaking(false);
+                          setActiveMessageId(null);
+                          toast("Cora stopped talking.");
+                        }}
+                        className="p-2 rounded-full border hover:bg-gray-100 transition flex items-center justify-center"
+                        style={{
+                          borderColor: primaryColor,
+                          color: primaryColor,
+                          backgroundColor: "#fff",
+                        }}
+                        title="Stop Cora's voice"
+                      >
+                        🔇
+                      </button>
+                    </div>
+                  )}
+
                   </div>
                 );
               })}

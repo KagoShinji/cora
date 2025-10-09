@@ -12,6 +12,7 @@ import {
 } from "../../api/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import toast from "react-hot-toast";
 
 export default function UserChat() {
   const [query, setQuery] = useState("");
@@ -33,6 +34,11 @@ export default function UserChat() {
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
   const recognitionRef = useRef(null);
+  const [activeMessageId, setActiveMessageId] = useState(null);
+  const messageId = Date.now();
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  
+
 
   // === Responsive: track mobile breakpoint (md < 768px) ===
   const [isMobile, setIsMobile] = useState(false);
@@ -72,14 +78,31 @@ export default function UserChat() {
   }, [isMobile, sidebarOpen]);
 
   // --- Text to Speech (TTS) ---
-  const speak = (text) => {
-    if (!window.speechSynthesis) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
+  const speak = (text, messageId) => {
+  if (!window.speechSynthesis) return;
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  setIsSpeaking(true);
+  setActiveMessageId(messageId);
+
+  utterance.onend = () => {
+    setIsSpeaking(false);
+    setActiveMessageId(null);
   };
+
+  utterance.onerror = () => {
+    setIsSpeaking(false);
+    setActiveMessageId(null);
+  };
+
+  window.speechSynthesis.speak(utterance);
+};
 
   // --- Web Speech API ---
   useEffect(() => {
@@ -139,24 +162,17 @@ export default function UserChat() {
     const trimmed = query.trim();
     if ((!trimmed && selectedImages.length === 0) || isTyping) return;
 
-    let convId = currentConversationId;
-    if (!convId) {
-      try {
-        const newConv = await createConversation(trimmed);
-        convId = newConv.id;
-        setCurrentConversationId(convId);
-        setSidebarRefreshKey((prev) => prev + 1);
-      } catch (err) {
-        console.error("Failed to create new conversation:", err);
-        return;
-      }
-    }
-
     appendMessage({
+      id: messageId,
       role: "user",
       text: trimmed,
       images: selectedImages.map((file) => URL.createObjectURL(file)),
     });
+
+    setChatHistory((prev) => [
+      ...prev,
+      { id: messageId + 1, role: "assistant", text: "" },
+    ]);
 
     setQuery("");
     setSelectedImages([]);
@@ -165,11 +181,8 @@ export default function UserChat() {
     const accessToken = useAuthStore.getState().access_token;
     let streamedAnswer = "";
 
-    await addMessage(convId, { role: "user", content: trimmed });
-
     try {
       setIsTyping(true);
-      setChatHistory((prev) => [...prev, { role: "assistant", text: "" }]);
 
       await generateAnswer(
         trimmed,
@@ -186,10 +199,14 @@ export default function UserChat() {
         selectedImages
       );
 
-      await addMessage(convId, { role: "assistant", content: streamedAnswer });
-
       if (voiceMode && streamedAnswer.trim()) {
-        speak(streamedAnswer);
+      const assistantId = Date.now();
+        setChatHistory((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1].id = assistantId;
+          return updated;
+        });
+        speak(streamedAnswer, assistantId);
         setVoiceMode(false);
       }
     } catch (err) {
@@ -201,6 +218,7 @@ export default function UserChat() {
         },
       ]);
       console.error("Streaming error:", err);
+      toast.error("Something went wrong while generating a response.");
     } finally {
       setIsTyping(false);
     }
@@ -381,6 +399,27 @@ export default function UserChat() {
                         {chat.text?.trim() || "Cora is generating"}
                       </ReactMarkdown>
                     </div>
+                    {!isUser && isSpeaking && activeMessageId === chat.id && (
+                    <div className="mt-2 flex justify-start">
+                      <button
+                        onClick={() => {
+                          window.speechSynthesis.cancel();
+                          setIsSpeaking(false);
+                          setActiveMessageId(null);
+                          toast("Cora stopped talking.");
+                        }}
+                        className="p-2 rounded-full border hover:bg-gray-100 transition flex items-center justify-center"
+                        style={{
+                          borderColor: primaryColor,
+                          color: primaryColor,
+                          backgroundColor: "#fff",
+                        }}
+                        title="Stop Cora's voice"
+                      >
+                        🔇
+                      </button>
+                    </div>
+                  )}
                     {chat.images?.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
                         {chat.images.map((src, i) => (

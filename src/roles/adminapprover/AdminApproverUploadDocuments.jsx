@@ -67,9 +67,10 @@ function AdminApproverUploadDocuments() {
   const handleUpload = async (formData) => {
     try {
       const file = formData.get("file");
-      const title = formData.get("title");
-      const notes = formData.get("notes");
-      await useDocumentStore.getState().createDocument(file, title, notes);
+      const title_id = formData.get("title_id");
+      const keywords = formData.get("keywords");
+
+      await useDocumentStore.getState().createDocument(file, title_id, keywords);
       toast.success("📄 Document uploaded successfully!");
       setShowUploadModal(false);
       fetchDocuments(filterStatus === "all" ? "" : filterStatus);
@@ -78,15 +79,14 @@ function AdminApproverUploadDocuments() {
     }
   };
 
-  // ✅ Toastified manual entry
   const handleManualSave = async (manualDoc) => {
     try {
-      const formData = new FormData();
-      formData.append("title", manualDoc.type);
-      formData.append("content", manualDoc.content);
-      if (manualDoc.notes) formData.append("notes", manualDoc.notes);
-
-      await submitManualEntry(formData);
+      const payload = {
+        title_id: manualDoc.title_id,
+        content: manualDoc.content,
+        keywords: manualDoc.keywords || [],
+      };
+      await submitManualEntry(payload);
       toast.success("📝 Manual entry saved successfully!");
       setShowManualModal(false);
       fetchDocuments(filterStatus === "all" ? "" : filterStatus);
@@ -98,9 +98,11 @@ function AdminApproverUploadDocuments() {
   // ✅ Toastified scan upload
   const handleScanUpload = async (scannedDoc) => {
     try {
-      await useDocumentStore
-        .getState()
-        .createDocument(scannedDoc.image, scannedDoc.title_id, scannedDoc.keywords);
+      await useDocumentStore.getState().createDocument(
+        scannedDoc.image,
+        scannedDoc.title_id,
+        scannedDoc.keywords
+      );
       toast.success("📠 Scanned document uploaded successfully!");
       fetchDocuments(filterStatus === "all" ? "" : filterStatus);
     } catch (error) {

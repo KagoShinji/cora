@@ -270,9 +270,11 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
                   <button
                     type="button"
                     onClick={() => setShowTypeModal(true)}
-                    className="px-3 py-2 text-sm font-medium !bg-white border !border-gray-300 rounded-xl text-gray-700 hover:!bg-gray-100 transition whitespace-nowrap"
+                    className="flex items-center justify-center w-10 h-10 text-lg font-bold !bg-white border !border-gray-300 rounded-xl text-gray-700 hover:!bg-gray-100 transition"
+                    title="Manage Types"
+                    aria-label="Manage Types"
                   >
-                    Manage Types
+                    +
                   </button>
                 </div>
               </div>

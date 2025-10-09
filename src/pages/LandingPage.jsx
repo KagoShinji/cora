@@ -517,11 +517,18 @@ const handleRegister = async (e) => {
               </div>
               <button
                 type="submit"
-                className="hidden sm:inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium text-white transition"
+                className="hidden sm:inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium text-white transition gap-2"
                 style={{ backgroundColor: primaryColor }}
                 disabled={isTyping || (!query.trim() && selectedImages.length === 0)}
               >
-                Send
+                {isTyping ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send"
+                )}
               </button>
             </div>
           </div>

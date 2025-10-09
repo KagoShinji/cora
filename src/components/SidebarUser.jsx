@@ -1,9 +1,10 @@
-import { FilePen, Menu, Star, XIcon } from "lucide-react";
+import { FilePen, Menu, Star, XIcon, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../stores/userStores";
 import { useAppSettingsStore } from "../stores/useSettingsStore";
 import { fetchConversations,submitSatisfactionReview } from "../api/api";
+import toast from "react-hot-toast";
 
 // ✅ Accept isMobile with a safe default (won't break older callers)
 function SidebarUser({
@@ -23,6 +24,7 @@ function SidebarUser({
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const getSettings = useAppSettingsStore((s) => s.getSettings);
 
   const navigate = useNavigate();
@@ -239,94 +241,106 @@ const bgColor = primaryColor ?? "transparent";
         </div>
       )}
 
-{/* Satisfaction Modal (modern, themed with primaryColor) */}
-{showSatisfactionModal && (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="satisfaction-title"
-      aria-describedby="satisfaction-desc"
-      className="relative w-[90%] max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 p-6 sm:p-8 text-center"
-      style={{ "--pc": primaryColor || "#B91C1C" }}
-    >
-      {/* Accent line */}
-      <div
-        className="absolute inset-x-0 -top-px h-[2px]"
-        style={{
-          background: "linear-gradient(90deg,transparent,var(--pc),transparent)",
-        }}
-      />
+{/* ✅ Satisfaction Modal (spinner added) */}
+      {showSatisfactionModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="satisfaction-title"
+            aria-describedby="satisfaction-desc"
+            className="relative w-[90%] max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 p-6 sm:p-8 text-center"
+            style={{ "--pc": primaryColor || "#B91C1C" }}
+          >
+            <div
+              className="absolute inset-x-0 -top-px h-[2px]"
+              style={{
+                background:
+                  "linear-gradient(90deg,transparent,var(--pc),transparent)",
+              }}
+            />
 
-      <h2
-        id="satisfaction-title"
-        className="text-xl sm:text-2xl font-semibold mb-2 !text-[var(--pc)]"
-      >
-        Rate Your Experience
-      </h2>
-      <p id="satisfaction-desc" className="text-neutral-600 mb-6">
-        How accurate and relevant was this conversation?
-      </p>
+            <h2
+              id="satisfaction-title"
+              className="text-xl sm:text-2xl font-semibold mb-2 !text-[var(--pc)]"
+            >
+              Rate Your Experience
+            </h2>
+            <p id="satisfaction-desc" className="text-neutral-600 mb-6">
+              How accurate and relevant was this conversation?
+            </p>
 
-      {/* Star rating */}
-      <div className="flex justify-center gap-2 mb-6">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            size={32}
-            className={`cursor-pointer transition ${
-              star <= (hoverRating || rating)
-                ? "text-yellow-400"
-                : "text-gray-300"
-            }`}
-            onMouseEnter={() => setHoverRating(star)}
-            onMouseLeave={() => setHoverRating(0)}
-            onClick={() => setRating(star)}
-          />
-        ))}
-      </div>
+            <div className="flex justify-center gap-2 mb-6">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  size={32}
+                  className={`cursor-pointer transition ${
+                    star <= (hoverRating || rating)
+                      ? "text-yellow-400"
+                      : "text-gray-300"
+                  }`}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={() => setRating(star)}
+                />
+              ))}
+            </div>
 
-      {/* Actions */}
-      <div className="flex flex-col sm:flex-row justify-center gap-3">
-        <button
-          onClick={() => setShowSatisfactionModal(false)}
-          type="button"
-          className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 border !bg-white text-sm font-medium transition hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
-          style={{
-            borderColor: "var(--pc)",
-            color: "var(--pc)",
-            "--tw-ring-color": "var(--pc)",
-          }}
-        >
-          Skip
-        </button>
-        <button
-        onClick={async () => {
-          try {
-            if (rating === 0) return; // extra safety
-            await submitSatisfactionReview(rating);
-            console.log("Rating submitted:", rating);
-            setShowSatisfactionModal(false);
-          } catch (error) {
-            console.error("Failed to submit rating:", error);
-            // Optionally show a toast or alert
-            alert(error.message || "Failed to submit rating");
-          }
-        }}
-        type="button"
-        disabled={rating === 0}
-        className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed !text-white"
-        style={{
-          backgroundColor: "var(--pc)",
-          "--tw-ring-color": "var(--pc)",
-        }}
-      >
-        Submit
-      </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <button
+                onClick={() => setShowSatisfactionModal(false)}
+                type="button"
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 border !bg-white text-sm font-medium transition hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{
+                  borderColor: "var(--pc)",
+                  color: "var(--pc)",
+                  "--tw-ring-color": "var(--pc)",
+                }}
+                disabled={isSubmitting} // ✅ Prevent skip while submitting
+              >
+                Skip
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (rating === 0 || isSubmitting) return;
+                  try {
+                    setIsSubmitting(true); // ✅ start spinner
+                    await submitSatisfactionReview(rating);
+                    console.log("Rating submitted:", rating);
+                    toast.success("Thank you for your feedback!");
+                    setShowSatisfactionModal(false);
+                  } catch (error) {
+                    console.error("Failed to submit rating:", error);
+                    toast.error(
+                      error.message ||
+                        "Failed to submit rating. Please try again."
+                    );
+                  } finally {
+                    setIsSubmitting(false); // ✅ stop spinner
+                  }
+                }}
+                type="button"
+                disabled={rating === 0 || isSubmitting}
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed !text-white"
+                style={{
+                  backgroundColor: "var(--pc)",
+                  "--tw-ring-color": "var(--pc)",
+                }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+                  </>
+                ) : (
+                  "Submit"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 // src/pages/user/UserChat.jsx
 import { useEffect, useRef, useState, useMemo } from "react";
-import { Mic, Image as ImageIcon, Menu } from "lucide-react";
+import { Mic, Image as ImageIcon, Menu, Loader2 } from "lucide-react";
 import SidebarUser from "../../components/SidebarUser";
 import { useAuthStore } from "../../stores/userStores";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
@@ -583,16 +583,24 @@ export default function UserChat() {
   className="
     hidden sm:inline-flex
     items-center justify-center
-    rounded-full        /* full round edges */
-    px-5 py-2           /* enough horizontal padding to stretch it */
+    rounded-full
+    px-5 py-2
     text-sm font-medium
     text-white
     transition
+    gap-2
   "
   style={{ backgroundColor: primaryColor }}
   disabled={isTyping || (!query.trim() && selectedImages.length === 0)}
 >
-  Send
+  {isTyping ? (
+    <>
+      <Loader2 className="h-4 w-4 animate-spin" />
+      Sending...
+    </>
+  ) : (
+    "Send"
+  )}
 </button>
     </div>
   </div>

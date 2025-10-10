@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X, AlertTriangle, Info, Save, Loader2 } from "lucide-react"; // ✅ Added Loader2 for spinner
 
-export default function ArchiveModal({ open, onClose, onConfirm, document: doc }) {
+export default function deleteModal({ open, onClose, onConfirm, document: doc }) {
   const [isLoading, setIsLoading] = useState(false); // ✅ spinner state
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function ArchiveModal({ open, onClose, onConfirm, document: doc }
 
   if (!open || !doc) return null;
 
-  const actionText = doc.archived ? "Unarchive" : "Archive";
+  const actionText = "delete";
 
   const handleBackdrop = (e) => {
     if (e.target === e.currentTarget) onClose();
@@ -63,13 +63,6 @@ export default function ArchiveModal({ open, onClose, onConfirm, document: doc }
               <h2 id="archive-title" className="text-xl font-semibold text-gray-900">
                 Confirm {actionText}
               </h2>
-              <p
-                id="archive-desc"
-                className="mt-1 flex items-center gap-1 text-sm text-gray-600"
-              >
-                <Info className="h-4 w-4 text-gray-400" aria-hidden="true" />
-                You can reverse this by {doc.archived ? "archiving" : "unarchiving"} again.
-              </p>
             </div>
             <X
               onClick={onClose}

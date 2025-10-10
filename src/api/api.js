@@ -1,6 +1,6 @@
-//const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const API_BASE_URL = "http://127.0.0.1:8000"
+//const API_BASE_URL = "http://127.0.0.1:8000"
 
 
 export const createUsers = async (userData) => {
@@ -696,4 +696,28 @@ export const fetchSatisfactionMetrics = async () => {
     throw new Error("Failed to fetch satisfaction metrics");
   }
   return response.json();
+};
+
+export const deleteDocument = async (docId) => {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    throw new Error("No access token found. Please log in.");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/users/delete_document/${docId}`, {
+    method: "POST", 
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Failed to delete document.");
+  }
+
+  const data = await response.json();
+  return data;
 };

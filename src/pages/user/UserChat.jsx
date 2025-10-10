@@ -158,71 +158,90 @@ export default function UserChat() {
 
   // --- Submit ---
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const trimmed = query.trim();
-    if ((!trimmed && selectedImages.length === 0) || isTyping) return;
+  e.preventDefault();
+  const trimmed = query.trim();
+  if ((!trimmed && selectedImages.length === 0) || isTyping) return;
 
-    appendMessage({
-      id: messageId,
-      role: "user",
-      text: trimmed,
-      images: selectedImages.map((file) => URL.createObjectURL(file)),
-    });
-
-    setChatHistory((prev) => [
-      ...prev,
-      { id: messageId + 1, role: "assistant", text: "" },
-    ]);
-
-    setQuery("");
-    setSelectedImages([]);
-    setSubmitted(true);
-
-    const accessToken = useAuthStore.getState().access_token;
-    let streamedAnswer = "";
-
+  let convId = currentConversationId;
+  if (!convId) {
     try {
-      setIsTyping(true);
+      const newConv = await createConversation(trimmed?.slice(0, 50) || "New Chat");
+      convId = newConv.id;
+      setCurrentConversationId(convId);
+      setSidebarRefreshKey((prev) => prev + 1);
+    } catch (err) {
+      console.error("Failed to create conversation:", err);
+      toast.error("Unable to create a conversation.");
+      return;
+    }
+  }
 
-      await generateAnswer(
-        trimmed,
-        accessToken,
-        (chunk) => {
-          streamedAnswer += chunk;
-          setChatHistory((prev) => {
-            const updated = [...prev];
-            const last = updated[updated.length - 1];
-            if (last.role === "assistant") last.text = streamedAnswer;
-            return [...updated.slice(0, -1), last];
-          });
-        },
-        selectedImages
-      );
+  const userMsgId = Date.now();
+  appendMessage({
+    id: userMsgId,
+    role: "user",
+    text: trimmed,
+    images: selectedImages.map((file) => URL.createObjectURL(file)),
+  });
 
-      if (voiceMode && streamedAnswer.trim()) {
-      const assistantId = Date.now();
+  const assistantMsgId = userMsgId + 1;
+  setChatHistory((prev) => [...prev, { id: assistantMsgId, role: "assistant", text: "" }]);
+
+  setQuery("");
+  setSelectedImages([]);
+  setSubmitted(true);
+
+  const accessToken = useAuthStore.getState().access_token;
+  let streamedAnswer = "";
+
+  try {
+    setIsTyping(true);
+
+    // --- Store user message in backend ---
+    await addMessage(convId, { role: "user", content: trimmed });
+
+    // --- Stream assistant answer ---
+    await generateAnswer(
+      trimmed,
+      accessToken,
+      (chunk) => {
+        streamedAnswer += chunk;
         setChatHistory((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1].id = assistantId;
-          return updated;
+          const last = updated[updated.length - 1];
+          if (last.role === "assistant") last.text = streamedAnswer;
+          return [...updated.slice(0, -1), last];
         });
-        speak(streamedAnswer, assistantId);
-        setVoiceMode(false);
-      }
-    } catch (err) {
-      setChatHistory((prev) => [
-        ...prev.slice(0, -1),
-        {
-          role: "assistant",
-          text: "Sorry, something went wrong while generating a response.",
-        },
-      ]);
-      console.error("Streaming error:", err);
-      toast.error("Something went wrong while generating a response.");
-    } finally {
-      setIsTyping(false);
+      },
+      selectedImages
+    );
+
+    // --- ✅ Store assistant message in backend ---
+    if (streamedAnswer.trim()) {
+      await addMessage(convId, { role: "assistant", content: streamedAnswer });
     }
-  };
+
+    if (voiceMode && streamedAnswer.trim()) {
+      const assistantId = Date.now();
+      setChatHistory((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1].id = assistantId;
+        return updated;
+      });
+      speak(streamedAnswer, assistantId);
+      setVoiceMode(false);
+    }
+  } catch (err) {
+    setChatHistory((prev) => [
+      ...prev.slice(0, -1),
+      { role: "assistant", text: "Sorry, something went wrong while generating a response." },
+    ]);
+    console.error("Streaming error:", err);
+    toast.error("Something went wrong while generating a response.");
+  } finally {
+    setIsTyping(false);
+  }
+};
 
   // --- Helpers ---
   const appendMessage = (msg) => setChatHistory((prev) => [...prev, msg]);
@@ -238,31 +257,33 @@ export default function UserChat() {
   };
 
   const handleSelectChat = async (convId) => {
-    setQuery("");
-    setSubmitted(true);
-    setIsTyping(false);
-    setSelectedImages([]);
-    setCurrentConversationId(convId);
+  setQuery("");
+  setSubmitted(true);
+  setIsTyping(false);
+  setSelectedImages([]);
+  setCurrentConversationId(convId);
 
-    try {
-      const convData = await fetchConversationById(convId);
-      if (convData.messages) {
-        setChatHistory(
-          convData.messages.map((msg) => ({
-            role: msg.role,
-            text: msg.content,
-          }))
-        );
-      } else {
-        setChatHistory([]);
-      }
-    } catch (error) {
-      console.error("Failed to load conversation:", error);
-      setChatHistory([
-        { role: "assistant", text: "Sorry, failed to load this conversation." },
-      ]);
+  try {
+    const convData = await fetchConversationById(convId);
+
+    if (convData.messages && convData.messages.length > 0) {
+      const messages = convData.messages.map((msg) => ({
+        id: msg.id,             // Use backend id for uniqueness
+        role: msg.role,
+        text: msg.content,
+        images: msg.images || [], // optional if backend returns images
+      }));
+      setChatHistory(messages);
+    } else {
+      setChatHistory([]);
     }
-  };
+  } catch (error) {
+    console.error("Failed to load conversation:", error);
+    setChatHistory([
+      { id: Date.now(), role: "assistant", text: "Sorry, failed to load this conversation." },
+    ]);
+  }
+};
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);

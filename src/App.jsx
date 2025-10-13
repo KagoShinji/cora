@@ -32,14 +32,13 @@ function App() {
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/superadmin" element={<SuperAdminDashboard />} />
-          <Route path="/superadmin/users" element={<SuperAdminUsers />} />
-          <Route path="/superadmin/logs" element={<SuperAdminLogs />} />
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             {/* SuperAdmin */}
-            
+            <Route path="/superadmin" element={<SuperAdminDashboard />} />
+            <Route path="/superadmin/users" element={<SuperAdminUsers />} />
+            <Route path="/superadmin/logs" element={<SuperAdminLogs />} />
 
             {/* Co-SuperAdmin */}
             <Route path="/cosuperadmin" element={<CoSuperAdminDashboard />} />

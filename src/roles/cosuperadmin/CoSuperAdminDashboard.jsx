@@ -72,9 +72,8 @@ useEffect(() => {
       // ✅ Only include docs that are neither approved/declined
       //    AND are not manual entries (filename is null/undefined)
       const filteredDocs = docs.filter((doc) => {
-        const status = doc.status?.toLowerCase() || "pending";
+        const status = doc.status?.toLowerCase() || "pending-approval" || "approved";
         return (
-          status !== "approved" &&
           status !== "declined" &&
           doc.filename // ✅ exclude manual entry (filename is null)
         );
@@ -83,7 +82,7 @@ useEffect(() => {
       // Group by department
       const counts = {};
       filteredDocs.forEach((doc) => {
-        const title = doc.title_id || "Unknown";
+        const title = doc.status || "Unknown";
         counts[title] = (counts[title] || 0) + 1;
       });
 
@@ -114,7 +113,7 @@ useEffect(() => {
         // Group by form name (use title for example)
         const counts = {};
         manualDocs.forEach((doc) => {
-          const form = doc.title || "Unknown";
+          const form = doc.status || "Unknown";
           counts[form] = (counts[form] || 0) + 1;
         });
 
@@ -908,7 +907,7 @@ const deptChart = users.reduce((acc, user) => {
           File Uploads
         </h3>
         <p className="text-gray-600 text-sm leading-relaxed mb-6">
-          Document uploads by department and category.
+          Document uploads by department and the status.
         </p>
 
         <div className="flex items-center gap-6">

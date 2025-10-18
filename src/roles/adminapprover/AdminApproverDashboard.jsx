@@ -112,12 +112,12 @@ function AdminApproverDashboard() {
       try {
         const docs = await fetchDocument();
         const filteredDocs = docs.filter((doc) => {
-          const status = doc.status?.toLowerCase() || "pending";
-          return status !== "approved" && status !== "declined" && doc.filename;
+          const status = doc.status?.toLowerCase() || "pending-approval" || "approved";
+          return status !== "declined" && doc.filename;
         });
         const counts = {};
         filteredDocs.forEach((doc) => {
-          const title = doc.title_id || "Unknown";
+          const title = doc.status || "Unknown";
           counts[title] = (counts[title] || 0) + 1;
         });
         const chartData = Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -137,7 +137,7 @@ function AdminApproverDashboard() {
         const manualDocs = docs.filter((doc) => !doc.filename);
         const counts = {};
         manualDocs.forEach((doc) => {
-          const form = doc.title || "Unknown";
+          const form = doc.status || "Unknown";
           counts[form] = (counts[form] || 0) + 1;
         });
         const chartData = Object.entries(counts).map(([name, count]) => ({ name, count }));

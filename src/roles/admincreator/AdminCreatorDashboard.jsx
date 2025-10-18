@@ -96,14 +96,17 @@ useEffect(() => {
 
         // Only include docs that are neither approved/declined AND are not manual entries (filename present)
         const filteredDocs = docs.filter((doc) => {
-          const status = doc.status?.toLowerCase() || "pending";
-          return status !== "approved" && status !== "declined" && doc.filename;
+          const status = doc.status?.toLowerCase() || "pending-approval" || "approved";
+           return (
+          status !== "declined" &&
+          doc.filename // ✅ exclude manual entry (filename is null)
+        );
         });
 
         // Group by title_id (as in your CoSuperAdminDashboard)
         const counts = {};
         filteredDocs.forEach((doc) => {
-          const title = doc.title_id || "Unknown";
+          const title = doc.status || "Unknown";
           counts[title] = (counts[title] || 0) + 1;
         });
 
@@ -131,7 +134,7 @@ useEffect(() => {
 
         const counts = {};
         manualDocs.forEach((doc) => {
-          const form = doc.title || "Unknown";
+          const form = doc.status || "Unknown";
           counts[form] = (counts[form] || 0) + 1;
         });
 

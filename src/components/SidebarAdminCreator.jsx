@@ -64,10 +64,11 @@ function SidebarAdminCreator({ isOpen, setOpen }) {
 
         {/* Footer with Logout Trigger */}
         {isOpen && (
-          <div className="mt-auto px-2 pb-4"style={{backgroundColor:secondaryColor}}>
+          <div className="mt-auto px-2 pb-4">
             <div
               onClick={() => setShowLogoutModal(true)}
-              className="bg-white text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
+              className=" text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
+              style={{backgroundColor:secondaryColor}}
             >
               <div style={{ color: secondaryColor }} className="font-semibold uppercase">
                 {user}

@@ -69,18 +69,18 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
 
         {/* Footer */}
         {isOpen && (
-          <div className="mt-auto px-2 pb-4">
+          <div className="mt-auto px-2 pb-4"style={{backgroundColor:secondaryColor}}>
             <div
               onClick={() => setShowLogoutModal(true)}
               className="bg-white text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
             >
               <div
-                style={{ color: secondaryColor }}
+                style={{ color: primaryColor }}
                 className="font-semibold uppercase"
               >
                 {user}
               </div>
-              <div style={{ color: secondaryColor }} className="text-sm">
+              <div style={{ color: primaryColor }} className="text-sm">
                 Super Admin
               </div>
             </div>

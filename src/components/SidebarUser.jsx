@@ -163,7 +163,7 @@ const bgColor = primaryColor ?? "transparent";
 
 {/* Footer card */} 
 {(isMobile || isOpen) && (
-  <div className="mt-auto px-2 pb-4">
+  <div className="mt-auto px-2 pb-4"style={{backgroundColor:secondaryColor}}>
     <div
       onClick={() => setShowLogoutModal(true)}
       className="rounded-lg shadow p-4 cursor-pointer hover:bg-gray-50 transition"

@@ -90,7 +90,7 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
 
         {/* Footer with Logout Trigger */}
         {isOpen && (
-          <div className="mt-auto px-2 pb-4">
+          <div className="mt-auto px-2 pb-4"style={{backgroundColor:secondaryColor}}>
             <div
               onClick={() => setShowLogoutModal(true)}
               className="rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition bg-white"

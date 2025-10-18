@@ -42,12 +42,18 @@ function App() {
 
             {/* Co-SuperAdmin */}
             <Route path="/cosuperadmin" element={<CoSuperAdminDashboard />} />
-            <Route path="/cosuperadmin/admins" element={<CoSuperAdminAdmins />} />
+            <Route
+              path="/cosuperadmin/admins"
+              element={<CoSuperAdminAdmins />}
+            />
             <Route
               path="/cosuperadmin/departments"
               element={<CoSuperAdminDepartments />}
             />
-            <Route path="/cosuperadmin/themes" element={<CoSuperAdminThemes />} />
+            <Route
+              path="/cosuperadmin/themes"
+              element={<CoSuperAdminThemes />}
+            />
             <Route path="/cosuperadmin/logs" element={<CoSuperAdminLogs />} />
 
             {/* Admin Creator */}
@@ -68,7 +74,10 @@ function App() {
               path="/adminapprover/uploaddocuments"
               element={<AdminApproverUploadDocuments />}
             />
-            <Route path="/adminapprover/logs" element={<AdminApproverLogs />} />
+            <Route
+              path="/adminapprover/logs"
+              element={<AdminApproverLogs />}
+            />
           </Route>
 
           {/* User routes */}

@@ -121,7 +121,7 @@ function ModalAdminUsers({ isOpen, onClose }) {
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm text-gray-600 font-medium">
-                  {filtered.length}Users{filtered.length !== 1 ? 's' : ''} found
+                  {filtered.length} User{filtered.length !== 1 ? 's' : ''} found
                 </span>
               </div>
               {(search || roleFilter) && (

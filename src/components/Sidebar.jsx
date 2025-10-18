@@ -72,7 +72,7 @@ export default function Sidebar({
 
         {/* New Chat */}
         <div
-          className="flex items-center gap-2 cursor-pointer px-4 py-2 hover:opacity-90 transition"
+          className="flex items-center gap-2 cursor-pointer p-2 hover:bg-gray-200/20 rounded transition mx-2"
           onClick={() => {
             onNewChat?.();
             if (isMobile) setOpen(false); // close drawer after action on mobile

@@ -44,14 +44,14 @@ function SidebarSuperAdmin({ isOpen, setOpen }) {
         <nav className="flex flex-col gap-2 p-2 text-white">
           <Link
             to="/superadmin"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition !text-white"
+            className="flex items-center gap-2 p-2 rounded transition text-white hover:bg-gray-200/20"
           >
             <Home size={18} className="!text-white" />
             {isOpen && <span className="!text-white">Home</span>}
           </Link>
           <Link
             to="/superadmin/users"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition !text-white"
+            className="flex items-center gap-2 p-2 rounded transition text-white hover:bg-gray-200/20"
           >
             <Users size={18} className="!text-white" />
             {isOpen && <span className="!text-white">Users</span>}

@@ -38,7 +38,7 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
         <nav className="flex flex-col gap-2 p-2">
           <Link
             to="/adminapprover"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition"
+            className="flex items-center gap-2 p-2 rounded transition text-white hover:bg-gray-200/20"
             style={{ color: "white" }}
           >
             <Home size={18} />
@@ -48,7 +48,7 @@ function SidebarAdminApprover({ isOpen, setOpen }) {
           {/* Collapsible Documents Menu */}
           <div className="flex flex-col rounded transition cursor-pointer">
             <div
-              className="flex items-center justify-between gap-2 p-2"
+              className="flex items-center justify-between gap-2 p-2 rounded hover:bg-gray-200/20"
               onClick={() => setDocsOpen(!docsOpen)}
             >
               <div className="flex items-center gap-2">

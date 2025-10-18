@@ -400,7 +400,7 @@ function CoSuperAdminThemes() {
                               style: {
                                 fontSize: "15px",
                                 borderRadius: "10px",
-                                background: "#fff",
+                                background: "#22c55e",
                               },
                             });
                           }}

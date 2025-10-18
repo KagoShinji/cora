@@ -45,7 +45,7 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
           {/* Home */}
           <Link
             to="/cosuperadmin"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
+            className="flex items-center gap-2 p-2 rounded transition text-white hover:bg-gray-200/20"
           >
             <Home size={18} className="text-white" />
             {isOpen && <span className="text-white">Home</span>}
@@ -54,7 +54,7 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
           {/* Admins */}
           <Link
             to="/cosuperadmin/admins"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
+            className="flex items-center gap-2 p-2 rounded transition text-white hover:bg-gray-200/20"
           >
             <Users size={18} className="text-white" />
             {isOpen && <span className="text-white">Admins</span>}
@@ -63,7 +63,7 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
           {/* Departments */}
           <Link
             to="/cosuperadmin/departments"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
+            className="flex items-center gap-2 p-2 rounded transition text-white hover:bg-gray-200/20"
           >
             <Landmark size={18} className="text-white" />
             {isOpen && <span className="text-white">Departments</span>}
@@ -72,7 +72,7 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
           {/* Themes */}
           <Link
             to="/cosuperadmin/themes"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
+            className="flex items-center gap-2 p-2 rounded transition text-white hover:bg-gray-200/20"
           >
             <Palette size={18} className="text-white" />
             {isOpen && <span className="text-white">Themes</span>}
@@ -81,7 +81,7 @@ function SidebarCoSuperAdmin({ isOpen, setOpen }) {
           {/* Logs 
           <Link
             to="/cosuperadmin/logs"
-            className="flex items-center gap-2 p-2 rounded hover:bg-primary transition text-white"
+            className="flex items-center gap-2 p-2 rounded transition text-white hover:bg-gray-200/20"
           >
             <ClipboardList size={18} className="text-white" />
             {isOpen && <span className="text-white">Logs</span>}

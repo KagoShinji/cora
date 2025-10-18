@@ -8,7 +8,8 @@ import { Upload, ScanLine, Pencil, Search, X, Menu } from "lucide-react";
 import { useDocumentStore } from "../../stores/useDocumentStore";
 import { submitManualEntry, updateDocument } from "../../api/api";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
-import toast from "react-hot-toast"; // ✅ Added toast
+import toast from "react-hot-toast";
+import RemarksModal from "../../components/RemarksModal";
 
 /* Content preview modal */
 function ContentModal({ isOpen, onClose, title, content }) {
@@ -89,8 +90,12 @@ function AdminCreatorDocuments() {
   const [editingDoc, setEditingDoc] = useState(null);
   const [showContentModal, setShowContentModal] = useState(false);
   const [contentModalData, setContentModalData] = useState({ title: "", content: "" });
+  const [showRemarksModal, setShowRemarksModal] = useState(false);
+  const [remarksDoc, setRemarksDoc] = useState(null);
+  const [remarks, setRemarks] = useState("");
 
-  const [filterStatus, setFilterStatus] = useState("declined");
+
+  const [filterStatus, setFilterStatus] = useState("pending-approval");
   const [search, setSearch] = useState("");
 
   const { documents, fetchDocuments } = useDocumentStore();
@@ -102,7 +107,7 @@ function AdminCreatorDocuments() {
     [isMobile, sidebarOpen]
   );
 
-  // ✅ Replace alerts with toasts (no color or style changes!)
+  // ✅ Upload handler
   const handleUpload = async (formData) => {
     try {
       const file = formData.get("file");
@@ -118,6 +123,7 @@ function AdminCreatorDocuments() {
     }
   };
 
+  // ✅ Manual Entry
   const handleManualSave = async (manualDoc) => {
     try {
       const payload = {
@@ -134,6 +140,7 @@ function AdminCreatorDocuments() {
     }
   };
 
+  // ✅ Edit handler
   const handleEdit = (doc) => {
     setEditingDoc(doc);
     setShowEditModal(true);
@@ -151,29 +158,59 @@ function AdminCreatorDocuments() {
     }
   };
 
-  const handleView = async (doc) => {
-    try {
-      if (doc.content) {
-        setContentModalData({
-          title: doc.title || "No title",
-          content: doc.content || "No content",
-        });
-        setShowContentModal(true);
-      } else {
-        const blob = await useDocumentStore.getState().previewDocument(doc.id);
-        if (!blob) {
-          toast.error("⚠️ No file found for this document.");
-          return;
-        }
-        const url = window.URL.createObjectURL(blob);
-        const newTab = window.open(url);
-        if (!newTab) toast("🔒 Popup blocked! Please allow popups for this site.");
-      }
-    } catch {
-      toast.error("❌ Failed to preview document.");
+  // ✅ View handler
+const handleView = async (doc) => {
+  try {
+    if (doc.status === "declined") {
+      setRemarksDoc(doc);
+      setRemarks(doc.remarks || "No remarks provided.");
+      setShowRemarksModal(true);
+      return;
     }
-  };
 
+    if (doc.content) {
+      setContentModalData({
+        title: doc.title || "No title",
+        content: doc.content || "No content",
+      });
+      setShowContentModal(true);
+    } else {
+      const blob = await useDocumentStore.getState().previewDocument(doc.id);
+      if (!blob) {
+        toast.error("⚠️ No file found for this document.");
+        return;
+      }
+      const url = window.URL.createObjectURL(blob);
+      const newTab = window.open(url);
+      if (!newTab) toast("🔒 Popup blocked! Please allow popups for this site.");
+    }
+  } catch {
+    toast.error("❌ Failed to preview document.");
+  }
+};
+
+const handleRemarksView = async () => {
+  setShowRemarksModal(false);
+  if (!remarksDoc) return;
+  if (remarksDoc.content) {
+    setContentModalData({
+      title: remarksDoc.title || "No title",
+      content: remarksDoc.content || "No content",
+    });
+    setShowContentModal(true);
+  } else {
+    const blob = await useDocumentStore.getState().previewDocument(remarksDoc.id);
+    if (!blob) {
+      toast.error("⚠️ No file found for this document.");
+      return;
+    }
+    const url = window.URL.createObjectURL(blob);
+    const newTab = window.open(url);
+    if (!newTab) toast("🔒 Popup blocked! Please allow popups for this site.");
+  }
+};
+
+  // ✅ Scan upload
   const handleScanUpload = async (scannedDoc) => {
     try {
       await useDocumentStore.getState().createDocument(
@@ -192,13 +229,14 @@ function AdminCreatorDocuments() {
     fetchDocuments(filterStatus === "all" ? "" : filterStatus);
   }, [filterStatus, fetchDocuments]);
 
+  // ✅ Updated filter logic to include pending
   const filteredDocs = (documents || []).filter((doc) => {
     const kw = Array.isArray(doc.keywords) ? doc.keywords.join(", ") : doc.keywords || "";
     const matchesSearch =
       (doc.uploaded_by_name || "").toLowerCase().includes((search || "").toLowerCase()) ||
       kw.toLowerCase().includes((search || "").toLowerCase());
-    const isNotPending = doc.status !== "pending-approval";
-    if (filterStatus === "all") return matchesSearch && isNotPending;
+
+    if (filterStatus === "all") return matchesSearch;
     return doc.status === filterStatus && matchesSearch;
   });
 
@@ -331,7 +369,8 @@ function AdminCreatorDocuments() {
               />
             </div>
 
-            <div className="flex gap-2">
+            {/* Filter Buttons */}
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setFilterStatus("all")}
                 className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
@@ -342,6 +381,18 @@ function AdminCreatorDocuments() {
               >
                 All
               </button>
+
+              <button
+                onClick={() => setFilterStatus("pending-approval")}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                  filterStatus === "pending-approval"
+                    ? "!bg-yellow-500 !text-white"
+                    : "!bg-yellow-50 !text-yellow-700 hover:!bg-yellow-100 !border !border-yellow-200"
+                }`}
+              >
+                Pending
+              </button>
+
               <button
                 onClick={() => setFilterStatus("approved")}
                 className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
@@ -352,6 +403,7 @@ function AdminCreatorDocuments() {
               >
                 Approved
               </button>
+
               <button
                 onClick={() => setFilterStatus("declined")}
                 className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
@@ -372,7 +424,7 @@ function AdminCreatorDocuments() {
             <h3 className="text-lg font-semibold text-gray-900">Documents</h3>
             <p className="text-sm text-gray-600 mt-1">
               {filteredDocs.length}{" "}
-              {filterStatus === "all" ? "" : filterStatus} document
+              {filterStatus === "all" ? "" : filterStatus.replace("-", " ")} document
               {filteredDocs.length === 1 ? "" : "s"} found
             </p>
           </div>
@@ -403,7 +455,7 @@ function AdminCreatorDocuments() {
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y…divide-gray-200">
                 {filteredDocs.length > 0 ? (
                   filteredDocs.map((doc, idx) => (
                     <tr
@@ -413,7 +465,7 @@ function AdminCreatorDocuments() {
                       }`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {doc.department?.department_name}
+                        {doc.department}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {doc.title}
@@ -436,6 +488,8 @@ function AdminCreatorDocuments() {
                           className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
                             doc.status === "approved"
                               ? "bg-green-100 text-green-700"
+                              : doc.status === "pending-approval"
+                              ? "bg-yellow-100 text-yellow-700"
                               : "bg-red-100 text-red-700"
                           }`}
                         >
@@ -460,7 +514,7 @@ function AdminCreatorDocuments() {
                       colSpan={filterStatus === "declined" ? 6 : 5}
                       className="text-center py-10 text-gray-500"
                     >
-                      No {filterStatus} documents found.
+                      No {filterStatus.replace("-", " ")} documents found.
                     </td>
                   </tr>
                 )}
@@ -498,6 +552,13 @@ function AdminCreatorDocuments() {
         title={contentModalData.title}
         content={contentModalData.content}
       />
+      <RemarksModal
+      open={showRemarksModal}
+      onClose={() => setShowRemarksModal(false)}
+      document={remarksDoc}
+      remarks={remarks}
+      onView={handleRemarksView}
+    />
     </div>
   );
 }

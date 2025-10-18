@@ -7,11 +7,15 @@ import { Upload, ScanLine, Pencil, Search, Menu } from "lucide-react";
 import { useDocumentStore } from "../../stores/useDocumentStore";
 import { submitManualEntry } from "../../api/api";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
-import toast from "react-hot-toast"; // ✅ Added toast
+import toast from "react-hot-toast";
+import { X } from "lucide-react";
 
 function AdminApproverUploadDocuments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  // ✅ For viewing manual-entry documents
+  const [showContentModal, setShowContentModal] = useState(false);
+  const [contentModalData, setContentModalData] = useState({ title: "", content: "" });
 
   // ✅ Responsive breakpoint
   useEffect(() => {
@@ -52,7 +56,7 @@ function AdminApproverUploadDocuments() {
   const [showScanModal, setShowScanModal] = useState(false);
 
   const { documents, fetchDocuments } = useDocumentStore();
-  const [filterStatus, setFilterStatus] = useState("declined");
+  const [filterStatus, setFilterStatus] = useState("pending-approval");
   const [search, setSearch] = useState("");
 
   const primaryColor = useAppSettingsStore((s) => s.primary_color) || "#3b82f6";
@@ -95,6 +99,57 @@ function AdminApproverUploadDocuments() {
     }
   };
 
+  function ContentModal({ isOpen, onClose, title, content }) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-2xl mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 pt-6 pb-4 border-b border-gray-200">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-200">
+              <Pencil className="h-5 w-5 text-gray-700" aria-hidden="true" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {title || "Document"}
+              </h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Preview of the manually created document.
+              </p>
+            </div>
+            <X
+              onClick={onClose}
+              className="h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-700"
+              role="button"
+              tabIndex={0}
+              aria-label="Close preview"
+              onKeyDown={(e) =>
+                (e.key === "Enter" || e.key === " ") && onClose()
+              }
+            />
+          </div>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)]">
+          <div className="prose max-w-none whitespace-pre-wrap text-gray-900">
+            {content || "No content"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
   // ✅ Toastified scan upload
   const handleScanUpload = async (scannedDoc) => {
     try {
@@ -110,13 +165,13 @@ function AdminApproverUploadDocuments() {
     }
   };
 
-  // ✅ Document filtering
+  // ✅ Updated document filtering
   const filteredDocs = (documents || []).filter((doc) => {
     const matchesSearch =
       (doc.uploaded_by_name || "").toLowerCase().includes(search.toLowerCase()) ||
       (doc.notes || "").toLowerCase().includes(search.toLowerCase());
-    const isNotPending = doc.status !== "pending-approval";
-    if (filterStatus === "all") return matchesSearch && isNotPending;
+
+    if (filterStatus === "all") return matchesSearch;
     return doc.status === filterStatus && matchesSearch;
   });
 
@@ -257,7 +312,8 @@ function AdminApproverUploadDocuments() {
               />
             </div>
 
-            <div className="flex gap-2">
+            {/* Filter Buttons */}
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setFilterStatus("all")}
                 className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
@@ -268,6 +324,18 @@ function AdminApproverUploadDocuments() {
               >
                 All
               </button>
+
+              <button
+                onClick={() => setFilterStatus("pending-approval")}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                  filterStatus === "pending-approval"
+                    ? "!bg-yellow-500 !text-white"
+                    : "!bg-yellow-50 !text-yellow-700 hover:!bg-yellow-100 !border !border-yellow-200"
+                }`}
+              >
+                Pending
+              </button>
+
               <button
                 onClick={() => setFilterStatus("approved")}
                 className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
@@ -278,6 +346,7 @@ function AdminApproverUploadDocuments() {
               >
                 Approved
               </button>
+
               <button
                 onClick={() => setFilterStatus("declined")}
                 className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
@@ -297,8 +366,8 @@ function AdminApproverUploadDocuments() {
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h3 className="text-lg font-semibold text-gray-900">Documents</h3>
             <p className="text-sm text-gray-600 mt-1">
-              {filteredDocs.length} {filterStatus === "all" ? "" : filterStatus} document
-              {filteredDocs.length === 1 ? "" : "s"} found
+              {filteredDocs.length} {filterStatus === "all" ? "" : filterStatus.replace("-", " ")}{" "}
+              document{filteredDocs.length === 1 ? "" : "s"} found
             </p>
           </div>
 
@@ -342,6 +411,17 @@ function AdminApproverUploadDocuments() {
                         <button
                           onClick={async () => {
                             try {
+                              // Manual entry (text-based)
+                              if (doc.content) {
+                                setContentModalData({
+                                  title: doc.title || "No title",
+                                  content: doc.content || "No content",
+                                });
+                                setShowContentModal(true);
+                                return;
+                              }
+
+                              // Uploaded or scanned file (binary/blob)
                               const blob = await useDocumentStore.getState().previewDocument(doc.id);
                               if (!blob) {
                                 toast.error("⚠️ No file found for this document.");
@@ -349,8 +429,7 @@ function AdminApproverUploadDocuments() {
                               }
                               const url = window.URL.createObjectURL(blob);
                               const newTab = window.open(url);
-                              if (!newTab)
-                                toast("🔒 Popup blocked! Please allow popups for this site.");
+                              if (!newTab) toast("🔒 Popup blocked! Please allow popups for this site.");
                             } catch {
                               toast.error("❌ Failed to preview document.");
                             }
@@ -370,6 +449,8 @@ function AdminApproverUploadDocuments() {
                           className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
                             doc.status === "approved"
                               ? "bg-green-100 text-green-700"
+                              : doc.status === "pending-approval"
+                              ? "bg-yellow-100 text-yellow-700"
                               : "bg-red-100 text-red-700"
                           }`}
                         >
@@ -381,7 +462,7 @@ function AdminApproverUploadDocuments() {
                 ) : (
                   <tr>
                     <td colSpan="5" className="text-center py-10 text-gray-500">
-                      No {filterStatus} documents found.
+                      No {filterStatus.replace("-", " ")} documents found.
                     </td>
                   </tr>
                 )}
@@ -401,6 +482,12 @@ function AdminApproverUploadDocuments() {
         isOpen={showManualModal}
         onClose={() => setShowManualModal(false)}
         onSave={handleManualSave}
+      />
+      <ContentModal
+        isOpen={showContentModal}
+        onClose={() => setShowContentModal(false)}
+        title={contentModalData.title}
+        content={contentModalData.content}
       />
       {showScanModal && (
         <ModalScan

@@ -78,7 +78,7 @@ function AdminApproverDocuments() {
   const [keywordResults, setKeywordResults] = useState(null);
   const [highlightedDocId, setHighlightedDocId] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
-
+  const [zoom, setZoom] = useState(1);
   const { documents, fetchDocuments } = useDocumentStore();
   const primaryColor = useAppSettingsStore((s) => s.primary_color) || "#3b82f6";
 
@@ -98,7 +98,6 @@ function AdminApproverDocuments() {
     await fetchDocuments();
     setSelectedDoc(null);
     setShowDeclineModal(false);
-    toast.error("❌ Document declined!");
   } catch (error) {
     console.error("Decline failed:", error);
     toast.error("❌ Failed to decline document.");
@@ -139,79 +138,91 @@ const handleSaveEdit = async (id, content) => {
   }
 };
 
-  const handlePreview = (doc) => {
-    try {
-      setKeywordResults(null);
-      setKeywordFilter(null);
+const handlePreview = (doc) => {
+  try {
+    setKeywordResults(null);
+    setKeywordFilter(null);
 
-      const relatedDocs = documents.filter(
-        (d) => d.title?.toLowerCase() === doc.title?.toLowerCase()
-      );
+    // 🔹 Only include documents with the same title AND same status
+    const relatedDocs = documents.filter(
+      (d) =>
+        d.title?.toLowerCase() === doc.title?.toLowerCase() &&
+        d.status === doc.status
+    );
 
-      const previewData = {
-        type: doc.title,
-        files: [],
-        manualEntries: [],
-        scannedDocuments: [],
-        keywords: [],
-      };
+    const previewData = {
+      type: doc.title,
+      files: [],
+      manualEntries: [],
+      scannedDocuments: [],
+      keywords: [],
+    };
 
-      const addedManualEntries = new Set();
-      const addedScannedDocs = new Set();
-      const addedKeywords = new Set();
+    const addedManualEntries = new Set();
+    const addedScannedDocs = new Set();
+    const addedKeywords = new Set();
 
-      relatedDocs.forEach((d) => {
-        const versionLabel =
-          d.status === "approved"
-            ? d.is_latest
-              ? "latest version"
-              : `v${d.version}`
-            : "pending-approval";
+    relatedDocs.forEach((d) => {
+      const versionLabel =
+        d.status === "approved"
+          ? d.is_latest
+            ? "latest version"
+            : `v${d.version}`
+          : d.status;
 
-        if (d.filename) {
-          previewData.files.push({
-            id: d.id,
-            name: d.filename,
-            title: `${d.title} (${versionLabel})`,
+      // ✅ Always include PDFs
+      if (d.filename) {
+        previewData.files.push({
+          id: d.id,
+          name: d.filename,
+          title: `${d.title} (${versionLabel})`,
+        });
+      }
+
+      // ✅ Always include manual entries (even declined)
+      if (d.content && !addedManualEntries.has(d.id)) {
+        previewData.manualEntries.push({
+          id: d.id,
+          title: `${d.title} (${versionLabel})`,
+          content: d.content,
+        });
+        addedManualEntries.add(d.id);
+      }
+
+      // ✅ Include scanned documents for same-status only
+      if (d.scanned_content && !addedScannedDocs.has(d.id)) {
+        previewData.scannedDocuments.push({
+          id: d.id,
+          title: `${d.title} (${versionLabel})`,
+          content: d.scanned_content,
+        });
+        addedScannedDocs.add(d.id);
+      }
+
+      // ✅ Always include keywords
+      if (typeof d.keywords === "string" && d.keywords.length > 0) {
+        d.keywords
+          .split(",")
+          .map((tag) => tag.trim())
+          .forEach((tag) => {
+            if (!addedKeywords.has(tag)) {
+              previewData.keywords.push(tag);
+              addedKeywords.add(tag);
+            }
           });
-        }
+      }
+    });
 
-        if (d.content && !addedManualEntries.has(d.id)) {
-          previewData.manualEntries.push({
-            id: d.id,
-            title: `${d.title} (${versionLabel})`,
-            content: d.content,
-          });
-          addedManualEntries.add(d.id);
-        }
-
-        if (d.scanned_content && !addedScannedDocs.has(d.id)) {
-          previewData.scannedDocuments.push({
-            id: d.id,
-            title: `${d.title} (${versionLabel})`,
-            content: d.scanned_content,
-          });
-          addedScannedDocs.add(d.id);
-        }
-
-        if (typeof d.keywords === "string" && d.keywords.length > 0) {
-          d.keywords
-            .split(",")
-            .map((tag) => tag.trim())
-            .forEach((tag) => {
-              if (!addedKeywords.has(tag)) {
-                previewData.keywords.push(tag);
-                addedKeywords.add(tag);
-              }
-            });
-        }
-      });
-
-      setSelectedDoc(previewData);
-    } catch (err) {
-      console.error("Failed to preview documents:", err);
+    // ✅ Keep Scanned Documents section visible even if empty (especially for declined)
+    if (previewData.scannedDocuments.length === 0) {
+      previewData.scannedDocuments = [];
     }
-  };
+
+    setSelectedDoc(previewData);
+  } catch (err) {
+    console.error("Failed to preview documents:", err);
+  }
+};
 
   const handleDelete = async (doc) => {
   if (!doc) return;
@@ -611,14 +622,61 @@ const handleSaveEdit = async (id, content) => {
                     <p className="text-gray-500 text-sm">No PDF files found</p>
                   )}
 
-                  {pdfPreview && highlightedDocId === pdfPreview.id && (
-                    <div className="mt-4 border rounded-lg shadow-sm overflow-hidden">
-                      <iframe src={pdfPreview.url} className="w-full h-96" title="PDF Preview" />
-                    </div>
-                  )}
+{pdfPreview && highlightedDocId === pdfPreview.id && (
+  <div className="mt-4 border rounded-lg shadow-sm overflow-hidden relative bg-gray-100">
+    {/* PDF Controls */}
+    <div className="absolute top-2 right-2 flex gap-2 z-10">
+      <button
+        onClick={() => setZoom((z) => Math.min(z + 0.1, 3))}
+        className="px-2 py-1 rounded bg-white border border-gray-300 text-sm shadow hover:bg-gray-50"
+        title="Zoom In"
+      >
+        +
+      </button>
+      <button
+        onClick={() => setZoom((z) => Math.max(z - 0.1, 0.5))}
+        className="px-2 py-1 rounded bg-white border border-gray-300 text-sm shadow hover:bg-gray-50"
+        title="Zoom Out"
+      >
+        −
+      </button>
+      <button
+        onClick={() => {
+          const iframe = document.getElementById(`pdf-${pdfPreview.id}`);
+          if (!iframe) return;
+          if (iframe.requestFullscreen) iframe.requestFullscreen();
+          else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+          else if (iframe.msRequestFullscreen) iframe.msRequestFullscreen();
+        }}
+        className="px-2 py-1 rounded bg-white border border-gray-300 text-sm shadow hover:bg-gray-50"
+        title="Full Screen"
+      >
+        ⛶
+      </button>
+    </div>
+
+    {/* PDF iframe with zoom scaling */}
+    <div className="overflow-auto" style={{ height: "24rem" }}>
+      <div
+        style={{
+          transform: `scale(${zoom})`,
+          transformOrigin: "top center",
+          transition: "transform 0.2s ease",
+        }}
+      >
+        <iframe
+          id={`pdf-${pdfPreview.id}`}
+          src={pdfPreview.url}
+          className="w-full h-[600px] border-0"
+          title="PDF Preview"
+        />
+      </div>
+    </div>
+  </div>
+)}
                 </div>
               </div>
-
+                  
               {/* Manual Entries */}
               {selectedDoc.manualEntries?.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -657,43 +715,46 @@ const handleSaveEdit = async (id, content) => {
                 </div>
               )}
 
-              {/* Scanned Documents */}
-              {selectedDoc.scannedDocuments?.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
-                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg !bg-orange-50">
-                      <Camera className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <h2 className="text-sm font-semibold text-gray-900">Scanned Documents</h2>
-                  </div>
-                  <div className="p-4">
-                    <ul className="space-y-2">
-                      {selectedDoc.scannedDocuments.map((scan) => (
-                        <li
-                          key={scan.id}
-                          className={`px-3 py-2 rounded-md border text-sm cursor-pointer flex items-center justify-between ${
-                            highlightedDocId === scan.id
-                              ? "bg-yellow-50 border-yellow-200"
-                              : "bg-white border-gray-200 hover:bg-gray-50"
-                          }`}
-                          onClick={() => {
-                            setDocModalData({
-                              title: scan.title,
-                              content: scan.content,
-                              id: scan.id,
-                            });
-                            setDocModalOpen(true);
-                            setHighlightedDocId(scan.id);
-                          }}
-                        >
-                          <span className="text-orange-700">{scan.title}</span>
-                          <Eye className="w-4 h-4 text-orange-600" />
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
+{/* Scanned Documents (always show) */}
+<div className="bg-white rounded-xl shadow-sm border border-gray-200">
+  <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+    <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg !bg-orange-50">
+      <Camera className="w-4 h-4 text-orange-600" />
+    </div>
+    <h2 className="text-sm font-semibold text-gray-900">Scanned Documents</h2>
+  </div>
+
+  <div className="p-4">
+    {selectedDoc.scannedDocuments?.length > 0 ? (
+      <ul className="space-y-2">
+        {selectedDoc.scannedDocuments.map((scan) => (
+          <li
+            key={scan.id}
+            className={`px-3 py-2 rounded-md border text-sm cursor-pointer flex items-center justify-between ${
+              highlightedDocId === scan.id
+                ? "bg-yellow-50 border-yellow-200"
+                : "bg-white border-gray-200 hover:bg-gray-50"
+            }`}
+            onClick={() => {
+              setDocModalData({
+                title: scan.title,
+                content: scan.content,
+                id: scan.id,
+              });
+              setDocModalOpen(true);
+              setHighlightedDocId(scan.id);
+            }}
+          >
+            <span className="text-orange-700">{scan.title}</span>
+            <Eye className="w-4 h-4 text-orange-600" />
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-gray-500 text-sm">No scanned files found</p>
+    )}
+  </div>
+</div>
 
               {/* Keywords */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200">

@@ -13,15 +13,17 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [stream, setStream] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Spinner state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [zoomHint, setZoomHint] = useState("");
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const [documentTypes, setDocumentTypes] = useState([]);
   const [showError, setShowError] = useState(false);
-  const { refreshTrigger} = useDocumentStore();
+  const { refreshTrigger } = useDocumentStore();
 
+  // Clean up preview URLs
   useEffect(() => {
     if (!image) {
       if (previewUrl) {
@@ -35,6 +37,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
     return () => URL.revokeObjectURL(url);
   }, [image]);
 
+  // Start camera
   const startCamera = async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -68,10 +71,29 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
       }, 200);
     } catch (err) {
       console.error("Camera error:", err);
-      alert("Camera not available: " + (err && err.message ? err.message : "Unknown error"));
+      alert(
+        "Camera not available: " +
+          (err && err.message ? err.message : "Unknown error")
+      );
     }
   };
 
+  // Stop camera
+  const stopCamera = () => {
+    try {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        setStream(null);
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    } finally {
+      setCameraActive(false);
+    }
+  };
+
+  // Capture image
   const captureImage = () => {
     if (!videoRef.current || !canvasRef.current) {
       alert("Camera not ready. Please try again.");
@@ -107,20 +129,6 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
       "image/png",
       0.95
     );
-  };
-
-  const stopCamera = () => {
-    try {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-        setStream(null);
-      }
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-    } finally {
-      setCameraActive(false);
-    }
   };
 
   const handleFileUpload = (e) => {
@@ -160,6 +168,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
     }
   };
 
+  // Fetch document types
   useEffect(() => {
     if (isOpen) {
       (async () => {
@@ -171,13 +180,40 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
         }
       })();
     }
-  }, [isOpen,refreshTrigger]);
+  }, [isOpen, refreshTrigger]);
 
+  // Cleanup camera on unmount
   useEffect(() => {
     return () => {
       stopCamera();
     };
   }, []);
+
+  // Zoom hint logic
+  useEffect(() => {
+    if (!cameraActive || !videoRef.current) return;
+
+    const interval = setInterval(() => {
+      const video = videoRef.current;
+      if (!video.videoWidth || !video.videoHeight) return;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let brightness = 0;
+      for (let i = 0; i < imgData.length; i += 4) brightness += imgData[i];
+      brightness /= canvas.width * canvas.height;
+
+      if (brightness < 40) setZoomHint("Too dark or too close");
+      else if (brightness > 200) setZoomHint("Too far");
+      else setZoomHint("Good distance");
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [cameraActive]);
 
   if (!isOpen) return null;
 
@@ -251,7 +287,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
               {/* Document Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-800 mb-2">
-                  Document Type <span className="text-red-500">*</span>
+                  Type of Information <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <select
@@ -294,7 +330,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
                 />
 
                 <div className="flex flex-col gap-3">
-                  {!cameraActive && (
+                  {!cameraActive && !image && (
                     <div className="flex gap-3">
                       <button
                         type="button"
@@ -317,18 +353,30 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
 
                   {cameraActive && (
                     <div className="flex flex-col gap-3">
-                      <video
-                        ref={videoRef}
-                        className="border border-gray-300 rounded-xl w-full h-64 object-cover bg-black"
-                        autoPlay
-                        playsInline
-                        muted
-                      />
-                      {!stream && (
-                        <p className="text-sm text-red-500 text-center mt-2">
-                          🚫 Camera stream not available.
+                      <div className="relative w-full h-64 border border-gray-300 rounded-xl overflow-hidden">
+                        <video
+                          ref={videoRef}
+                          className="absolute inset-0 w-full h-full object-cover bg-black"
+                          autoPlay
+                          playsInline
+                          muted
+                        />
+
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="relative w-4/5 h-3/5 border-4 border-white/80 rounded-lg shadow-[0_0_10px_rgba(255,255,255,0.3)]"></div>
+                        </div>
+
+                        <p className="absolute bottom-2 left-0 right-0 text-center text-white text-xs bg-black/40 py-1">
+                          Align your document within the white frame
+                        </p>
+                      </div>
+
+                      {zoomHint && (
+                        <p className="text-center text-sm text-gray-600 mt-1">
+                          {zoomHint}
                         </p>
                       )}
+
                       <div className="flex gap-3">
                         <button
                           type="button"
@@ -352,7 +400,9 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
                   {image && (
                     <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-200">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700">Selected Image:</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          Selected Image:
+                        </span>
                         <button
                           type="button"
                           onClick={() => setImage(null)}

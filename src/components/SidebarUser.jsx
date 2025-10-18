@@ -18,7 +18,7 @@ function SidebarUser({
 }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showSatisfactionModal, setShowSatisfactionModal] = useState(false);
-  const [hasShownSatisfaction, setHasShownSatisfaction] = useState(false);
+  //const [hasShownSatisfaction, setHasShownSatisfaction] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,12 +59,8 @@ function SidebarUser({
   };
 
   const handleNewChatClick = () => {
-    if (!hasShownSatisfaction) {
-      setShowSatisfactionModal(true);
-      setHasShownSatisfaction(true);
-    }
+    setShowSatisfactionModal(true); // ✅ Always show modal
     onNewChat();
-    // Keep drawer open; user likely wants to see the new conversation list item
   };
 
   // Auto-close drawer on mobile after selecting a chat
@@ -126,7 +122,7 @@ const bgColor = primaryColor ?? "transparent";
 
         <nav className="flex flex-col gap-2 p-2 text-white">
           <div
-            className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-red-800 transition"
+            className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-gray-200/20 transition"
             onClick={handleNewChatClick}
           >
             <FilePen size={18} className="text-white" />

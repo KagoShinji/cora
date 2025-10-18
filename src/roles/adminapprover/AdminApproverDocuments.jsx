@@ -8,9 +8,10 @@ import {
   declineDocument,
   viewDocument,
   updateDocument,
+  deleteDocument,
 } from "../../api/api";
 import ModalDocumentViewer from "../../components/ModalDocumentViewer";
-import ArchiveModal from "../../components/ArchiveModal";
+import DeleteModal from "../../components/DeleteModal";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
 import toast from "react-hot-toast";
 
@@ -73,7 +74,7 @@ function AdminApproverDocuments() {
   const [keywordFilter, setKeywordFilter] = useState(null);
   const [docModalOpen, setDocModalOpen] = useState(false);
   const [docModalData, setDocModalData] = useState(null);
-  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [keywordResults, setKeywordResults] = useState(null);
   const [highlightedDocId, setHighlightedDocId] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
@@ -111,20 +112,7 @@ const handleApprove = async (documentId) => {
     console.error("Error approving document:", error);
   }
 };
-const handleArchive = async (doc) => {
-  try {
-    await fetchDocuments();
-    setShowArchiveModal(false);
-    setSelectedDoc(null);
 
-    toast.success(
-      `${doc.archived ? "🗂️ Unarchived" : "📦 Archived"} document: ${doc.title}`
-    );
-  } catch (err) {
-    console.error("Failed to toggle archive:", err);
-    toast.error("❌ Failed to update archive state.");
-  }
-};
 
 const handleViewPdf = async (docId) => {
   try {
@@ -236,6 +224,19 @@ const handlePreview = (doc) => {
   }
 };
 
+  const handleDelete = async (doc) => {
+  if (!doc) return;
+
+  try {
+    await deleteDocument(doc.id); // Use the imported API function
+    await fetchDocuments(); // Refresh document list
+    setSelectedDoc(null);
+    toast.success(`🗑️ Document "${doc.title}" deleted successfully!`);
+  } catch (error) {
+    console.error("Delete failed:", error);
+    toast.error(`❌ Failed to delete document: ${error.message}`);
+  }
+};
   const handleKeywordClick = (tag) => {
     const cleanedTag = tag.trim();
 
@@ -303,7 +304,6 @@ const handlePreview = (doc) => {
       doc.notes?.toLowerCase().includes(search.toLowerCase());
 
     if (filterStatus === "all") return matchesSearch;
-    if (filterStatus === "archived") return doc.archived && matchesSearch;
     return doc.status === filterStatus && matchesSearch;
   });
 
@@ -447,18 +447,6 @@ const handlePreview = (doc) => {
                 >
                   Declined
                 </button>
-
-                <button
-                  onClick={() => setFilterStatus("archived")}
-                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all
-                    ${
-                      filterStatus === "archived"
-                        ? "!bg-slate-700 !text-white"
-                        : "!bg-slate-50 !text-slate-700 hover:!bg-slate-100 !border !border-slate-200"
-                    }`}
-                >
-                  Archived
-                </button>
               </div>
             </div>
           </div>
@@ -555,12 +543,12 @@ const handlePreview = (doc) => {
                                 <button
                                   onClick={() => {
                                     setSelectedDoc(doc);
-                                    setShowArchiveModal(true);
+                                    setShowDeleteModal(true); 
                                   }}
                                   className="inline-flex items-center gap-1 px-4 py-2 rounded-md !bg-slate-700 !text-white text-sm font-medium hover:!bg-slate-800 transition"
                                 >
                                   <ArchiveIcon className="w-4 h-4" />
-                                  {doc.archived ? "Unarchive" : "Archive"}
+                                  Delete
                                 </button>
                               )}
                             </div>
@@ -569,12 +557,12 @@ const handlePreview = (doc) => {
                               <button
                                 onClick={() => {
                                   setSelectedDoc(doc);
-                                  setShowArchiveModal(true);
+                                  setShowDeleteModal(true); 
                                 }}
                                 className="inline-flex items-center gap-1 px-4 py-2 rounded-md !bg-slate-700 !text-white text-sm font-medium hover:!bg-slate-800 transition"
                               >
                                 <ArchiveIcon className="w-4 h-4" />
-                                {doc.archived ? "Unarchive" : "Archive"}
+                                Delete
                               </button>
                             </div>
                           ) : (
@@ -955,10 +943,10 @@ const handlePreview = (doc) => {
         doc={docModalData}
         onSave={handleSaveEdit}
       />
-      <ArchiveModal
-        open={showArchiveModal}
-        onClose={() => setShowArchiveModal(false)}
-        onConfirm={() => handleArchive(selectedDoc)}
+      <DeleteModal
+        open={showDeleteModal} 
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={() => handleDelete(selectedDoc)}
         document={selectedDoc}
       />
     </div>

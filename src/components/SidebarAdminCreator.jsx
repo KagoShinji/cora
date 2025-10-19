@@ -70,10 +70,10 @@ function SidebarAdminCreator({ isOpen, setOpen }) {
               className=" text-primary rounded-lg shadow p-4 cursor-pointer hover:bg-gray-100 transition"
               style={{backgroundColor:secondaryColor}}
             >
-              <div style={{ color: secondaryColor }} className="font-semibold uppercase">
+              <div style={{ color: primaryColor }} className="font-semibold uppercase">
                 {user}
               </div>
-              <div style={{ color: secondaryColor }} className="text-sm">
+              <div style={{ color: primaryColor }} className="text-sm">
                 Admin Creator
               </div>
             </div>

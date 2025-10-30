@@ -15,6 +15,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
   const [stream, setStream] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [zoomHint, setZoomHint] = useState("");
+  
  
 
   const videoRef = useRef(null);
@@ -248,17 +249,18 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
       stopCamera();
       onClose();
     }
+    if (!isOpen) return null;
   };
-
   return (
     <>
+    
       <div
         className="fixed inset-0 z-50 flex items-center justify-center"
         role="dialog"
         aria-modal="true"
         aria-labelledby="scan-doc-title"
         aria-describedby="scan-doc-desc"
-        onMouseDown={handleBackdrop}
+        onClick={handleBackdrop}
       >
         {/* Backdrop */}
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
@@ -266,7 +268,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
         {/* Modal Card */}
         <div
           className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
-          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="px-6 pt-6 pb-4 border-b border-gray-200">

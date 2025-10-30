@@ -16,8 +16,6 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [zoomHint, setZoomHint] = useState("");
   
- 
-
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -41,53 +39,52 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [image]);
-  
- useEffect(() => {
-  if (!cameraActive || !videoRef.current) return;
-  analysisStopped.current = false;
 
-  const interval = setInterval(() => {
-    if (analysisStopped.current) return;
+  // Camera analysis effect
+  useEffect(() => {
+    if (!cameraActive || !videoRef.current) return;
+    analysisStopped.current = false;
 
-    const video = videoRef.current;
-    const canvas = document.createElement("canvas");
-    canvas.width = 320;
-    canvas.height = 240;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const interval = setInterval(() => {
+      if (analysisStopped.current) return;
 
-    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = img.data;
-    let brightness = 0;
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 240;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    for (let i = 0; i < data.length; i += 4) {
-      brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
-    }
-    brightness /= data.length / 4;
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = img.data;
+      let brightness = 0;
 
-    if (brightness > 80 && brightness < 180) {
-      setZoomHint("Good distance ✅");
-      goodFrameCount.current++;
-    } else {
-      setZoomHint("Too dark or too bright ⚠️");
-      goodFrameCount.current = 0;
-    }
+      for (let i = 0; i < data.length; i += 4) {
+        brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+      }
+      brightness /= data.length / 4;
 
-    if (autoCaptureEnabled && goodFrameCount.current >= 3) {
-      setZoomHint("Auto-captured ✅");
-      clearInterval(interval);
-      analysisStopped.current = true;
+      if (brightness > 80 && brightness < 180) {
+        setZoomHint("Good distance ✅");
+        goodFrameCount.current++;
+      } else {
+        setZoomHint("Too dark or too bright ⚠️");
+        goodFrameCount.current = 0;
+      }
 
-      // 🕒 0.5s delay for stability
-      setTimeout(() => {
-        captureImage();
-      }, 500);
-    }
-  }, 2000);
+      if (autoCaptureEnabled && goodFrameCount.current >= 3) {
+        setZoomHint("Auto-captured ✅");
+        clearInterval(interval);
+        analysisStopped.current = true;
 
-  // ✅ Proper cleanup outside the interval callback
-  return () => clearInterval(interval);
-}, [cameraActive]);
+        setTimeout(() => {
+          captureImage();
+        }, 500);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [cameraActive]);
 
   // Start camera
   const startCamera = async () => {
@@ -241,19 +238,19 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
     };
   }, []);
 
-  // Zoom hint logic
-  
-
+  // Fixed handleBackdrop function
   const handleBackdrop = (e) => {
     if (e.target === e.currentTarget) {
       stopCamera();
       onClose();
     }
-    if (!isOpen) return null;
   };
+
+  // Don't render if not open
+  if (!isOpen) return null;
+
   return (
     <>
-    
       <div
         className="fixed inset-0 z-50 flex items-center justify-center"
         role="dialog"

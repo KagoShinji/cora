@@ -15,13 +15,16 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
   const [stream, setStream] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [zoomHint, setZoomHint] = useState("");
-
+  
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
+  const goodFrameCount = useRef(0);
+  const analysisStopped = useRef(false);
   const [documentTypes, setDocumentTypes] = useState([]);
   const [showError, setShowError] = useState(false);
   const { refreshTrigger } = useDocumentStore();
+  const autoCaptureEnabled = true;
 
   // Clean up preview URLs
   useEffect(() => {
@@ -36,6 +39,52 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [image]);
+
+  // Camera analysis effect
+  useEffect(() => {
+    if (!cameraActive || !videoRef.current) return;
+    analysisStopped.current = false;
+
+    const interval = setInterval(() => {
+      if (analysisStopped.current) return;
+
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 240;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = img.data;
+      let brightness = 0;
+
+      for (let i = 0; i < data.length; i += 4) {
+        brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+      }
+      brightness /= data.length / 4;
+
+      if (brightness > 80 && brightness < 180) {
+        setZoomHint("Good distance ✅");
+        goodFrameCount.current++;
+      } else {
+        setZoomHint("Too dark or too bright ⚠️");
+        goodFrameCount.current = 0;
+      }
+
+      if (autoCaptureEnabled && goodFrameCount.current >= 3) {
+        setZoomHint("Auto-captured ✅");
+        clearInterval(interval);
+        analysisStopped.current = true;
+
+        setTimeout(() => {
+          captureImage();
+        }, 500);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [cameraActive]);
 
   // Start camera
   const startCamera = async () => {
@@ -189,40 +238,16 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
     };
   }, []);
 
-  // Zoom hint logic
-  useEffect(() => {
-    if (!cameraActive || !videoRef.current) return;
-
-    const interval = setInterval(() => {
-      const video = videoRef.current;
-      if (!video.videoWidth || !video.videoHeight) return;
-
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-      let brightness = 0;
-      for (let i = 0; i < imgData.length; i += 4) brightness += imgData[i];
-      brightness /= canvas.width * canvas.height;
-
-      if (brightness < 40) setZoomHint("Too dark or too close");
-      else if (brightness > 200) setZoomHint("Too far");
-      else setZoomHint("Good distance");
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, [cameraActive]);
-
-  if (!isOpen) return null;
-
+  // Fixed handleBackdrop function
   const handleBackdrop = (e) => {
     if (e.target === e.currentTarget) {
       stopCamera();
       onClose();
     }
   };
+
+  // Don't render if not open
+  if (!isOpen) return null;
 
   return (
     <>
@@ -232,7 +257,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
         aria-modal="true"
         aria-labelledby="scan-doc-title"
         aria-describedby="scan-doc-desc"
-        onMouseDown={handleBackdrop}
+        onClick={handleBackdrop}
       >
         {/* Backdrop */}
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
@@ -240,7 +265,7 @@ export default function ModalScan({ onClose, onUpload, isOpen }) {
         {/* Modal Card */}
         <div
           className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-gray-200 max-h-[calc(100vh-2rem)] overflow-hidden"
-          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="px-6 pt-6 pb-4 border-b border-gray-200">

@@ -12,6 +12,7 @@ import { generateAnswer } from "../api/api";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 export default function LandingPage() {
   const [query, setQuery] = useState("");
@@ -106,30 +107,30 @@ export default function LandingPage() {
   );
 
   const speak = (text, messageId) => {
-  if (!window.speechSynthesis) return;
+    if (!window.speechSynthesis) return;
 
-  window.speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  utterance.rate = 1;
-  utterance.pitch = 1;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.pitch = 1;
 
-  setIsSpeaking(true);
-  setActiveMessageId(messageId);
+    setIsSpeaking(true);
+    setActiveMessageId(messageId);
 
-  utterance.onend = () => {
-    setIsSpeaking(false);
-    setActiveMessageId(null);
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setActiveMessageId(null);
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setActiveMessageId(null);
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
-
-  utterance.onerror = () => {
-    setIsSpeaking(false);
-    setActiveMessageId(null);
-  };
-
-  window.speechSynthesis.speak(utterance);
-};
 
   const tint20 = useMemo(
     () => (primaryColor?.startsWith?.("#") ? `${primaryColor}20` : primaryColor),
@@ -161,7 +162,6 @@ export default function LandingPage() {
     setSelectedImages([]);
     setSubmitted(true);
 
-    const accessToken = useAuthStore.getState().access_token;
     let streamedAnswer = "";
 
     try {
@@ -169,21 +169,23 @@ export default function LandingPage() {
 
       await generateAnswer(
         trimmed,
-        accessToken,
+
         (chunk) => {
           streamedAnswer += chunk;
           setChatHistory((prev) => {
             const updated = [...prev];
             const last = updated[updated.length - 1];
-            if (last.role === "assistant") last.text = streamedAnswer;
+            if (last.role === "assistant") {
+              last.text = streamedAnswer.replace(/\r\n|\r/g, "\n");
+            };
             return [...updated.slice(0, -1), last];
           });
         },
-        selectedImages
+        selectedImages || []
       );
 
       if (voiceMode && streamedAnswer.trim()) {
-      const assistantId = Date.now();
+        const assistantId = Date.now();
         setChatHistory((prev) => {
           const updated = [...prev];
           updated[updated.length - 1].id = assistantId;
@@ -281,41 +283,41 @@ export default function LandingPage() {
     }
   };
 
-// === REGISTER ===
-const handleRegister = async (e) => {
-  e.preventDefault();
-  const userData = {
-    name: `${firstName} ${lastName} ${middleInitial}`,
-    email,
-    password,
-  };
+  // === REGISTER ===
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    const userData = {
+      name: `${firstName} ${lastName} ${middleInitial}`,
+      email,
+      password,
+    };
 
-  try {
-    setIsRegistering(true);
-    const response = await signup(userData);
+    try {
+      setIsRegistering(true);
+      const response = await signup(userData);
 
-    // ✅ FIXED: Handle various possible return shapes
-    if (!response || response.error) {
-      toast.error(response?.error || "Failed to register. Please try again.");
-      return;
+      toast.success("Account created successfully!");
+      window.location.reload();
+    } catch (err) {
+      console.error("Registration error:", err);
+
+      // err.message contains your Pydantic validation message
+      toast.error(err.message || "Something went wrong, please try again.");
+    } finally {
+      setIsRegistering(false);
     }
-
-    toast.success("Account created successfully!");
-    window.location.reload();
-  } catch (err) {
-    console.error("Registration error:", err);
-    toast.error("Something went wrong, please try again.");
-  } finally {
-    setIsRegistering(false);
-  }
-};
-
+  };
 
   // Auto-scroll
   useEffect(() => {
     const el = document.getElementById("chat-scroll");
     if (el) el.scrollTop = el.scrollHeight;
   }, [chatHistory]);
+
+  const addSpaceBeforeNumbers = (text) => {
+  if (!text) return text;
+  return text.replace(/([a-zA-Z])(\d+)/g, "$1 $2");
+};
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -412,35 +414,108 @@ const handleRegister = async (e) => {
                         : { backgroundColor: tint15, color: primaryColor }
                     }
                   >
-                    <span className="font-semibold">{isUser ? "You" : "CORA"}:</span>{" "}
-                    <div className="whitespace-pre-wrap break-words">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {chat.text?.trim() || "Cora is generating"}
-                        
+                    <span className="font-semibold mb-2 block">{isUser ? "You" : "CORA"}:</span>
+                    
+                    {/* Display images if they exist */}
+                    {chat.images && chat.images.length > 0 && (
+                      <div className="flex flex-wrap gap-2 my-2">
+                        {chat.images.map((imgUrl, imgIdx) => (
+                          <img
+                            key={imgIdx}
+                            src={imgUrl}
+                            alt={`uploaded-${imgIdx}`}
+                            className="max-w-xs w-full sm:w-48 h-auto object-cover rounded-lg border"
+                            style={{ borderColor: primaryColor }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* FIXED: Proper markdown rendering with spacing */}
+                   <div className="prose prose-sm max-w-none break-words">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm, remarkBreaks]}
+                        components={{
+                          p: ({ children }) => (
+                            <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="mb-4 ml-6 list-disc space-y-2 last:mb-0">{children}</ul>
+                          ),
+                          // FIXED: Force sequential numbering with CSS counter
+                          ol: ({ children, ...props }) => (
+                            <ol 
+                              className="mb-4 ml-6 space-y-2 last:mb-0"
+                              style={{ 
+                                listStyleType: 'decimal',
+                                counterReset: 'item'
+                              }}
+                              {...props}
+                            >
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children, ordered }) => (
+                            <li 
+                              className="leading-relaxed"
+                              style={ordered ? { 
+                                display: 'list-item',
+                                listStyleType: 'decimal'
+                              } : {}}
+                            >
+                              {children}
+                            </li>
+                          ),
+                          h1: ({ children }) => (
+                            <h1 className="text-xl font-bold mb-3 mt-6 first:mt-0">{children}</h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-lg font-bold mb-3 mt-5 first:mt-0">{children}</h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-base font-bold mb-2 mt-4 first:mt-0">{children}</h3>
+                          ),
+                          strong: ({ children }) => (
+                            <strong className="font-semibold">{children}</strong>
+                          ),
+                          blockquote: ({ children }) => (
+                            <blockquote className="border-l-4 pl-4 my-4 italic opacity-80">{children}</blockquote>
+                          ),
+                          pre: ({ children }) => (
+                            <pre className="mb-4 p-3 rounded bg-gray-100 overflow-x-auto">{children}</pre>
+                          ),
+                          code: ({ inline, children }) => (
+                            inline 
+                              ? <code className="px-1 py-0.5 rounded bg-gray-100 text-sm">{children}</code>
+                              : <code>{children}</code>
+                          ),
+                        }}
+                      >
+                        {addSpaceBeforeNumbers(chat.text?.trim() || "Cora is generating")}
                       </ReactMarkdown>
                     </div>
+                    
                     {!isUser && isSpeaking && activeMessageId === chat.id && (
-                    <div className="mt-2 flex justify-start">
-                      <button
-                        onClick={() => {
-                          window.speechSynthesis.cancel();
-                          setIsSpeaking(false);
-                          setActiveMessageId(null);
-                          toast("Cora stopped talking.");
-                        }}
-                        className="p-2 rounded-full border hover:bg-gray-100 transition flex items-center justify-center"
-                        style={{
-                          borderColor: primaryColor,
-                          color: primaryColor,
-                          backgroundColor: "#fff",
-                        }}
-                        title="Stop Cora's voice"
-                      >
-                        🔇
-                      </button>
-                    </div>
-                  )}
-
+                      <div className="mt-2 flex justify-start">
+                        <button
+                          onClick={() => {
+                            window.speechSynthesis.cancel();
+                            setIsSpeaking(false);
+                            setActiveMessageId(null);
+                            toast("Cora stopped talking.");
+                          }}
+                          className="p-2 rounded-full border hover:bg-gray-100 transition flex items-center justify-center"
+                          style={{
+                            borderColor: primaryColor,
+                            color: primaryColor,
+                            backgroundColor: "#fff",
+                          }}
+                          title="Stop Cora's voice"
+                        >
+                          🔇
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -517,18 +592,42 @@ const handleRegister = async (e) => {
               </div>
               <button
                 type="submit"
-                className="hidden sm:inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium text-white transition gap-2"
-                style={{ backgroundColor: primaryColor }}
                 disabled={isTyping || (!query.trim() && selectedImages.length === 0)}
+                className="inline-flex items-center justify-center rounded-full 
+                          px-3 py-2 text-white transition
+                          sm:px-5 sm:py-2
+                          text-sm sm:text-sm"
+                style={{ backgroundColor: primaryColor }}
               >
-                {isTyping ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  "Send"
-                )}
+                {/* Mobile icon */}
+                <span className="sm:hidden flex">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 12l12-8-4 8 4 8-12-8z"
+                    />
+                  </svg>
+                </span>
+
+                {/* Desktop text */}
+                <span className="hidden sm:flex items-center gap-2">
+                  {isTyping ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send"
+                  )}
+                </span>
               </button>
             </div>
           </div>

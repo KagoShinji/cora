@@ -1,4 +1,5 @@
 {
+  "regions": ["dub"],
   "rewrites": [
     { "source": "/login", "destination": "/index.html" },
     { "source": "/auth/reset-password/:rest*", "destination": "/index.html" },

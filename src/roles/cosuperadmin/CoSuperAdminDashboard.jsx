@@ -56,8 +56,8 @@ function CoSuperAdminDashboard() {
     new Date(new Date().setDate(new Date().getDate() - 30))
   );
   const [searchEndDate, setSearchEndDate] = useState(new Date());
-  const [ratingStartDate, setRatingStartDate] = useState(null);
-  const [ratingEndDate, setRatingEndDate] = useState(null);
+  const [ratingStartDate, setRatingStartDate] = useState(new Date());
+  const [ratingEndDate, setRatingEndDate] = useState(new Date());
   const [users,setUsers] = useState([])
   const [satisfactionChart, setSatisfactionChart] = useState([]);
   const [searchedDataClassification, setSearchedDataClassification] = useState([]);
@@ -72,9 +72,8 @@ useEffect(() => {
       // ✅ Only include docs that are neither approved/declined
       //    AND are not manual entries (filename is null/undefined)
       const filteredDocs = docs.filter((doc) => {
-        const status = doc.status?.toLowerCase() || "pending";
+        const status = doc.status?.toLowerCase() || "pending-approval" || "approved";
         return (
-          status !== "approved" &&
           status !== "declined" &&
           doc.filename // ✅ exclude manual entry (filename is null)
         );
@@ -83,7 +82,7 @@ useEffect(() => {
       // Group by department
       const counts = {};
       filteredDocs.forEach((doc) => {
-        const title = doc.title_id || "Unknown";
+        const title = doc.status || "Unknown";
         counts[title] = (counts[title] || 0) + 1;
       });
 
@@ -114,7 +113,7 @@ useEffect(() => {
         // Group by form name (use title for example)
         const counts = {};
         manualDocs.forEach((doc) => {
-          const form = doc.title || "Unknown";
+          const form = doc.status || "Unknown";
           counts[form] = (counts[form] || 0) + 1;
         });
 
@@ -137,7 +136,7 @@ useEffect(() => {
     try {
       if (!searchStartDate || !searchEndDate) return;
 
-      const data = await mostSearchData(searchStartDate, searchEndDate, 10);
+      const data = await mostSearchData(searchStartDate, searchEndDate, 5);
 
       const formatted = data.map((item) => ({
         name: item.title,
@@ -291,21 +290,6 @@ useEffect(()=>{
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-  const getMetrics = async () => {
-    try {
-      const start = ratingStartDate ? ratingStartDate.toISOString().split("T")[0] : undefined;
-      const end = ratingEndDate ? ratingEndDate.toISOString().split("T")[0] : undefined;
-
-      const data = await fetchSatisfactionMetrics({ start_date: start, end_date: end });
-      setSatisfactionChart(data);
-    } catch (error) {
-      console.error("Failed to load satisfaction metrics:", error);
-    }
-  };
-
-  getMetrics();
-}, [ratingStartDate, ratingEndDate]);
 
 const userChart = users.reduce((acc, user) => {
     const role = user.role || "Unknown";
@@ -336,17 +320,21 @@ const deptChart = users.reduce((acc, user) => {
 }, []);
 
 
- useEffect(() => {
-    const loadMetrics = async () => {
-      try {
-        const data = await fetchSatisfactionMetrics();
-        setSatisfactionChart(data);
-      } catch (err) {
-        console.error("Failed to load satisfaction metrics:", err);
-      }
-    };
-    loadMetrics();
-  }, []);
+useEffect(() => {
+  const getMetrics = async () => {
+    try {
+      const start = ratingStartDate?.toLocaleDateString("en-CA"); // YYYY-MM-DD
+      const end = ratingEndDate?.toLocaleDateString("en-CA");
+
+      const data = await fetchSatisfactionMetrics({ start_date: start, end_date: end });
+      setSatisfactionChart(data);
+    } catch (error) {
+      console.error("Failed to load satisfaction metrics:", error);
+    }
+  };
+
+  getMetrics();
+}, [ratingStartDate, ratingEndDate]);
 
 
   return (
@@ -908,7 +896,7 @@ const deptChart = users.reduce((acc, user) => {
           File Uploads
         </h3>
         <p className="text-gray-600 text-sm leading-relaxed mb-6">
-          Document uploads by department and category.
+          Document uploads by department and the status.
         </p>
 
         <div className="flex items-center gap-6">

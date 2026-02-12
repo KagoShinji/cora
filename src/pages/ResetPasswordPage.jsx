@@ -138,7 +138,7 @@ export default function ResetPasswordPage() {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 border text-black border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Enter 6-digit OTP"
               />
               <div className="flex justify-end gap-2">
